@@ -1,0 +1,15 @@
+<launch>
+  <node name="cr_capture" pkg="cr_capture" type="cr_capture"
+	output="screen">
+    <remap from="~left/image" to="/CameraL/image_rect_color"/>
+    <remap from="~left/camera_info" to="/CameraL/camera_info"/>
+    <remap from="~right/image" to="/CameraR/image_rect_color"/>
+    <remap from="~right/camera_info" to="/CameraR/camera_info"/>
+    <remap from="~range/image" to="/sr4000/image_depth"/>
+    <remap from="~range/camera_info" to="/sr4000/camera_info"/>
+
+    <rosparam command="load" file="$(find cr_capture)/launch/sr4000_offset.yaml"/>
+    <param name="max_range" value="5.0"/>
+    <param name="calculation_pixel" value="false"/>
+  </node>
+</launch>
