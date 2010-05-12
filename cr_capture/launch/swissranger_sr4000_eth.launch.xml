@@ -5,7 +5,8 @@
 	clear_params="true">
     <param name="frame_id" type="string" value="sr4000_base"/>
     <param name="camera_info_manager/url"
-	   value="file:///$(find cr_capture)/launch/2010-02-16-15-14-42-sr4000.yaml"/>
+	   value="file:///$(find cr_capture)/launch/2010-04-20-19-14-52-sr4000.yaml"/>
+    <param name="ether_addr" value="192.168.101.151"/>
     <remap from="~distance/image_raw16" to="~image_depth"/>
   </node>
   <!--

@@ -8,7 +8,8 @@
     <remap from="~range/image" to="/sr4000/image_depth"/>
     <remap from="~range/camera_info" to="/sr4000/camera_info"/>
 
-    <rosparam command="load" file="$(find cr_capture)/launch/sr4000_offset.yaml"/>
+    <!-- <rosparam command="load" file="$(find cr_capture)/launch/2010-02-16-15-14-42-external.yaml"/> -->
+    <rosparam command="load" file="$(find cr_capture)/launch/2010-04-20-19-14-52-external.yaml"/>
     <param name="max_range" value="5.0"/>
     <param name="calculation_pixel" value="false"/>
   </node>
