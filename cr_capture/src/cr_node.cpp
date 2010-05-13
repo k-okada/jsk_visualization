@@ -126,7 +126,7 @@ public:
 
   void camerarangeCB(const sensor_msgs::ImageConstPtr &img,
                      const sensor_msgs::CameraInfoConstPtr &info) {
-    ROS_INFO("%s", __PRETTY_FUNCTION__);
+    //ROS_INFO("%s", __PRETTY_FUNCTION__);
     if((ipl_depth_->width != (int)img->width) ||
        (ipl_depth_->height != (int)img->height)) {
       ipl_depth_ = cvCreateImage(cvSize(img->width, img->height), IPL_DEPTH_16U, 1);
