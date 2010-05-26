@@ -1,0 +1,15 @@
+<package>
+  <description brief="jtalk">
+
+     jtalk
+
+  </description>
+  <author>Kei Okada</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/jtalk</url>
+  <depend package="sound_play"/>
+
+</package>
+
+
