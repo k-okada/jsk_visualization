@@ -12,11 +12,11 @@ MD5SUM_FILE	= $(PKGNAME)-$(VER).tar.gz.md5sum
 include $(shell rospack find mk)/download_unpack_build.mk
 
 installed.$(PKGNAME): $(SOURCE_DIR)/unpacked
-	cd $(SOURCE_DIR) && ./configure && make
+	cd $(SOURCE_DIR) && ./configure --prefix=`rospack find jtalk`/hts_engine_API && make && make install
 	touch installed.$(PKGNAME)
 
 clean:
-	rm -rf build installed.$(PKGNAME)
+	rm -rf build hts_engin_API installed.$(PKGNAME)
 
 wipe: clean
 
