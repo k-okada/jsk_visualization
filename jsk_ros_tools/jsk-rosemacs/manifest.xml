@@ -3,5 +3,5 @@
     a collection of emacs utility packages for ros.
   </description>
   <author>Ryohei Ueda(ueda@jsk.t.u-tokyo.ac.jp)</author>
-  <license>GPL</license>
+  <license>BSD</license>
 </package>
