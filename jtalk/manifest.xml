@@ -4,7 +4,8 @@
      jtalk
 
   </description>
-  <author>Kei Okada</author>
+  <author>Nagoya Institute of Technology, Department of Computer
+  Science. ROS package maintained by Kei Okada</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/jtalk</url>
