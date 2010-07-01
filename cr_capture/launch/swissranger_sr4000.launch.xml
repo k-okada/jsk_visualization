@@ -1,10 +1,10 @@
 <launch>
-  <param name="display" type="int" value="0"/>
+  <group ns="RangeSensor">
   <node name="sr4000" pkg="swissranger_camera"
 	type="swissranger_camera" respawn="false" output="screen"
 	clear_params="true">
-    <param name="frame_id" type="string" value="sr4000_base"/>
-    <param name="camera_info_manager/url"
+    <param name="frame_id" type="string" value="/sr4000_cam"/>
+    <param name="camera_info_url"
 	   value="file:///$(find cr_capture)/launch/2010-02-16-15-14-42-sr4000.yaml"/>
     <remap from="~distance/image_raw16" to="~image_depth"/>
   </node>
@@ -13,4 +13,5 @@
     <remap from="image" to="sr4000/intensity/image_raw"/>
   </node>
   -->
+  </group>
 </launch>

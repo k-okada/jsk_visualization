@@ -1,12 +1,12 @@
 <launch>
   <node name="cr_capture" pkg="cr_capture" type="cr_capture"
 	output="screen">
-    <remap from="~left/image" to="/CameraL/image_rect_color"/>
-    <remap from="~left/camera_info" to="/CameraL/camera_info"/>
-    <remap from="~right/image" to="/CameraR/image_rect_color"/>
-    <remap from="~right/camera_info" to="/CameraR/camera_info"/>
-    <remap from="~range/image" to="/sr4000/image_depth"/>
-    <remap from="~range/camera_info" to="/sr4000/camera_info"/>
+    <remap from="~left/image" to="/FleaCam/left/camera/image_rect_color"/>
+    <remap from="~left/camera_info" to="/FleaCam/left/camera/camera_info"/>
+    <remap from="~right/image" to="/FleaCam/right/camera/image_rect_color"/>
+    <remap from="~right/camera_info" to="/FleaCam/right/camera/camera_info"/>
+    <remap from="~range/image" to="RangeSensor/sr4000/image_depth"/>
+    <remap from="~range/camera_info" to="RangeSensor/sr4000/camera_info"/>
 
     <!-- <rosparam command="load" file="$(find cr_capture)/launch/2010-02-16-15-14-42-external.yaml"/> -->
     <rosparam command="load" file="$(find cr_capture)/launch/2010-04-20-19-14-52-external.yaml"/>
