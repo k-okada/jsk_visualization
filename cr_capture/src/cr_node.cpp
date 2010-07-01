@@ -36,7 +36,7 @@ private:
   double trans_quat[4];
 
   // buffers
-  sensor_msgs::PointCloud pts_;
+  //sensor_msgs::PointCloud pts_;
   sensor_msgs::CameraInfo info_left_, info_right_, info_depth_;
   IplImage *ipl_left_, *ipl_right_, *ipl_depth_;
   float *map_x, *map_y, *map_z;
@@ -151,9 +151,10 @@ public:
     // check info and make map
     makeConvertMap();
 
+    sensor_msgs::PointCloud pts_;
     //convert
     pts_.points.resize(srwidth*srheight);
-    convert3DPos();
+    convert3DPos(pts_);
 
     // add color
     if(calc_pixelpos) {
@@ -171,11 +172,13 @@ public:
       pts_.channels[0].name = "rgb";
       pts_.channels[0].values.resize(srwidth*srheight);
     }
-    getColorsOfPointsLRCheck();
+    getColorsOfPointsLRCheck(pts_);
 
     // advertise
-    pts_.header = info->header;
-    cloud_pub_.publish(pts_);
+    //pts_.header = info->header;
+    pts_.header = img->header;
+    sensor_msgs::PointCloudPtr ptr = boost::make_shared <sensor_msgs::PointCloud> (pts_);
+    cloud_pub_.publish(ptr);
   }
 
   void makeConvertMap () {
@@ -238,22 +241,28 @@ public:
     }
   }
 
-  void convert3DPos() {
+  void convert3DPos(sensor_msgs::PointCloud &pts) {
     int lng=(srwidth*srheight);
     unsigned short *ibuf = (unsigned short*)ipl_depth_->imageData;
-    geometry_msgs::Point32 *pt = &(pts_.points[0]);
+    geometry_msgs::Point32 *pt = &(pts.points[0]);
 
     for(int i=0;i<lng;i++){
       double scl = (max_range *  ibuf[i]) / (double)0xFFFF;
-      pt->x = (map_x[i] * scl);
-      pt->y = (map_y[i] * scl);
-      pt->z = (map_z[i] * scl);
+      if(ibuf[i] >= 0xFFF8) { // saturate
+	pt->x = 0.0;
+	pt->y = 0.0;
+	pt->z = 0.0;
+      } else {
+	pt->x = (map_x[i] * scl);
+	pt->y = (map_y[i] * scl);
+	pt->z = (map_z[i] * scl);
+      }
       pt++;
     }
   }
 
-  void getColorsOfPointsLRCheck() {
-    geometry_msgs::Point32 *point_ptr = &(pts_.points[0]);
+  void getColorsOfPointsLRCheck(sensor_msgs::PointCloud &pts) {
+    geometry_msgs::Point32 *point_ptr = &(pts.points[0]);
     float fx = info_left_.P[0];
     float cx = info_left_.P[2];
     float fy = info_left_.P[5];
@@ -263,9 +272,9 @@ public:
 
     float *lu_ptr = NULL, *ru_ptr = NULL, *v_ptr = NULL;
     if (calc_pixelpos) {
-      lu_ptr = &(pts_.channels[1].values[0]);
-      ru_ptr = &(pts_.channels[2].values[0]);
-      v_ptr = &(pts_.channels[3].values[0]);
+      lu_ptr = &(pts.channels[1].values[0]);
+      ru_ptr = &(pts.channels[2].values[0]);
+      v_ptr = &(pts.channels[3].values[0]);
     }
     // ROS_INFO("CHECK/ %f %f %f %f - %f", fx, cx, fy, cy, tr);
     unsigned char *imgl = (unsigned char *)ipl_left_->imageData;
@@ -536,7 +545,7 @@ public:
         }
       }
       // setting color
-      float *colv = &(pts_.channels[0].values[y*srwidth]);
+      float *colv = &(pts.channels[0].values[y*srwidth]);
       for(int x=0;x<srwidth;x++) {
         colv[x] = *reinterpret_cast<float*>(&(col_x[x]));
       }
