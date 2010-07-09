@@ -3,7 +3,7 @@
 	output="screen" machine="vision">
     <remap from="~left/image" to="FleaCam/left/camera/image_rect_color"/>
     <remap from="~left/camera_info" to="FleaCam/left/camera/camera_info"/>
-    <remap from="~right/image" to="/leaCam/right/camera/image_rect_color"/>
+    <remap from="~right/image" to="FleaCam/right/camera/image_rect_color"/>
     <remap from="~right/camera_info" to="FleaCam/right/camera/camera_info"/>
     <remap from="~range/image" to="RangeSensor/sr4000/image_depth"/>
     <remap from="~range/camera_info" to="RangeSensor/sr4000/camera_info"/>

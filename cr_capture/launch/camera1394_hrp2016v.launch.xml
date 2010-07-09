@@ -1,33 +1,33 @@
 <launch>
+  <!-- <machine name="vision" address="caigua"/> -->
   <group ns="FleaCam">
     <group ns="left">
       <node name="left_dev" pkg="camera1394" type="camera1394_node"
 	    respawn="false" output="screen" machine="vision"
 	    clear_params="true">
+	<param name="frame_rate" value="7.5"/>
 	<param name="video_mode" value="640x480_rgb8"/>
-	<param name="frame_rate" value="15"/>
 	<param name="guid" value="00b09d01008c8f46"/>
 	<param name="frame_id" type="string" value="/HRP2JSKNT/FLEA-LEFT_CAMERA"/>
 	<param name="camera_info_url"
 	       value="file:///$(find cr_capture)/launch/2010-02-16-15-14-42-stereo-left.yaml"/>
       </node>
       <node name="image_proc" pkg="image_proc" type="image_proc"
-	    ns="camera"/>
+	    ns="camera" machine="vision"/>
     </group>
     <group ns="right">
       <node name="right_dev" pkg="camera1394" type="camera1394_node"
-	    respawn="false" output="screen"  machine="vision"
+	    respawn="false" output="screen" machine="vision"
 	    clear_params="true">
-	<param name="frame_rate" value="15"/>
+	<param name="frame_rate" value="7.5"/>
 	<param name="video_mode" value="640x480_rgb8"/>
 	<param name="guid" value="00b09d01008c8f44"/>
 	<param name="frame_id" type="string" value="/HRP2JSKNT/FLEA-RIGHT_CAMERA"/>
-	<param name="encoding" value="rgb8"/>
 	<param name="camera_info_url"
 	       value="file:///$(find cr_capture)/launch/2010-02-16-15-14-42-stereo-right.yaml"/>
       </node>
       <node name="image_proc" pkg="image_proc" type="image_proc"
-	    ns="camera"/>
+	    ns="camera" machine="vision"/>
     </group>
   </group>
 </launch>
