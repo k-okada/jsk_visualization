@@ -1,4 +1,5 @@
 <launch>
+  <machine name="vision" address="caigua"/>
   <include file="$(find cr_capture)/launch/camera1394_hrp2016v.launch.xml"/>
   <include file="$(find cr_capture)/launch/swissranger_sr4000.launch.xml"/>
   <include file="$(find cr_capture)/launch/cr_capture.launch.xml"/>
