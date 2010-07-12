@@ -32,6 +32,8 @@ private:
   // parameter
   double max_range;
   bool calc_pixelpos;
+  bool use_filter;
+  int filter_type;
   double trans_pos[3];
   double trans_quat[4];
 
@@ -88,6 +90,9 @@ public:
     ROS_INFO("rotation : [%f, %f, %f, %f]", trans_quat[0], trans_quat[1],
              trans_quat[2], trans_quat[3]);
 
+    nh_.param("use_filter", use_filter, false);
+    ROS_INFO("use_filter : %d", use_filter);
+
     // ros node setting
     //cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1, msg_connect, msg_disconnect);
     cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1);
@@ -141,6 +146,25 @@ public:
       //ROS_WARN("invalid image");
       return;
     }
+    // filter
+    if (use_filter) {
+      cv::Mat in_img16(ipl_depth_);
+      cv::Mat in_img(in_img16.rows, in_img16.cols, CV_8UC1);
+      cv::Mat out_img(in_img16.rows, in_img16.cols, CV_8UC1);
+      in_img16.convertTo(in_img, CV_8UC1);
+
+      cv::Canny(in_img, out_img, 8.0, 40.0);
+      cv::dilate(out_img, out_img, cv::Mat());
+
+      unsigned short *sptr = (unsigned short *)in_img16.data;
+      unsigned char *cptr = (unsigned char *)out_img.data;
+      for(int i=0;i<in_img16.rows*in_img16.cols;i++) {
+	if(*cptr++ > 128) {
+	  sptr[i] = 0;
+	}
+      }
+    }
+
     //check transform
     //tf_.lookupTransform("/sr4000_base", "/left_cam_base", info_depth_.header.stamp, cam_trans_);
     btQuaternion btq(trans_quat[0], trans_quat[1], trans_quat[2], trans_quat[3]);
