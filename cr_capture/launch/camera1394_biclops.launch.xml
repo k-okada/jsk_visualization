@@ -1,58 +1,33 @@
 <launch>
-  <group ns="CameraL">
+  <group ns="FleaMV">
     <param name="display" type="int" value="0"/>
-
-    <node name="cam" pkg="camera1394" type="camera1394"
-	  respawn="false" output="screen"
-	  clear_params="true">
-      <param name="video_mode" value="640x480_mono"/>
-      <param name="fps" value="7.5"/>
-      <param name="guid" value="00b09d01008c6584"/>
-      <param name="encoding" value="bayer_rggb8"/>
-      <param name="frame_id" type="string" value="left_base"/>
-      <param name="camera_info_manager/url"
-	     value="file:///home/leus/2010-04-20-19-14-52-stereo-left.yaml"/>
-      <remap from="~camera/image_raw" to="image_raw"/>
-      <remap from="~camera/camera_info" to="camera_info"/>
-    </node>
-
-    <node name="proc" pkg="image_proc" type="image_proc">
-      <!--<remap from="image_raw" to="cam/camera/image_raw"/>
-	  <remap from="camera_info" to="cam/camera/camera_info"/> -->
-    </node>
-    <!--
-    <node name="iview" pkg="image_view" type="image_view">
-      <remap from="image" to="image_rect_color"/>
-    </node>
-    -->
+    <group ns="left">
+      <node name="left_dev" pkg="camera1394" type="camera1394_node"
+	    respawn="false" output="screen" clear_params="true">
+        <param name="video_mode" value="640x480_mono8"/>
+        <param name="frame_rate" value="15.0"/>
+        <param name="guid" value="00b09d01008c6584"/>
+        <param name="bayer_pattern" value="rggb"/>
+        <!-- <param name="bayer_method" value="Simple"/> -->
+        <param name="frame_id" type="string" value="/left_mv_cam"/>
+        <param name="camera_info_url"
+	       value="file:///$(find cr_capture)/launch/2010-04-20-19-14-52-stereo-left.yaml"/>
+      </node>
+      <node name="proc" pkg="image_proc" type="image_proc" ns="camera"/>
+    </group>
+    <group ns="right">
+      <node name="cam" pkg="camera1394" type="camera1394_node"
+	    respawn="false" output="screen" clear_params="true">
+        <param name="video_mode" value="640x480_mono8"/>
+        <param name="frame_rate" value="15.0"/>
+        <param name="guid" value="00b09d01008c6583"/>
+        <param name="bayer_pattern" value="rggb"/>
+        <!-- <param name="bayer_method" value="Simple"/> -->
+        <param name="frame_id" type="string" value="/right_mv_cam"/>
+        <param name="camera_info_url"
+	       value="file:///$(find cr_capture)/launch/2010-04-20-19-14-52-stereo-right.yaml"/>
+      </node>
+      <node name="proc" pkg="image_proc" type="image_proc" ns="camera"/>
+    </group>
   </group>
-
-  <group ns="CameraR">
-    <param name="display" type="int" value="0"/>
-
-    <node name="cam" pkg="camera1394" type="camera1394"
-	  respawn="false" output="screen"
-	  clear_params="true">
-      <param name="video_mode" value="640x480_mono"/>
-      <param name="fps" value="7.5"/>
-      <param name="guid" value="00b09d01008c6583"/>
-      <param name="encoding" value="bayer_rggb8"/>
-      <param name="frame_id" type="string" value="right_base"/>
-      <param name="camera_info_manager/url"
-	     value="file:///home/leus/2010-04-20-19-14-52-stereo-right.yaml"/>
-      <remap from="~camera/image_raw" to="image_raw"/>
-      <remap from="~camera/camera_info" to="camera_info"/>
-    </node>
-
-    <node name="proc" pkg="image_proc" type="image_proc">
-      <!-- <remap from="image_raw" to="cam/camera/image_raw"/>
-	   <remap from="camera_info" to="cam/camera/camera_info"/> -->
-    </node>
-    <!--
-    <node name="iview" pkg="image_view" type="image_view">
-      <remap from="image" to="image_rect_color"/>
-    </node>
-    -->
-  </group>
-
 </launch>
