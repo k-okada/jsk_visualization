@@ -29,6 +29,14 @@ private:
   ros::Publisher cloud_pub_;
   std::string left_ns_, right_ns_, range_ns_;
 
+  // all subscriber
+  message_filters::Subscriber<sensor_msgs::Image> image_conf_sub_;
+  message_filters::Subscriber<sensor_msgs::Image> image_intent_sub_;
+  message_filters::Subscriber<sensor_msgs::Image> image_depth_sub_;
+  message_filters::Subscriber<sensor_msgs::CameraInfo> info_sub_;
+  message_filters::TimeSynchronizer<sensor_msgs::Image, sensor_msgs::Image,
+				    sensor_msgs::Image, sensor_msgs::CameraInfo> sync_;
+
   // parameter
   double max_range;
   bool calc_pixelpos;
@@ -36,6 +44,8 @@ private:
   int filter_type;
   double trans_pos[3];
   double trans_quat[4];
+  bool use_images;
+  int intensity_threshold, confidence_threshold;
 
   // buffers
   //sensor_msgs::PointCloud pts_;
@@ -47,7 +57,9 @@ private:
   tf::StampedTransform cam_trans_;
 
 public:
-  CRCaptureNode () : nh_("~"), it_(nh_), tf_(ros::Duration(30.0), true), map_x(0), map_y(0), map_z(0) {
+  CRCaptureNode () : nh_("~"), it_(nh_),
+		     tf_(ros::Duration(30.0), true), sync_(5),
+		     map_x(0), map_y(0), map_z(0) {
     // initialize
     ipl_left_ = new IplImage();
     ipl_right_ = new IplImage();
@@ -93,6 +105,9 @@ public:
     nh_.param("use_filter", use_filter, false);
     ROS_INFO("use_filter : %d", use_filter);
 
+    nh_.param("use_images", use_images, false);
+    ROS_INFO("use_images : %d", use_images);
+
     // ros node setting
     //cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1, msg_connect, msg_disconnect);
     cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1);
@@ -103,7 +118,29 @@ public:
 
     camera_sub_l_ = it_.subscribeCamera(left_ns_ + "/image", 1, &CRCaptureNode::cameraleftCB, this);
     camera_sub_r_ = it_.subscribeCamera(right_ns_ + "/image", 1, &CRCaptureNode::camerarightCB, this);
-    camera_sub_depth_ = it_.subscribeCamera(range_ns_ + "/image", 1, &CRCaptureNode::camerarangeCB, this);
+
+    if(use_images) {
+      // all subscribe
+      nh_.param("intensity_threshold", intensity_threshold, -1);
+      if(intensity_threshold >= 0) {
+	ROS_INFO("intensity_threshold : %d", intensity_threshold);
+      }
+      nh_.param("confidence_threshold", confidence_threshold, -1);
+      if(confidence_threshold >= 0) {
+	ROS_INFO("confidence_threshold : %d", confidence_threshold);
+      }
+
+      image_conf_sub_.subscribe(nh_, range_ns_ + "/confidence/image_raw", 1);
+      image_intent_sub_.subscribe(nh_, range_ns_ + "/intensity/image_raw", 1);
+      image_depth_sub_.subscribe(nh_, range_ns_ + "/distance/image_raw16", 1);
+      info_sub_.subscribe(nh_, range_ns_ + "/camera_info", 1);
+
+      sync_.connectInput(image_conf_sub_, image_intent_sub_, image_depth_sub_, info_sub_);
+      sync_.registerCallback(boost::bind(&CRCaptureNode::cameraallCB, this, _1, _2, _3, _4));
+    } else {
+      // not all subscribe
+      camera_sub_depth_ = it_.subscribeCamera(range_ns_ + "/image", 1, &CRCaptureNode::camerarangeCB, this);
+    }
   }
 
   void cameraleftCB(const sensor_msgs::ImageConstPtr &img,
@@ -129,6 +166,38 @@ public:
     info_right_ = *info;
   }
 
+  void cameraallCB (const sensor_msgs::ImageConstPtr &img_c,
+		    const sensor_msgs::ImageConstPtr &img_i,
+		    const sensor_msgs::ImageConstPtr &img_d,
+		    const sensor_msgs::CameraInfoConstPtr &info) {
+    if((ipl_depth_->width != (int)img_d->width) ||
+       (ipl_depth_->height != (int)img_d->height)) {
+      ipl_depth_ = cvCreateImage(cvSize(img_d->width, img_d->height), IPL_DEPTH_16U, 1);
+      srwidth = img_d->width;
+      srheight = img_d->height;
+    }
+    sensor_msgs::CvBridge bridge;
+    cvResize(bridge.imgMsgToCv(img_d), ipl_depth_); // pass through
+    info_depth_ = *info;
+    if ( (ipl_right_->width != ipl_left_->width) ||
+         (ipl_right_->height != ipl_left_->height) ) {
+      //ROS_WARN("invalid image");
+      return;
+    }
+
+    const unsigned char *conf_img = &(img_c->data[0]);
+    const unsigned char *intent_img = &(img_i->data[0]);
+    unsigned short *depth_img = (unsigned short*)ipl_depth_->imageData;
+    int size = img_c->data.size();
+    for(int i=0;i<size;i++) {
+      if( (conf_img[i] < confidence_threshold) ||
+	  (intent_img[i] < intensity_threshold) ) {
+	depth_img[i] = 0;
+      }
+    }
+    //
+    calculate_color(img_d, info);
+  }
   void camerarangeCB(const sensor_msgs::ImageConstPtr &img,
                      const sensor_msgs::CameraInfoConstPtr &info) {
     //ROS_INFO("%s", __PRETTY_FUNCTION__);
@@ -146,6 +215,11 @@ public:
       //ROS_WARN("invalid image");
       return;
     }
+    calculate_color(img, info);
+  }
+
+  void calculate_color(const sensor_msgs::ImageConstPtr &img,
+		       const sensor_msgs::CameraInfoConstPtr &info) {
     // filter
     if (use_filter) {
       cv::Mat in_img16(ipl_depth_);
@@ -154,7 +228,8 @@ public:
       in_img16.convertTo(in_img, CV_8UC1);
 
       cv::Canny(in_img, out_img, 8.0, 40.0);
-      cv::dilate(out_img, out_img, cv::Mat());
+      //cv::dilate(out_img, out_img, cv::Mat());
+      cv::dilate(out_img, out_img, cv::Mat(), cv::Point(-1, -1), 2);
 
       unsigned short *sptr = (unsigned short *)in_img16.data;
       unsigned char *cptr = (unsigned char *)out_img.data;
