@@ -1,0 +1,30 @@
+<launch>
+  <machine name="cap" address="kombu" user="lyouhei"
+           password="lyouhei"
+           ros-root="/home/lyouhei/ros/cturtle/ros"
+           ros-package-path="/home/lyouhei/ros/cturtle/tum-ros-pkg:/home/lyouhei/ros/cturtle/cu-ros-pkg:/home/lyouhei/ros/cturtle/ros-experimental-trunk:/home/lyouhei/ros/cturtle/usc-ros-pkg:/home/lyouhei/ros/cturtle/sail-ros-pkg:/home/lyouhei/ros/cturtle/jsk-ros-pkg:/home/lyouhei/ros/cturtle/utexas-art-ros-pkg:/home/lyouhei/ros/cturtle/kul-ros-pkg:/home/lyouhei/ros/cturtle/ros_pkg_tutorials:/home/lyouhei/ros/cturtle/brown-ros-pkg:/home/lyouhei/ros/cturtle/bosch-ros-pkg:/home/lyouhei/ros/cturtle/ccny-ros-pkg:/home/lyouhei/ros/cturtle/wg-ros-pkg-unreleased:/home/lyouhei/ros/cturtle/cmu-ros-pkg:/home/lyouhei/ros/cturtle/ros_tutorials:/home/lyouhei/ros/cturtle/ua-ros-pkg:/home/lyouhei/ros/cturtle/alufr-ros-pkg:/home/lyouhei/ros/cturtle/wu-ros-pkg:/home/lyouhei/ros/cturtle/gt-ros-pkg:/home/lyouhei/ros/cturtle/prairiedog-ros-pkg:/home/lyouhei/ros/cturtle/ros-pkg-unreleased:/home/lyouhei/ros/cturtle/stacks:/home/lyouhei/prog/hrp2/ros"
+           />
+  <node name="cr_capture" pkg="cr_capture" type="cr_capture"
+	output="screen" machine="cap">
+    <remap from="~left/image" to="FleaMV/left/camera/image_rect_color"/>
+    <remap from="~left/camera_info" to="FleaMV/left/camera/camera_info"/>
+    <remap from="~right/image" to="FleaMV/right/camera/image_rect_color"/>
+    <remap from="~right/camera_info" to="FleaMV/right/camera/camera_info"/>
+    <!--
+    <remap from="~range/image" to="RoomRangeSensor/sr4000/image_depth"/>
+    <remap from="~range/camera_info" to="RoomRangeSensor/sr4000/camera_info"/>
+    -->
+    <remap from="~range" to="RoomRangeSensor/sr4000"/>
+    <!-- <rosparam command="load" file="$(find cr_capture)/launch/2010-02-16-15-14-42-external.yaml"/> -->
+    <rosparam command="load" file="$(find cr_capture)/launch/2010-04-20-19-14-52-external.yaml"/>
+    <!-- <param name="max_range" value="5.0"/> -->
+    <param name="max_range" value="9.68"/>
+    <param name="calculation_pixel" value="false"/>
+    <param name="use_filter" value="true"/>
+
+    <!-- -->
+    <param name="use_images" value="true"/>
+    <param name="intensity_threshold" value="1"/>
+    <param name="confidence_threshold" value="160"/>
+  </node>
+</launch>

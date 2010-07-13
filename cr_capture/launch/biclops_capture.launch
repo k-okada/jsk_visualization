@@ -1,0 +1,6 @@
+<launch>
+  <include file="$(find cr_capture)/launch/camera1394_biclops.launch.xml"/>
+  <include file="$(find cr_capture)/launch/swissranger_sr4000_eth.launch.xml"/>
+  <include file="$(find cr_capture)/launch/cr_capture_biclops.launch"/>
+</launch>
+
