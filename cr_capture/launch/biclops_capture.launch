@@ -1,6 +1,13 @@
+<!-- -*- mode: xml -*- -->
 <launch>
-  <include file="$(find cr_capture)/launch/camera1394_biclops.launch.xml"/>
-  <include file="$(find cr_capture)/launch/swissranger_sr4000_eth.launch.xml"/>
+  <include file="$(find cr_capture)/launch/camera1394_biclops.launch"/>
+  <include file="$(find cr_capture)/launch/swissranger_sr4000_eth.launch"/>
   <include file="$(find cr_capture)/launch/cr_capture_biclops.launch"/>
-</launch>
 
+  <node name="snapshotter" pkg="jskpointcloud"
+        type="cloud_snapshotter" output="screen"
+        ns="snapshot">
+    <param name="append_size" value="8"/>
+    <remap from="points_old_in" to="cr_capture/color_pcloud"/>
+  </node>
+</launch>

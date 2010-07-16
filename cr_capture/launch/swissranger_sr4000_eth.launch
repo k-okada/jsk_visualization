@@ -1,3 +1,4 @@
+<!-- -*- mode: xml -*- -->
 <launch>
   <param name="display" type="int" value="0"/>
   <node name="sr4000" pkg="swissranger_camera"
@@ -11,7 +12,7 @@
 	   value="file:///$(find cr_capture)/launch/2010-04-20-19-14-52-sr4000.yaml"/>
     <!-- <param name="ether_addr" value="192.168.101.151"/> -->
     <param name="ether_addr" value="192.168.101.163"/>
-    <remap from="~distance/image_raw16" to="~image_depth"/>
+    <!-- <remap from="~distance/image_raw16" to="~image_depth"/> -->
   </node>
   <!--
   <node name="iview" pkg="image_view" type="image_view">
