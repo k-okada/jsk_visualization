@@ -1,7 +1,7 @@
 <!-- -*- mode: xml -*- -->
 <launch>
   <node name="cr_capture" pkg="cr_capture" type="cr_capture"
-	output="screen">
+	clear_params="true" output="screen">
     <remap from="~left/image" to="FleaMV/left/camera/image_rect_color"/>
     <remap from="~left/camera_info" to="FleaMV/left/camera/camera_info"/>
     <remap from="~right/image" to="FleaMV/right/camera/image_rect_color"/>
@@ -12,7 +12,9 @@
     -->
     <remap from="~range" to="RoomRangeSensor/sr4000"/>
     <!-- <rosparam command="load" file="$(find cr_capture)/launch/2010-02-16-15-14-42-external.yaml"/> -->
-    <rosparam command="load" file="$(find cr_capture)/launch/2010-04-20-19-14-52-external.yaml"/>
+    <!-- <rosparam command="load" file="$(find cr_capture)/launch/2010-04-20-19-14-52-external.yaml"/> -->
+    <rosparam command="load"
+	      file="$(find cr_capture)/launch/2010-07-18-14-00-26-external.yaml"/>
     <!-- <param name="max_range" value="5.0"/> -->
     <param name="max_range" value="9.68"/>
     <param name="calculation_pixel" value="false"/>
@@ -20,7 +22,7 @@
 
     <!-- -->
     <param name="use_images" value="true"/>
-    <param name="intensity_threshold" value="1"/>
-    <param name="confidence_threshold" value="160"/>
+    <!-- <param name="intensity_threshold" value="0"/> -->
+    <!-- <param name="confidence_threshold" value="100"/> -->
   </node>
 </launch>

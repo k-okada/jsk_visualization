@@ -6,8 +6,8 @@
 
   <node name="snapshotter" pkg="jskpointcloud"
         type="cloud_snapshotter" output="screen"
-        ns="snapshot">
-    <param name="append_size" value="8"/>
-    <remap from="points_old_in" to="cr_capture/color_pcloud"/>
+        clear_params="true" ns="snapshot">
+    <param name="append_size" value="11"/>
+    <remap from="points_old_in" to="/cr_capture/color_pcloud"/>
   </node>
 </launch>

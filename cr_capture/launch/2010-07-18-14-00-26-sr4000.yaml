@@ -1,0 +1,18 @@
+image_width: 176
+image_height: 144
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [247.904, 0, 87.5,  0, 246.986, 71.5,  0, 0, 1]
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [-0.874673, 0.725113, -0.008679, 0.001821, 0.0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1, 0, 0,   0, 1, 0,   0, 0, 1]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [247.904, 0, 87.5, 0,  0, 246.986, 71.5, 0,  0, 0, 1, 0]
