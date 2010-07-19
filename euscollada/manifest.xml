@@ -1,0 +1,17 @@
+<package>
+  <description brief="collada_eus">
+
+     collada_eus
+
+  </description>
+  <author>Kei Okada</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/collada_eus</url>
+
+  <depend package="colladadom"/>
+  <depend package="yaml_cpp"/>
+
+</package>
+
+
