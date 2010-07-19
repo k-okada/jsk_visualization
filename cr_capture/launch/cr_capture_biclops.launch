@@ -1,6 +1,6 @@
 <!-- -*- mode: xml -*- -->
 <launch>
-  <node name="cr_capture" pkg="cr_capture" type="cr_capture"
+  <node name="cr_capture_room" pkg="cr_capture" type="cr_capture"
 	clear_params="true" output="screen">
     <remap from="~left/image" to="FleaMV/left/camera/image_rect_color"/>
     <remap from="~left/camera_info" to="FleaMV/left/camera/camera_info"/>

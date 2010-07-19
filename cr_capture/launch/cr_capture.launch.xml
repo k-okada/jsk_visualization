@@ -10,7 +10,7 @@
     <remap from="~range/image" to="RangeSensor/sr4000/image_depth"/>
     <remap from="~range/camera_info" to="RangeSensor/sr4000/camera_info"/>
     -->
-    <remap from="~range" to="RoomRangeSensor/sr4000"/>
+    <remap from="~range" to="RangeSensor/sr4000"/>
     <rosparam command="load" file="$(find cr_capture)/launch/2010-02-16-15-14-42-external.yaml"/>
 
     <param name="max_range" value="5.0"/>

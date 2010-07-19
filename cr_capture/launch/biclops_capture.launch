@@ -11,7 +11,7 @@
 	machine="localhost"
 	>
     <param name="append_size" value="11"/>
-    <remap from="points_old_in" to="/cr_capture/color_pcloud"/>
+    <remap from="points_old_in" to="/cr_capture_room/color_pcloud"/>
   </node>
 
   <node name="downsampler" pkg="jskpointcloud"
