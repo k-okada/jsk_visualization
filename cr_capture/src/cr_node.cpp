@@ -262,14 +262,24 @@ public:
       pts_.channels[0].values.resize(srwidth*srheight);
       pts_.channels[1].name = "lu";
       pts_.channels[1].values.resize(srwidth*srheight);
-      pts_.channels[1].name = "ru";
-      pts_.channels[1].values.resize(srwidth*srheight);
-      pts_.channels[2].name = "v";
+      pts_.channels[2].name = "ru";
       pts_.channels[2].values.resize(srwidth*srheight);
+      pts_.channels[3].name = "v";
+      pts_.channels[3].values.resize(srwidth*srheight);
     } else {
+#if 1 // use rgb
       pts_.channels.resize(1);
       pts_.channels[0].name = "rgb";
       pts_.channels[0].values.resize(srwidth*srheight);
+#else
+      pts_.channels.resize(3);
+      pts_.channels[0].name = "r";
+      pts_.channels[0].values.resize(srwidth*srheight);
+      pts_.channels[1].name = "g";
+      pts_.channels[1].values.resize(srwidth*srheight);
+      pts_.channels[2].name = "b";
+      pts_.channels[2].values.resize(srwidth*srheight);
+#endif
     }
     getColorsOfPointsLRCheck(pts_);
 
@@ -644,10 +654,22 @@ public:
         }
       }
       // setting color
+#if 1 // use rgb
       float *colv = &(pts.channels[0].values[y*srwidth]);
       for(int x=0;x<srwidth;x++) {
         colv[x] = *reinterpret_cast<float*>(&(col_x[x]));
       }
+#else
+      float *colr = &(pts.channels[0].values[y*srwidth]);
+      float *colg = &(pts.channels[1].values[y*srwidth]);
+      float *colb = &(pts.channels[2].values[y*srwidth]);
+      for(int x=0;x<srwidth;x++) {
+	int col = col_x[x];
+        colr[x] = ((col >> 16) & 0xFF) / 255.0;
+	colg[x] = ((col >> 8) & 0xFF) / 255.0;
+	colb[x] = (col & 0xFF) / 255.0;
+      }
+#endif
 #if 0
       // setting color
       for(int x=0;x<srwidth;x++,tmp_ptr+=3) {
