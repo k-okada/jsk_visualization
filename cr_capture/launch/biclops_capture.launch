@@ -1,13 +1,35 @@
 <!-- -*- mode: xml -*- -->
 <launch>
+  <include file="$(find cr_capture)/launch/machine.launch"/>
   <include file="$(find cr_capture)/launch/camera1394_biclops.launch"/>
   <include file="$(find cr_capture)/launch/swissranger_sr4000_eth.launch"/>
   <include file="$(find cr_capture)/launch/cr_capture_biclops.launch"/>
 
   <node name="snapshotter" pkg="jskpointcloud"
         type="cloud_snapshotter" output="screen"
-        clear_params="true" ns="snapshot">
+        clear_params="true" ns="snapshot"
+	machine="localhost"
+	>
     <param name="append_size" value="11"/>
     <remap from="points_old_in" to="/cr_capture/color_pcloud"/>
   </node>
+
+  <node name="downsampler" pkg="jskpointcloud"
+	type="downsample_cloud2" output="screen"
+	clear_params="true" ns="downsample"
+	machine="localhost"
+	>
+    <remap from="points_in" to="/snapshot/appended_points"/>
+
+    <param name="leaf_size_x" value="0.04"/>
+    <param name="leaf_size_y" value="0.04"/>
+    <param name="leaf_size_z" value="0.04"/>
+    <param name="max_x" value="5.0"/>
+    <param name="min_x" value="-5.0"/>
+    <param name="max_y" value="3.0"/>
+    <param name="min_y" value="-0.5"/>
+    <param name="max_z" value="7.0"/>
+    <param name="min_z" value="0.0"/>
+  </node>
+
 </launch>

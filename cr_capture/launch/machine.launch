@@ -1,0 +1,8 @@
+<!-- -*- mode: xml -*- -->
+<launch>
+  <machine name="localhost" address="localhost"/>
+  <machine name="maca" address="maca"
+	   user="leus" password="leus"/>
+  <machine name="kombu" address="kombu"
+	   user="leus" password="leus"/>
+</launch>
