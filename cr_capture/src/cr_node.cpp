@@ -46,6 +46,7 @@ private:
   double trans_quat[4];
   bool use_images;
   int intensity_threshold, confidence_threshold;
+  bool clear_uncolored_points;
 
   // buffers
   //sensor_msgs::PointCloud pts_;
@@ -107,6 +108,8 @@ public:
 
     nh_.param("use_images", use_images, false);
     ROS_INFO("use_images : %d", use_images);
+
+    nh_.param("clear_uncolored_points", clear_uncolored_points, true);
 
     // ros node setting
     //cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1, msg_connect, msg_disconnect);
@@ -543,7 +546,14 @@ public:
               v_ptr[ptr_pos]  = yy;
             }
           } else {
+	    // did not find corresponding points in image
             col_x[x] = 0xFF0000;
+	    if (clear_uncolored_points) {
+	      int pidx = y*srwidth + x;
+	      point_ptr[pidx].x = 0.0;
+	      point_ptr[pidx].y = 0.0;
+	      point_ptr[pidx].z = 0.0;
+	    }
           }
         } else if (lr_use[x] > 0) {
           // use left
