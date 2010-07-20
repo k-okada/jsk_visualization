@@ -11,6 +11,9 @@
 	machine="localhost"
 	>
     <param name="append_size" value="11"/>
+    <param name="filter_outlier" value="true"/>
+    <param name="mean_k" value="60"/>
+    <param name="mul_thresh" value="2.0"/>
     <remap from="points_old_in" to="/cr_capture_room/color_pcloud"/>
   </node>
 
