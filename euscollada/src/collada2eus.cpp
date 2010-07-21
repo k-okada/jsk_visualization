@@ -299,6 +299,7 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   int jointElementCount;
   jointElementCount = g_dae->getDatabase()->getElementCount(NULL, "joint", NULL);
   domJoint *thisJoint = findJointFromName(jointSid);
+  cerr << "writeJoint " << thisJoint->getName() << ", parent = " << parentLink->getName() << ", child = " << childLink->getName()  << endl;
   fprintf(fp, "     (setq %s\n", thisJoint->getName());
   fprintf(fp, "           (instance %s :init\n",
           (thisJoint->getPrismatic_array().getCount()>0)?"linear-joint":"rotational-joint");
@@ -334,6 +335,7 @@ void writeKinematics(FILE *fp, domLink::domAttachment_full_Array thisAttachmentA
     domLinkRef thisLink = thisAttachmentArray[currentAttachment]->getLink();
     writeKinematics(fp, thisLink->getAttachment_full_array());
 
+    cerr << "writeKinematics " << thisLink->getName() << ", childlen = " << thisLink->getAttachment_full_array().getCount() << endl;
     for(unsigned int currentAttachment2=0;currentAttachment2 < (unsigned int)(thisLink->getAttachment_full_array().getCount());currentAttachment2++) {
       writeJoint(fp, thisLink->getAttachment_full_array()[currentAttachment2]->getJoint(),
                  thisLink,
@@ -412,6 +414,19 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
                 thisNode->getNode_array()[currentNodeArray]->getName());
       }
       fprintf(fp, "       )\n");
+    } else if ( thisNode->getNode_array().getCount() > 0 &&
+                strcmp(thisNode->getNode_array()[0]->getName(),"visual") != 0 ) {
+      cerr << ";; WARNING link without geometry : " << thisNode->getName() << endl;
+      fprintf(fp, "     ;; define bodyset-link for %s\n", thisNode->getName());
+      fprintf(fp, "     (setq %s (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 10 10 10)) :name :%s))\n", thisNode->getName(), thisNode->getName());
+
+      // assoc
+      for(unsigned int currentNodeArray=0;currentNodeArray<thisNode->getNode_array().getCount();currentNodeArray++) {
+        if ( strcmp(thisNode->getNode_array()[currentNodeArray]->getName(),"visual") == 0 ) continue; //@@@ OK??
+        fprintf(fp, "     (send %s :assoc %s)\n",
+                thisNode->getName(),
+                thisNode->getNode_array()[currentNodeArray]->getName());
+      }
     } else {
       fprintf(fp, "     ;; define cascaded-coords for %s\n", thisNode->getName());
       fprintf(fp, "     (setq %s (make-cascoords :name :%s))\n", thisNode->getName(), thisNode->getName());
@@ -559,6 +574,14 @@ int main(int argc, char* argv[]){
   domKinematics_model *thisKinematics;
   g_dae->getDatabase()->getElement((daeElement**)&thisKinematics, 0, NULL, "kinematics_model");
   writeKinematics(output_fp, thisKinematics->getTechnique_common()->getLink_array()[0]->getAttachment_full_array());
+
+  domLinkRef thisLink = thisKinematics->getTechnique_common()->getLink_array()[0];
+  for(unsigned int currentAttachment2=0;currentAttachment2 < (unsigned int)(thisLink->getAttachment_full_array().getCount());currentAttachment2++) {
+    writeJoint(output_fp, thisLink->getAttachment_full_array()[currentAttachment2]->getJoint(),
+               thisLink,
+               thisLink->getAttachment_full_array()[currentAttachment2]->getLink()
+               );
+  }
 
   // end-coords
   fprintf(output_fp, "     ;; end coords\n");
