@@ -524,7 +524,7 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, ";; %s $ ", get_current_dir_name());for(int i=0;i<argc;i++) fprintf(output_fp, "%s ", argv[i]); fprintf(output_fp, "\n");
   fprintf(output_fp, ";;\n");
   fprintf(output_fp, "\n");
-  fprintf(output_fp, "(defun %s () (setq *pr2* (instance %s-robot :init)))\n", thisNode->getName(), thisNode->getName());
+  fprintf(output_fp, "(defun %s () (setq *%s* (instance %s-robot :init)))\n", thisNode->getName(), thisNode->getName(), thisNode->getName());
   fprintf(output_fp, "\n");
   fprintf(output_fp, "(defclass %s-robot\n", thisNode->getName());
   fprintf(output_fp, "  :super robot-model\n");
