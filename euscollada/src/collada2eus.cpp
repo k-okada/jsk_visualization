@@ -501,42 +501,6 @@ int main(int argc, char* argv[]){
     }
   }
 
-  // get number of joints
-  int jointElementCount;
-  jointElementCount = g_dae->getDatabase()->getElementCount(NULL, "joint", NULL);
-  fprintf(stderr, "Number of Joints %d\n", jointElementCount);
-
-  for(int currentJoint=0;currentJoint<jointElementCount;currentJoint++) {
-    // get current geometry
-    domJoint *thisJoint;
-    g_dae->getDatabase()->getElement((daeElement**)&thisJoint, currentJoint, NULL, "joint");
-
-    fprintf(stderr, "joint[%2d] %s %s %s ", currentJoint, thisJoint->getName(), thisJoint->getSid(), thisJoint->getId());
-
-    domAxis_constraint_Array jointAxis_array;
-    int jointCount = 0;
-    if ( thisJoint->getPrismatic_array().getCount() > 0 ) {
-      jointAxis_array = thisJoint->getPrismatic_array();
-      jointCount = thisJoint->getPrismatic_array().getCount();
-    } else if ( thisJoint->getRevolute_array().getCount() > 0 ) {
-      jointAxis_array = thisJoint->getRevolute_array();
-      jointCount = thisJoint->getRevolute_array().getCount();
-    }
-    for (int currentJoint=0;currentJoint<jointCount;currentJoint++){
-      fprintf(stderr, "axis : %2.0f %2.0f %2.0f, ",
-              jointAxis_array[currentJoint]->getAxis()->getValue()[0],
-              jointAxis_array[currentJoint]->getAxis()->getValue()[1],
-              jointAxis_array[currentJoint]->getAxis()->getValue()[2]);
-      fprintf(stderr, "limits :");
-      if (jointAxis_array[currentJoint]->getLimits()) {
-        fprintf(stderr, " %f %f",
-                jointAxis_array[currentJoint]->getLimits()->getMin()->getValue(),
-                jointAxis_array[currentJoint]->getLimits()->getMax()->getValue());
-      }
-    }
-    fprintf(stderr, "\n");
-  }
-
   // get number of kinmatics
   int kinematicsElementCount;
   kinematicsElementCount = g_dae->getDatabase()->getElementCount(NULL, "kinematics_model", NULL);
