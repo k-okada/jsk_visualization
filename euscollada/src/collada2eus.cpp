@@ -35,11 +35,13 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
   int triangleElementCount = (int)(thisMesh->getTriangles_array().getCount());
 
   fprintf(fp, "(defclass %s\n", thisGeometry->getId());
-  fprintf(fp, "  :super bodyset-link\n");
+  fprintf(fp, "  :super body\n");
   fprintf(fp, "  :slots ())\n");
   fprintf(fp, "(defmethod %s\n", thisGeometry->getId());
   fprintf(fp, "  (:init (&key (name))\n");
-  fprintf(fp, "         (send-super :init (make-cascoords) :bodies (list (make-cube 10 10 10)) :name name))\n");
+  fprintf(fp, "         (replace-object self (make-cube 100 100 100))\n");
+  fprintf(fp, "         (if name (send self :name name))\n");
+  fprintf(fp, "         self)\n");
   fprintf(fp, "  (:draw (vwr)\n");
   fprintf(fp, "   (let ((mat (send (send self :worldcoords) :4x4))\n");
   fprintf(fp, "#+:jsk\n");
@@ -321,7 +323,7 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   fprintf(fp, "     (setq %s\n", thisJoint->getName());
   fprintf(fp, "           (instance %s :init\n",
           (thisJoint->getPrismatic_array().getCount()>0)?"linear-joint":"rotational-joint");
-  fprintf(fp, "                     :name %s\n", findLinkName(thisJoint->getName()));
+  fprintf(fp, "                     :name :%s\n", findLinkName(thisJoint->getName()));
   fprintf(fp, "                     :parent-link %s :child-link %s\n", parentLink->getName(), childLink->getName());
   domAxis_constraint_Array jointAxis_array;
   int jointCount;
@@ -363,6 +365,8 @@ void writeLink(FILE *fp, domLink::domAttachment_full_Array thisAttachmentArray) 
 
     fprintf(fp, "\n");
     fprintf(fp, "     ;; define bodyset-link for %s\n", thisLink->getName());
+
+    // geometry
     const char *geometry_name;
     if ( (geometry_name = findGeometryFromLinkName(thisLink->getName())) != NULL ) {
       fprintf(fp, "     (setq %s (instance %s :init :name \"%s\"))\n", thisLink->getName(), geometry_name, thisLink->getName());
@@ -406,26 +410,109 @@ void writeLink(FILE *fp, domLink::domAttachment_full_Array thisAttachmentArray) 
   }
 }
 
-void writeKinematics(FILE *fp, domLinkRef thisLink) {
-  int attachmentArrayCount = thisLink->getAttachment_full_array().getCount();
-  writeLink(fp, thisLink->getAttachment_full_array());
+void writeKinematics(FILE *fp, domLink::domAttachment_full_Array thisAttachmentArray) {
+  for(unsigned int currentAttachment=0;currentAttachment < thisAttachmentArray.getCount();currentAttachment++) {
+    domLinkRef thisLink = thisAttachmentArray[currentAttachment]->getLink();
+    writeKinematics(fp, thisLink->getAttachment_full_array());
 
-  fprintf(stderr, "link id:%s name:%s attachment:%d\n",
-          thisLink->getSid(), thisLink->getName(), attachmentArrayCount);
-  fprintf(fp, "     ;; define bodyset-link for %s\n", thisLink->getName());
-  fprintf(fp, "     (setq %s (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 10 10 10))))\n",
-          thisLink->getName());
-  for(int currentAttachment2=0;currentAttachment2<(int)(thisLink->getAttachment_full_array().getCount());currentAttachment2++){
-    fprintf(fp, "     (send %s :assoc %s)\n",
-            thisLink->getName(),
-            thisLink->getAttachment_full_array()[currentAttachment2]->getLink()->getName());
-    writeJoint(fp, thisLink->getAttachment_full_array()[currentAttachment2]->getJoint(),
-               thisLink,
-               thisLink->getAttachment_full_array()[currentAttachment2]->getLink()
-               );
+    for(unsigned int currentAttachment2=0;currentAttachment2 < (unsigned int)(thisLink->getAttachment_full_array().getCount());currentAttachment2++) {
+      writeJoint(fp, thisLink->getAttachment_full_array()[currentAttachment2]->getJoint(),
+                 thisLink,
+                 thisLink->getAttachment_full_array()[currentAttachment2]->getLink()
+                 );
+    }
   }
-  fprintf(fp, "     (send self :assoc %s)\n", thisLink->getName());
-  fprintf(fp, "\n");
+}
+
+void writeTranslate(FILE *fp, const char *indent, const char *name, domTranslate_Array thisArray) {
+  int translateCount = thisArray.getCount();
+  for(int currentTranslate=0;currentTranslate<translateCount;currentTranslate++){
+    domTranslateRef thisTranslate = thisArray[currentTranslate];
+    if ( thisTranslate->getSid() ) continue;
+    fprintf(fp, "%s(send %s :translate (float-vector %f %f %f))\n",
+            indent, name,
+            1000*thisTranslate->getValue()[0],
+            1000*thisTranslate->getValue()[1],
+            1000*thisTranslate->getValue()[2]);
+  }
+}
+
+void writeRotate(FILE *fp, const char *indent, const char *name, domRotate_Array thisArray) {
+  int rotateCount = thisArray.getCount();
+  for(int currentRotate=0;currentRotate<rotateCount;currentRotate++){
+    domRotateRef thisRotate = thisArray[currentRotate];
+    if ( thisRotate->getSid() ) continue;
+    fprintf(fp, "%s(send %s :rotate %f (float-vector %f %f %f))\n",
+            indent, name,
+            (thisRotate->getValue()[3])*M_PI/180.0,
+            thisRotate->getValue()[0],
+            thisRotate->getValue()[1],
+            thisRotate->getValue()[2]);
+  }
+}
+
+void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
+  int nodeArrayCount = thisNodeArray.getCount();
+  for(int currentNodeArray=0;currentNodeArray<nodeArrayCount;currentNodeArray++) {
+    domNode *thisNode = thisNodeArray[currentNodeArray];
+    writeNodes(fp, thisNode->getNode_array());
+
+    if ( strcmp(thisNode->getName(),"visual") == 0 ) continue; //@@@ OK??
+    // link
+    fprintf(stderr, "link sid:%s name:%s node_array:%d\n",
+            thisNode->getSid(), thisNode->getName(),thisNode->getNode_array().getCount() );
+
+    // geometry we assume Node_array()[0] contatins geometry
+    if ( thisNode->getNode_array().getCount() > 0 &&
+         thisNode->getNode_array()[0]->getInstance_geometry_array().getCount() > 0 ) {
+      domNode *thisNode2 = thisNode->getNode_array()[0];
+      int geometryCount = thisNode2->getInstance_geometry_array().getCount();
+      domInstance_geometry *thisGeometry = thisNode2->getInstance_geometry_array()[0];
+      const char * geometryName = (string("b_")+thisGeometry->getUrl().id()).c_str();
+      assert(geometryCount == 1);
+      fprintf(fp, "     ;; define bodyset-link for %s : %s\n", thisNode->getName(), thisNode->getId());
+      fprintf(fp, "     (let (%s)\n", geometryName);
+      fprintf(fp, "       (setq %s (instance %s :init))\n",  geometryName, thisGeometry->getUrl().id().c_str());
+      // translate
+      writeTranslate(fp, "       ", geometryName, thisNode2->getTranslate_array());
+      // rotate
+      writeRotate(fp, "       ", geometryName, thisNode2->getRotate_array());
+
+      // bodyset link
+      fprintf(fp, "       (setq %s\n", thisNode->getName());
+      fprintf(fp, "             (instance bodyset-link\n");
+      fprintf(fp, "                       :init (make-cascoords)\n");
+      fprintf(fp, "                       :bodies (list %s)\n", geometryName);
+      fprintf(fp, "                       :name :%s))\n", thisNode->getName());
+
+      // assoc
+      for(unsigned int currentNodeArray=0;currentNodeArray<thisNode->getNode_array().getCount();currentNodeArray++) {
+        if ( strcmp(thisNode->getNode_array()[currentNodeArray]->getName(),"visual") == 0 ) continue; //@@@ OK??
+        fprintf(fp, "       (send %s :assoc %s)\n",
+                thisNode->getName(),
+                thisNode->getNode_array()[currentNodeArray]->getName());
+      }
+      fprintf(fp, "       )\n");
+    } else {
+      fprintf(fp, "     ;; define cascaded-coords for %s\n", thisNode->getName());
+      fprintf(fp, "     (setq %s (make-cascoords :name :%s))\n", thisNode->getName(), thisNode->getName());
+
+      // assoc
+      for(unsigned int currentNodeArray=0;currentNodeArray<thisNode->getNode_array().getCount();currentNodeArray++) {
+        if ( strcmp(thisNode->getNode_array()[currentNodeArray]->getName(),"visual") == 0 ) continue; //@@@ OK??
+        fprintf(fp, "     (send %s :assoc %s)\n",
+                thisNode->getName(),
+                thisNode->getNode_array()[currentNodeArray]->getName());
+      }
+    }
+
+    // translate
+    writeTranslate(fp, "     ", thisNode->getName(), thisNode->getTranslate_array());
+    // rotate
+    writeRotate(fp, "     ", thisNode->getName(), thisNode->getRotate_array());
+
+    fprintf(fp, "\n");
+  }
 }
 
 int main(int argc, char* argv[]){
@@ -491,7 +578,6 @@ int main(int argc, char* argv[]){
         const YAML::Node& n = limb_doc[i];
         for(YAML::Iterator it=n.begin();it!=n.end();it++) {
           string key, value; it.first() >> key; it.second() >> value;
-          cerr << key << "/" << value << endl;
           joint_names.push_back(key);
           link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
           all_link_names.push_back(pair<string, string>(key, value));
@@ -502,13 +588,16 @@ int main(int argc, char* argv[]){
   }
 
   // get number of kinmatics
-  int kinematicsElementCount;
-  kinematicsElementCount = g_dae->getDatabase()->getElementCount(NULL, "kinematics_model", NULL);
-  fprintf(stderr, "Number of Kinmeatics %d\n", kinematicsElementCount); // this shoule be 1
-  domKinematics_model *thisKinematics;
-  g_dae->getDatabase()->getElement((daeElement**)&thisKinematics, 0, NULL, "kinematics_model");
+  int visualSceneCount;
+  visualSceneCount = g_dae->getDatabase()->getElementCount(NULL, "visual_scene", NULL);
+  fprintf(stderr, "Number of Visual Scene %d (= 1)\n", visualSceneCount); // this shoule be 1
+  domVisual_scene *thisVisualscene;
+  g_dae->getDatabase()->getElement((daeElement**)&thisVisualscene, 0, NULL, "visual_scene");
+  int nodeCount = thisVisualscene->getNode_array().getCount();
+  fprintf(stderr, "Number of Nodes %d (= 1)\n", nodeCount); // this shoule be 1
+  domNode* thisNode= thisVisualscene->getNode_array()[0];
 
-  fprintf(stderr, "Kinematics_model id:%s name:%s\n", thisKinematics->getId(), thisKinematics->getName());
+  fprintf(stderr, "Visual_scene %s\n", thisNode->getName());
 
   fprintf(output_fp, ";; DO NOT EDIT THIS FILE\n");
   fprintf(output_fp, ";;\n");
@@ -516,12 +605,10 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, ";; %s $ ", get_current_dir_name());for(int i=0;i<argc;i++) fprintf(output_fp, "%s ", argv[i]); fprintf(output_fp, "\n");
   fprintf(output_fp, ";;\n");
   fprintf(output_fp, "\n");
-  fprintf(output_fp, "\n");
-  fprintf(output_fp, "\n");
-  fprintf(output_fp, "(defclass %s-robot\n", thisKinematics->getName());
+  fprintf(output_fp, "(defclass %s-robot\n", thisNode->getName());
   fprintf(output_fp, "  :super robot-model\n");
   fprintf(output_fp, "  :slots ())\n");
-  fprintf(output_fp, "(defmethod %s-robot\n", thisKinematics->getName());
+  fprintf(output_fp, "(defmethod %s-robot\n", thisNode->getName());
   fprintf(output_fp, "  (:init\n");
   fprintf(output_fp, "   (&rest args)\n");
   fprintf(output_fp, "   (let (");
@@ -544,10 +631,15 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, "\n");
 
   // write kinemtaics
-  writeKinematics(output_fp, thisKinematics->getTechnique_common()->getLink_array()[0]);
+  writeNodes(output_fp, thisNode->getNode_array());
+  fprintf(output_fp, "     (send self :assoc %s)\n", thisNode->getNode_array()[0]->getName());
+
+  // write joint
+  domKinematics_model *thisKinematics;
+  g_dae->getDatabase()->getElement((daeElement**)&thisKinematics, 0, NULL, "kinematics_model");
+  writeKinematics(output_fp, thisKinematics->getTechnique_common()->getLink_array()[0]->getAttachment_full_array());
 
   // end-coords
-
   fprintf(output_fp, "     ;; end coords\n");
   BOOST_FOREACH(link_joint_pair& limb, limbs) {
     string limb_name = limb.first;
@@ -573,6 +665,7 @@ int main(int argc, char* argv[]){
         fprintf(output_fp, "))\n");
       } catch(YAML::RepresentationException& e) {
       }
+      fprintf(output_fp, "     (send %s :assoc %s-end-coords)\n", link_names.back().c_str(), limb_name.c_str());
     }
   }
   fprintf(output_fp, "\n");
@@ -603,35 +696,11 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, "     ;; joint-list\n");
   fprintf(output_fp, "     (setq joint-list (list");
   BOOST_FOREACH(link_joint_pair& limb, limbs) {
-    string limb_name = limb.first;
-    vector<string> joint_names = limb.second.first;
+    vector<string> joint_names = limb.second.second;
     for (unsigned int i=0;i<joint_names.size();i++) fprintf(output_fp, " %s", joint_names[i].c_str());
   }
   fprintf(output_fp, "))\n");
   fprintf(output_fp, "\n");
-
-#if 0
-  // all link name
-  fprintf(output_fp, "     ;; links\n");
-  fprintf(output_fp, "     (setq links (list ");
-  for(int currentLink=0;currentLink<(int)(g_dae->getDatabase()->getElementCount(NULL, "link", NULL));currentLink++) {
-    domJoint *thisLink;
-    g_dae->getDatabase()->getElement((daeElement**)&thisLink, currentLink, NULL, "link");
-    fprintf(output_fp, "%s ", thisLink->getName());
-  }
-  fprintf(output_fp, "))\n");
-  fprintf(output_fp, "\n");
-  // all joint-list name
-  fprintf(output_fp, "     ;; joint-list\n");
-  fprintf(output_fp, "     (setq joint-list (list ");
-  for(int currentLink=0;currentLink<(int)(g_dae->getDatabase()->getElementCount(NULL, "joint", NULL));currentLink++) {
-    domJoint *thisLink;
-    g_dae->getDatabase()->getElement((daeElement**)&thisLink, currentLink, NULL, "joint");
-    fprintf(output_fp, "%s ", thisLink->getName());
-  }
-  fprintf(output_fp, "))\n");
-  fprintf(output_fp, "\n");
-#endif
 
   // init ending
   fprintf(output_fp, "     ;; init-ending\n");
@@ -640,15 +709,33 @@ int main(int argc, char* argv[]){
 
   // bodies
   fprintf(output_fp, "     ;; overwrite bodies to return draw-things links not (send link :bodies)\n");
-  fprintf(output_fp, "     (setq bodies (list ");
+
+  fprintf(output_fp, "     (setq bodies (flatten (mapcar #'(lambda (b) (if (find-method b :bodies) (send b :bodies) (list b))) (list");
   for(int currentLink=0;currentLink<(int)(g_dae->getDatabase()->getElementCount(NULL, "link", NULL));currentLink++) {
     domJoint *thisLink;
     g_dae->getDatabase()->getElement((daeElement**)&thisLink, currentLink, NULL, "link");
-    fprintf(output_fp, "%s ", thisLink->getName());
+    fprintf(output_fp, " %s", thisLink->getName());
   }
-  fprintf(output_fp, "))\n");
-  fprintf(output_fp, "     self)) ;; :init\n");
-  //fprintf(output_fp, "  (:bodies () links)\n");
+  fprintf(output_fp, "))))\n\n");
+
+  fprintf(output_fp, "     self)) ;; :init\n\n");
+
+  try {
+    const YAML::Node& n = doc["angle-vector"];
+    if ( n.size() > 0 ) fprintf(output_fp, "    ;; pre-defined pose methods\n");
+    for(YAML::Iterator it=n.begin();it!=n.end();it++) {
+      string name; it.first() >> name;
+      fprintf(output_fp, "    (:%s () (send self :angle-vector (float-vector", name.c_str());
+      const YAML::Node& v = it.second();
+      for(unsigned int i=0;i<v.size();i++){
+        double d; v[i] >> d;
+        fprintf(output_fp, " %f", d);
+      }
+      fprintf(output_fp, ")))\n");
+    }
+  } catch(YAML::RepresentationException& e) {
+  }
+
   fprintf(output_fp, "  )\n\n");
 
   writeGeometry(output_fp, g_dae->getDatabase());
