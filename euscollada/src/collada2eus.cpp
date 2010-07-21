@@ -14,7 +14,7 @@ using namespace std;
 daeDocument *g_document;
 DAE* g_dae = NULL;
 
-vector<pair<string, string> > link_names;
+vector<pair<string, string> > all_link_names;
 
 // returns max offsset value
 unsigned int getMaxOffset( domInput_local_offset_Array &input_array )
@@ -300,7 +300,7 @@ domLink *findChildLinkFromJointName(const char *jointName) {
 }
 
 const char* findLinkName(const char *link_name) {
-  for(vector<pair<string, string> >::iterator it=link_names.begin();it!=link_names.end();it++){
+  for(vector<pair<string, string> >::iterator it=all_link_names.begin();it!=all_link_names.end();it++){
     if ( it->first.compare(link_name) == 0 ) {
       return it->second.c_str();
     }
@@ -458,10 +458,20 @@ int main(int argc, char* argv[]){
   }
   g_document = g_dae->getDoc(0);
 
+  // read yaml
   vector<string> larm_joint_names, rarm_joint_names, lleg_joint_names, rleg_joint_names, head_joint_names, torso_joint_names;
   vector<string> larm_link_names, rarm_link_names, lleg_link_names, rleg_link_names, head_link_names, torso_link_names;
 
-  // read yaml
+  typedef pair<vector<string> &, vector<string> & > link_joint;
+  typedef pair<string, link_joint > link_joint_pair;
+  link_joint_pair limbs[]
+    = {  link_joint_pair("larm", link_joint(larm_link_names, larm_joint_names)),
+         link_joint_pair("rarm", link_joint(rarm_link_names, rarm_joint_names)),
+         link_joint_pair("lleg", link_joint(lleg_link_names, lleg_joint_names)),
+         link_joint_pair("rleg", link_joint(rleg_link_names, rleg_joint_names)),
+         link_joint_pair("head", link_joint(head_link_names, head_joint_names)),
+         link_joint_pair("torso", link_joint(torso_link_names, torso_joint_names)) };
+
   ifstream fin(yaml_filename);
   if (fin.fail()) {
     fprintf(stderr, "Could not open %s.", yaml_filename);
@@ -471,88 +481,24 @@ int main(int argc, char* argv[]){
   YAML::Node doc;
   parser.GetNextDocument(doc);
 
-  try {
-    const YAML::Node& limb = doc["larm"];
-    for(unsigned int i = 0; i < limb.size(); i++) {
-      const YAML::Node& n = limb[i];
-      for(YAML::Iterator it=n.begin();it!=n.end();it++) {
-        string key, value; it.first() >> key; it.second() >> value;
-        larm_joint_names.push_back(key);
-        larm_link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
-        link_names.push_back(pair<string, string>(key, value));
+  BOOST_FOREACH(link_joint_pair& limb, limbs) {
+    string limb_name = limb.first;
+    vector<string>& link_names = limb.second.first;
+    vector<string>& joint_names = limb.second.second;
+    try {
+      const YAML::Node& limb_doc = doc[limb_name];
+      for(unsigned int i = 0; i < limb_doc.size(); i++) {
+        const YAML::Node& n = limb_doc[i];
+        for(YAML::Iterator it=n.begin();it!=n.end();it++) {
+          string key, value; it.first() >> key; it.second() >> value;
+          cerr << key << "/" << value << endl;
+          joint_names.push_back(key);
+          link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
+          all_link_names.push_back(pair<string, string>(key, value));
+        }
       }
+    } catch(YAML::RepresentationException& e) {
     }
-  } catch(YAML::RepresentationException& e) {
-  }
-
-  try {
-    const YAML::Node& limb = doc["rarm"];
-    for(unsigned int i = 0; i < limb.size(); i++) {
-      const YAML::Node& n = limb[i];
-      for(YAML::Iterator it=n.begin();it!=n.end();it++) {
-        string key, value; it.first() >> key; it.second() >> value;
-        rarm_joint_names.push_back(key);
-        rarm_link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
-        link_names.push_back(pair<string, string>(key, value));
-      }
-    }
-  } catch(YAML::RepresentationException& e) {
-  }
-
-  try {
-    const YAML::Node& limb = doc["lleg"];
-    for(unsigned int i = 0; i < limb.size(); i++) {
-      const YAML::Node& n = limb[i];
-      for(YAML::Iterator it=n.begin();it!=n.end();it++) {
-        string key, value; it.first() >> key; it.second() >> value;
-        lleg_joint_names.push_back(key);
-        lleg_link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
-        link_names.push_back(pair<string, string>(key, value));
-      }
-    }
-  } catch(YAML::RepresentationException& e) {
-  }
-
-  try {
-    const YAML::Node& limb = doc["rleg"];
-    for(unsigned int i = 0; i < limb.size(); i++) {
-      const YAML::Node& n = limb[i];
-      for(YAML::Iterator it=n.begin();it!=n.end();it++) {
-        string key, value; it.first() >> key; it.second() >> value;
-        rleg_joint_names.push_back(key);
-        rleg_link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
-        link_names.push_back(pair<string, string>(key, value));
-      }
-    }
-  } catch(YAML::RepresentationException& e) {
-  }
-
-  try {
-    const YAML::Node& limb = doc["head"];
-    for(unsigned int i = 0; i < limb.size(); i++) {
-      const YAML::Node& n = limb[i];
-      for(YAML::Iterator it=n.begin();it!=n.end();it++) {
-        string key, value; it.first() >> key; it.second() >> value;
-        head_joint_names.push_back(key);
-        head_link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
-        link_names.push_back(pair<string, string>(key, value));
-      }
-    }
-  } catch(YAML::RepresentationException& e) {
-  }
-
-  try {
-    const YAML::Node& limb = doc["torso"];
-    for(unsigned int i = 0; i < limb.size(); i++) {
-      const YAML::Node& n = limb[i];
-      for(YAML::Iterator it=n.begin();it!=n.end();it++) {
-        string key, value; it.first() >> key; it.second() >> value;
-        torso_joint_names.push_back(key);
-        torso_link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
-        link_names.push_back(pair<string, string>(key, value));
-      }
-    }
-  } catch(YAML::RepresentationException& e) {
   }
 
   // get number of joints
@@ -637,18 +583,11 @@ int main(int argc, char* argv[]){
   writeKinematics(output_fp, thisKinematics->getTechnique_common()->getLink_array()[0]);
 
   // end-coords
+
   fprintf(output_fp, "     ;; end coords\n");
-  typedef pair<string, vector<string> > name_link_pair;
-  name_link_pair limbs[]
-    = {  name_link_pair("larm", larm_link_names),
-         name_link_pair("rarm", rarm_link_names),
-         name_link_pair("lleg", lleg_link_names),
-         name_link_pair("rleg", rleg_link_names),
-         name_link_pair("head", head_link_names),
-         name_link_pair("torso", torso_link_names) };
-  BOOST_FOREACH(name_link_pair& it, limbs) {
-    string limb_name = it.first;
-    vector<string> link_names = it.second;
+  BOOST_FOREACH(link_joint_pair& limb, limbs) {
+    string limb_name = limb.first;
+    vector<string> link_names = limb.second.first;
 
     if (link_names.size()>0) {
       fprintf(output_fp, "     (setq %s-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", limb_name.c_str(), link_names.back().c_str());
@@ -676,9 +615,9 @@ int main(int argc, char* argv[]){
 
   // limb name
   fprintf(output_fp, "     ;; limbs\n");
-  BOOST_FOREACH(name_link_pair& it, limbs) {
-    string limb_name = it.first;
-    vector<string> link_names = it.second;
+  BOOST_FOREACH(link_joint_pair& limb, limbs) {
+    string limb_name = limb.first;
+    vector<string> link_names = limb.second.first;
     if (link_names.size()>0) fprintf(output_fp, "     (setq %s-root-link %s)\n", limb_name.c_str(), link_names[0].c_str());
     if ( link_names.size() > 0 ) {
       fprintf(output_fp, "     (setq %s (list", limb_name.c_str());
@@ -690,19 +629,18 @@ int main(int argc, char* argv[]){
 
   fprintf(output_fp, "     ;; links\n");
   fprintf(output_fp, "     (setq links (list");
-  BOOST_FOREACH(name_link_pair& it, limbs) {
-    vector<string> link_names = it.second;
+  BOOST_FOREACH(link_joint_pair& limb, limbs) {
+    string limb_name = limb.first;
+    vector<string> link_names = limb.second.first;
     for (unsigned int i=0;i<link_names.size();i++) fprintf(output_fp, " %s", link_names[i].c_str());
   }
   fprintf(output_fp, "))\n");
 
-  vector<string> joints[]
-    = { larm_joint_names, rarm_joint_names,
-        lleg_joint_names, rleg_joint_names,
-        head_joint_names, torso_joint_names };
-  fprintf(output_fp, ";; joint-list\n");
+  fprintf(output_fp, "     ;; joint-list\n");
   fprintf(output_fp, "     (setq joint-list (list");
-  BOOST_FOREACH(vector<string>& joint_names, joints) {
+  BOOST_FOREACH(link_joint_pair& limb, limbs) {
+    string limb_name = limb.first;
+    vector<string> joint_names = limb.second.first;
     for (unsigned int i=0;i<joint_names.size();i++) fprintf(output_fp, " %s", joint_names[i].c_str());
   }
   fprintf(output_fp, "))\n");
