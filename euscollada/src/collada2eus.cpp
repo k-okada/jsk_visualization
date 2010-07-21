@@ -217,27 +217,6 @@ void writeGeometry(FILE *fp, daeDatabase *thisDatabase) {
 }
 
 //
-const char *findGeometryFromLinkName(const char *linkName) {
-  int nodeElementCount;
-  nodeElementCount = g_dae->getDatabase()->getElementCount(NULL, "node", NULL);
-  for(int currentNode=0;currentNode<nodeElementCount;currentNode++) {
-    domNode *thisNode;
-    g_dae->getDatabase()->getElement((daeElement**)&thisNode, currentNode, NULL, "node");
-    if (strcmp(linkName, thisNode->getName())==0) {
-      while ( thisNode->getInstance_geometry_array().getCount()==0 &&
-              thisNode->getNode_array().getCount() != 0 ) {
-        thisNode = thisNode->getNode_array()[0];
-      }
-      int geometryElementCount = thisNode->getInstance_geometry_array().getCount();
-      for(int currentGeometry=0;currentGeometry<geometryElementCount;currentGeometry++) {
-        domInstance_geometry *thisGeometry = thisNode->getInstance_geometry_array()[currentGeometry];
-        return thisGeometry->getUrl().id().c_str();
-      }
-    }
-  }
-  return NULL;
-}
-
 domJoint *findJointFromName(const char *jointName) {
   int jointElementCount;
   jointElementCount = g_dae->getDatabase()->getElementCount(NULL, "joint", NULL);
@@ -348,66 +327,6 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   fprintf(fp, "                     :axis (float-vector %f %f %f)\n", axis[0], axis[1], axis[2]);
   fprintf(fp, "                     :min %f :max %f\n", min, max);
   fprintf(fp, "                     ))\n");
-}
-
-void writeLink(FILE *fp, domLink::domAttachment_full_Array thisAttachmentArray) {
-
-  int attachmentArrayCount = thisAttachmentArray.getCount();
-  for(int currentAttachment=0;currentAttachment<attachmentArrayCount;currentAttachment++){
-    domLinkRef thisLink = thisAttachmentArray[currentAttachment]->getLink();
-    // link
-
-    writeLink(fp, thisLink->getAttachment_full_array());
-
-    // link
-    fprintf(stderr, "link id:%s name:%s attachment:%d\n",
-            thisLink->getSid(), thisLink->getName(), attachmentArrayCount);
-
-    fprintf(fp, "\n");
-    fprintf(fp, "     ;; define bodyset-link for %s\n", thisLink->getName());
-
-    // geometry
-    const char *geometry_name;
-    if ( (geometry_name = findGeometryFromLinkName(thisLink->getName())) != NULL ) {
-      fprintf(fp, "     (setq %s (instance %s :init :name \"%s\"))\n", thisLink->getName(), geometry_name, thisLink->getName());
-    } else {
-      fprintf(fp, "     (setq %s (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 1 1 1)) :name \"%s\"))\n",
-              thisLink->getName(), thisLink->getName());
-    }
-
-    // assoc
-    for(int currentAttachment2=0;currentAttachment2<(int)(thisLink->getAttachment_full_array().getCount());currentAttachment2++){
-      fprintf(fp, "     (send %s :assoc %s)\n",
-              thisLink->getName(),
-              thisLink->getAttachment_full_array()[currentAttachment2]->getLink()->getName());
-      writeJoint(fp, thisLink->getAttachment_full_array()[currentAttachment2]->getJoint(),
-                 thisLink,
-                 thisLink->getAttachment_full_array()[currentAttachment2]->getLink()
-                 );
-    }
-
-    // translate
-    int translateCount = thisAttachmentArray[currentAttachment]->getTranslate_array().getCount();
-    for(int currentTranslate=0;currentTranslate<translateCount;currentTranslate++){
-      domTranslateRef thisTranslate = thisAttachmentArray[currentAttachment]->getTranslate_array()[currentTranslate];
-      fprintf(fp, "     (send %s :translate (float-vector %f %f %f))\n",
-              thisLink->getName(),
-              1000*thisTranslate->getValue()[0],
-              1000*thisTranslate->getValue()[1],
-              1000*thisTranslate->getValue()[2]);
-    }
-    // rotate
-    int rotateCount = thisAttachmentArray[currentAttachment]->getRotate_array().getCount();
-    for(int currentRotate=0;currentRotate<rotateCount;currentRotate++){
-      domRotateRef thisRotate = thisAttachmentArray[currentAttachment]->getRotate_array()[currentRotate];
-      fprintf(fp, "     (send %s :rotate %f (float-vector %f %f %f))\n",
-              thisLink->getName(),
-              (thisRotate->getValue()[3])*M_PI/180.0,
-              thisRotate->getValue()[0],
-              thisRotate->getValue()[1],
-              thisRotate->getValue()[2]);
-    }
-  }
 }
 
 void writeKinematics(FILE *fp, domLink::domAttachment_full_Array thisAttachmentArray) {
@@ -741,65 +660,5 @@ int main(int argc, char* argv[]){
   writeGeometry(output_fp, g_dae->getDatabase());
 
   return 0;
-#if 0
-  // node
-  int nodeElementCount;
-  nodeElementCount = g_dae->getDatabase()->getElementCount(NULL, "node", NULL);
-  fprintf(stderr, "Number of Nodes %d\n", nodeElementCount);
-  for(int currentNode=0;currentNode<nodeElementCount;currentNode++) {
-    domNode *thisNode;
-    g_dae->getDatabase()->getElement((daeElement**)&thisNode, currentNode, NULL, "node");
-    fprintf(stderr, "%d id:%s, name:%s, sid:%s\n", currentNode, thisNode->getId(), thisNode->getName(), thisNode->getSid());
-    int geometryElementCount = thisNode->getInstance_geometry_array().getCount();
-    for(int currentGeometry=0;currentGeometry<geometryElementCount;currentGeometry++) {
-      domInstance_geometry *thisGeometry = thisNode->getInstance_geometry_array()[currentGeometry];
-      fprintf(stderr, " %s\n", thisGeometry->getUrl().id().c_str());
-    }
-  }
-
-  // get number of links
-  int linkElementCount;
-  linkElementCount = g_dae->getDatabase()->getElementCount(NULL, "link", NULL);
-  fprintf(stderr, "Number of Links %d\n", linkElementCount);
-
-  for(int currentLink=0;currentLink<linkElementCount;currentLink++) {
-    // get current link
-    domLink *thisLink;
-    g_dae->getDatabase()->getElement((daeElement**)&thisLink, currentLink, NULL, "link");
-
-    fprintf(stderr, "link[%2d] %-32s, ", currentLink, thisLink->getName());
-    fprintf(stderr, "rotate %d, translate %d, contents %d, full %d\n", 
-            thisLink->getRotate_array().getCount(),
-            thisLink->getTranslate_array().getCount(),
-            thisLink->getContents().getCount(),
-            thisLink->getAttachment_full_array().getCount()
-            );
-
-    domAxis_constraint_Array jointAxis_array;
-    int jointCount;
-    if ( thisJoint->getPrismatic_array().getCount() > 0 ) {
-      jointAxis_array = thisJoint->getPrismatic_array();
-      jointCount = thisJoint->getPrismatic_array().getCount();
-    } else if ( thisJoint->getRevolute_array().getCount() > 0 ) {
-      jointAxis_array = thisJoint->getRevolute_array();
-      jointCount = thisJoint->getRevolute_array().getCount();
-    }
-    for (int currentJoint=0;currentJoint<jointCount;currentJoint++){
-      fprintf(stderr, "axis : %2.0f %2.0f %2.0f, ",
-              jointAxis_array[currentJoint]->getAxis()->getValue()[0],
-              jointAxis_array[currentJoint]->getAxis()->getValue()[1],
-              jointAxis_array[currentJoint]->getAxis()->getValue()[2]);
-      fprintf(stderr, "limits :");
-      if (jointAxis_array[currentJoint]->getLimits()) {
-        fprintf(stderr, " %f %f",
-                jointAxis_array[currentJoint]->getLimits()->getMin()->getValue(),
-                jointAxis_array[currentJoint]->getLimits()->getMax()->getValue());
-      }
-    }
-    fprintf(stderr, "\n");
-  }
-
-  exit(0);
-#endif
 }
 
