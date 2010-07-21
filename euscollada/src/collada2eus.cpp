@@ -14,7 +14,7 @@ using namespace std;
 daeDocument *g_document;
 DAE* g_dae = NULL;
 
-vector<pair<string, string> > all_link_names;
+vector<pair<string, string> > g_all_link_names;
 
 // returns max offsset value
 unsigned int getMaxOffset( domInput_local_offset_Array &input_array )
@@ -281,7 +281,7 @@ domLink *findChildLinkFromJointName(const char *jointName) {
 }
 
 const char* findLinkName(const char *link_name) {
-  for(vector<pair<string, string> >::iterator it=all_link_names.begin();it!=all_link_names.end();it++){
+  for(vector<pair<string, string> >::iterator it=g_all_link_names.begin();it!=g_all_link_names.end();it++){
     if ( it->first.compare(link_name) == 0 ) {
       return it->second.c_str();
     }
@@ -499,7 +499,7 @@ int main(int argc, char* argv[]){
           string key, value; it.first() >> key; it.second() >> value;
           joint_names.push_back(key);
           link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
-          all_link_names.push_back(pair<string, string>(key, value));
+          g_all_link_names.push_back(pair<string, string>(key, value));
         }
       }
     } catch(YAML::RepresentationException& e) {
