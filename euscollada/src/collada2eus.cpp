@@ -321,27 +321,27 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   fprintf(fp, "                     :name %s\n", findLinkName(thisJoint->getName()));
   fprintf(fp, "                     :parent-link %s :child-link %s\n", parentLink->getName(), childLink->getName());
   domAxis_constraint_Array jointAxis_array;
-  int jointCount = 0;
+  int jointCount;
+  float axis[3], min = -360, max = 360;
   if ( thisJoint->getPrismatic_array().getCount() > 0 ) {
     jointAxis_array = thisJoint->getPrismatic_array();
-    jointCount = thisJoint->getPrismatic_array().getCount();
+    if ( jointAxis_array[0]->getLimits() ) {
+      min = 1000*jointAxis_array[0]->getLimits()->getMin()->getValue();
+      max = 1000*jointAxis_array[0]->getLimits()->getMax()->getValue();
+    }
   } else if ( thisJoint->getRevolute_array().getCount() > 0 ) {
     jointAxis_array = thisJoint->getRevolute_array();
     jointCount = thisJoint->getRevolute_array().getCount();
-  }
-  for (int currentJoint=0;currentJoint<jointCount;currentJoint++){
-    fprintf(fp, "                     :axis (float-vector %f %f %f)\n",
-            jointAxis_array[currentJoint]->getAxis()->getValue()[0],
-            jointAxis_array[currentJoint]->getAxis()->getValue()[1],
-            jointAxis_array[currentJoint]->getAxis()->getValue()[2]);
-    if (jointAxis_array[currentJoint]->getLimits()) {
-      fprintf(fp, "                     :min %f :max %f\n",
-              jointAxis_array[currentJoint]->getLimits()->getMin()->getValue(),
-              jointAxis_array[currentJoint]->getLimits()->getMax()->getValue());
-    }else{
-      fprintf(fp, "                     :min -360 :max 360\n");
+    if ( jointAxis_array[0]->getLimits() ) {
+      min = jointAxis_array[0]->getLimits()->getMin()->getValue();
+      max = jointAxis_array[0]->getLimits()->getMax()->getValue();
     }
   }
+  axis[0] = jointAxis_array[0]->getAxis()->getValue()[0];
+  axis[1] = jointAxis_array[0]->getAxis()->getValue()[1];
+  axis[2] = jointAxis_array[0]->getAxis()->getValue()[2];
+  fprintf(fp, "                     :axis (float-vector %f %f %f)\n", axis[0], axis[1], axis[2]);
+  fprintf(fp, "                     :min %f :max %f\n", min, max);
   fprintf(fp, "                     ))\n");
 }
 
