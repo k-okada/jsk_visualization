@@ -11,6 +11,7 @@
 
   <depend package="colladadom"/>
   <depend package="yaml_cpp"/>
+  <depend package="collada_urdf"/>
 
 </package>
 
