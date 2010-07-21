@@ -629,7 +629,7 @@ int main(int argc, char* argv[]){
   // bodies
   fprintf(output_fp, "     ;; overwrite bodies to return draw-things links not (send link :bodies)\n");
 
-  fprintf(output_fp, "     (setq bodies (flatten (mapcar #'(lambda (b) (if (find-method b :bodies) (send b :bodies) (list b))) (list");
+  fprintf(output_fp, "     (setq bodies (flatten (mapcar #'(lambda (b) (if (find-method b :bodies) (send b :bodies))) (list");
   for(int currentLink=0;currentLink<(int)(g_dae->getDatabase()->getElementCount(NULL, "link", NULL));currentLink++) {
     domJoint *thisLink;
     g_dae->getDatabase()->getElement((daeElement**)&thisLink, currentLink, NULL, "link");
