@@ -9,6 +9,8 @@ using namespace std;
 #include <fstream>
 #include "yaml-cpp/yaml.h"
 
+#include <boost/foreach.hpp>
+
 daeDocument *g_document;
 DAE* g_dae = NULL;
 
@@ -306,6 +308,7 @@ const char* findLinkName(const char *link_name) {
   return link_name;
 }
 
+// write euslisp joint instance from jointSid, parentLink, childLink
 void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *childLink) {
   //
   domLink *tmp_childLink = findNonFixChildLink(childLink);
@@ -634,192 +637,77 @@ int main(int argc, char* argv[]){
   writeKinematics(output_fp, thisKinematics->getTechnique_common()->getLink_array()[0]);
 
   // end-coords
-  fprintf(output_fp, ";; end coords\n");
-  if (larm_link_names.size()>0) {
-    fprintf(output_fp, "     (setq larm-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", larm_link_names.back().c_str());
-    try {
-      const YAML::Node& n = doc["larm-end-coords"]["translate"];
-      double value;
-      fprintf(output_fp, "     (send larm-end-coords :translate (float-vector");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", 1000*value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-    try {
-      const YAML::Node& n = doc["rarm-end-coords"]["rotate"];
-      double value;
-      fprintf(output_fp, "     (send larm-end-coords :rotate");
-      for(unsigned int i=3;i<4;i++) { n[i]>>value; fprintf(output_fp, " %f", M_PI/180*value);}
-      fprintf(output_fp, " (float-vector\n");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-    fprintf(output_fp, "     (send %s :assoc larm-end-coords)\n", larm_link_names.back().c_str());
-  }
-  if (rarm_link_names.size()>0) {
-    fprintf(output_fp, "     (setq rarm-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", rarm_link_names.back().c_str());
-    fprintf(output_fp, "     (send %s :assoc rarm-end-coords)\n", rarm_link_names.back().c_str());
-    try {
-      const YAML::Node& n = doc["rarm-end-coords"]["translate"];
-      double value;
-      fprintf(output_fp, "     (send rarm-end-coords :translate (float-vector");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", 1000*value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-    try {
-      const YAML::Node& n = doc["rarm-end-coords"]["rotate"];
-      double value;
-      fprintf(output_fp, "     (send rarm-end-coords :rotate");
-      for(unsigned int i=3;i<4;i++) { n[i]>>value; fprintf(output_fp, " %f", M_PI/180*value);}
-      fprintf(output_fp, " (float-vector\n");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
+  fprintf(output_fp, "     ;; end coords\n");
+  typedef pair<string, vector<string> > name_link_pair;
+  name_link_pair limbs[]
+    = {  name_link_pair("larm", larm_link_names),
+         name_link_pair("rarm", rarm_link_names),
+         name_link_pair("lleg", lleg_link_names),
+         name_link_pair("rleg", rleg_link_names),
+         name_link_pair("head", head_link_names),
+         name_link_pair("torso", torso_link_names) };
+  BOOST_FOREACH(name_link_pair& it, limbs) {
+    string limb_name = it.first;
+    vector<string> link_names = it.second;
+
+    if (link_names.size()>0) {
+      fprintf(output_fp, "     (setq %s-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", limb_name.c_str(), link_names.back().c_str());
+      try {
+        const YAML::Node& n = doc[limb_name+"-end-coords"]["translate"];
+        double value;
+        fprintf(output_fp, "     (send %s-end-coords :translate (float-vector", limb_name.c_str());
+        for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", 1000*value);}
+        fprintf(output_fp, "))\n");
+      } catch(YAML::RepresentationException& e) {
+      }
+      try {
+        const YAML::Node& n = doc[limb_name+"-end-coords"]["rotate"];
+        double value;
+        fprintf(output_fp, "     (send %s-end-coords :rotate", limb_name.c_str());
+        for(unsigned int i=3;i<4;i++) { n[i]>>value; fprintf(output_fp, " %f", M_PI/180*value);}
+        fprintf(output_fp, " (float-vector");
+        for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", value);}
+        fprintf(output_fp, "))\n");
+      } catch(YAML::RepresentationException& e) {
+      }
     }
   }
-  if (lleg_link_names.size()>0) {
-    fprintf(output_fp, "     (setq lleg-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", lleg_link_names.back().c_str());
-    fprintf(output_fp, "     (send %s :assoc lleg-end-coords)\n", lleg_link_names.back().c_str());
-    try {
-      const YAML::Node& n = doc["lleg-end-coords"]["translate"];
-      double value;
-      fprintf(output_fp, "     (send lleg-end-coords :translate (float-vector");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", 1000*value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-    try {
-      const YAML::Node& n = doc["lleg-end-coords"]["rotate"];
-      double value;
-      fprintf(output_fp, "     (send lleg-end-coords :rotate");
-      for(unsigned int i=3;i<4;i++) { n[i]>>value; fprintf(output_fp, " %f", M_PI/180*value);}
-      fprintf(output_fp, " (float-vector\n");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-  }
-  if (rleg_link_names.size()>0) {
-    fprintf(output_fp, "     (setq rleg-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", rleg_link_names.back().c_str());
-    fprintf(output_fp, "     (send %s :assoc rleg-end-coords)\n", rleg_link_names.back().c_str());
-    try {
-      const YAML::Node& n = doc["rleg-end-coords"]["translate"];
-      double value;
-      fprintf(output_fp, "     (send rleg-end-coords :translate (float-vector");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", 1000*value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-    try {
-      const YAML::Node& n = doc["rleg-end-coords"]["rotate"];
-      double value;
-      fprintf(output_fp, "     (send rleg-end-coords :rotate");
-      for(unsigned int i=3;i<4;i++) { n[i]>>value; fprintf(output_fp, " %f", M_PI/180*value);}
-      fprintf(output_fp, " (float-vector\n");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-  }
-  if (head_link_names.size()>0) {
-    fprintf(output_fp, "     (setq head-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", head_link_names.back().c_str());
-    fprintf(output_fp, "     (send %s :assoc head-end-coords)\n", head_link_names.back().c_str());
-    try {
-      const YAML::Node& n = doc["head-end-coords"]["translate"];
-      double value;
-      fprintf(output_fp, "     (send head-end-coords :translate (float-vector");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", 1000*value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-    try {
-      const YAML::Node& n = doc["head-end-coords"]["rotate"];
-      double value;
-      fprintf(output_fp, "     (send head-end-coords :rotate");
-      for(unsigned int i=3;i<4;i++) { n[i]>>value; fprintf(output_fp, " %f", M_PI/180*value);}
-      fprintf(output_fp, " (float-vector\n");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-  }
-  if (torso_link_names.size()>0) {
-    fprintf(output_fp, "     (setq torso-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", torso_link_names.back().c_str());
-    fprintf(output_fp, "     (send %s :assoc torso-end-coords)\n", torso_link_names.back().c_str());
-    try {
-      const YAML::Node& n = doc["torso-end-coords"]["translate"];
-      double value;
-      fprintf(output_fp, "     (send torso-end-coords :translate (float-vector");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", 1000*value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-    try {
-      const YAML::Node& n = doc["torso-end-coords"]["rotate"];
-      double value;
-      fprintf(output_fp, "     (send torso-end-coords :rotate");
-      for(unsigned int i=3;i<4;i++) { n[i]>>value; fprintf(output_fp, " %f", M_PI/180*value);}
-      fprintf(output_fp, " (float-vector\n");
-      for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", value);}
-      fprintf(output_fp, "))\n");
-    } catch(YAML::RepresentationException& e) {
-    }
-  }
+  fprintf(output_fp, "\n");
 
   // limb name
   fprintf(output_fp, "     ;; limbs\n");
-  if (larm_link_names.size()>0) fprintf(output_fp, "     (setq larm-root-link %s)\n", larm_link_names[0].c_str());
-  if (rarm_link_names.size()>0) fprintf(output_fp, "     (setq rarm-root-link %s)\n", rarm_link_names[0].c_str());
-  if (lleg_link_names.size()>0) fprintf(output_fp, "     (setq lleg-root-link %s)\n", lleg_link_names[0].c_str());
-  if (rleg_link_names.size()>0) fprintf(output_fp, "     (setq rleg-root-link %s)\n", rleg_link_names[0].c_str());
-  if (head_link_names.size()>0) fprintf(output_fp, "     (setq head-root-link %s)\n", head_link_names[0].c_str());
-  if (torso_link_names.size()>0) fprintf(output_fp, "     (setq torso-root-link %s)\n", torso_link_names[0].c_str());
-  fprintf(output_fp, "\n");
-  if ( larm_link_names.size() > 0 ) {
-    fprintf(output_fp, "     (setq larm (list");
-    for (unsigned int i=0;i<larm_link_names.size();i++) fprintf(output_fp, " %s", larm_link_names[i].c_str()); fprintf(output_fp, "))\n");
-  }
-  if ( rarm_link_names.size() > 0 ) {
-    fprintf(output_fp, "     (setq rarm (list");
-    for (unsigned int i=0;i<rarm_link_names.size();i++) fprintf(output_fp, " %s", rarm_link_names[i].c_str()); fprintf(output_fp, "))\n");
-  }
-  if ( lleg_link_names.size() > 0 ) {
-    fprintf(output_fp, "     (setq lleg (list");
-    for (unsigned int i=0;i<lleg_link_names.size();i++) fprintf(output_fp, " %s", lleg_link_names[i].c_str()); fprintf(output_fp, "))\n");
-  }
-  if ( rleg_link_names.size() > 0 ) {
-    fprintf(output_fp, "     (setq rleg (list");
-    for (unsigned int i=0;i<rleg_link_names.size();i++) fprintf(output_fp, " %s", rleg_link_names[i].c_str()); fprintf(output_fp, "))\n");
-  }
-  if ( head_link_names.size() > 0 ) {
-    fprintf(output_fp, "     (setq head (list");
-    for (unsigned int i=0;i<head_link_names.size();i++) fprintf(output_fp, " %s", head_link_names[i].c_str()); fprintf(output_fp, "))\n");
-  }
-  if ( torso_link_names.size() > 0 ) {
-    fprintf(output_fp, "     (setq torso (list");
-    for (unsigned int i=0;i<torso_link_names.size();i++) fprintf(output_fp, " %s", torso_link_names[i].c_str()); fprintf(output_fp, "))\n");
+  BOOST_FOREACH(name_link_pair& it, limbs) {
+    string limb_name = it.first;
+    vector<string> link_names = it.second;
+    if (link_names.size()>0) fprintf(output_fp, "     (setq %s-root-link %s)\n", limb_name.c_str(), link_names[0].c_str());
+    if ( link_names.size() > 0 ) {
+      fprintf(output_fp, "     (setq %s (list", limb_name.c_str());
+      for (unsigned int i=0;i<link_names.size();i++) fprintf(output_fp, " %s", link_names[i].c_str()); fprintf(output_fp, "))\n");
+      fprintf(output_fp, "\n");
+    }
   }
   fprintf(output_fp, "\n");
-  fprintf(output_fp, "     (setq links (list");
-  for (unsigned int i=0;i<larm_link_names.size();i++) fprintf(output_fp, " %s", larm_link_names[i].c_str());
-  for (unsigned int i=0;i<rarm_link_names.size();i++) fprintf(output_fp, " %s", rarm_link_names[i].c_str());
-  for (unsigned int i=0;i<lleg_link_names.size();i++) fprintf(output_fp, " %s", lleg_link_names[i].c_str());
-  for (unsigned int i=0;i<rleg_link_names.size();i++) fprintf(output_fp, " %s", rleg_link_names[i].c_str());
-  for (unsigned int i=0;i<head_link_names.size();i++) fprintf(output_fp, " %s", head_link_names[i].c_str());
-  for (unsigned int i=0;i<torso_link_names.size();i++) fprintf(output_fp, " %s", torso_link_names[i].c_str());
-  fprintf(output_fp, "))\n");
-  fprintf(output_fp, "     (setq joint-list (list");
-  for (unsigned int i=0;i<larm_joint_names.size();i++) fprintf(output_fp, " %s", larm_joint_names[i].c_str());
-  for (unsigned int i=0;i<rarm_joint_names.size();i++) fprintf(output_fp, " %s", rarm_joint_names[i].c_str());
-  for (unsigned int i=0;i<lleg_joint_names.size();i++) fprintf(output_fp, " %s", lleg_joint_names[i].c_str());
-  for (unsigned int i=0;i<rleg_joint_names.size();i++) fprintf(output_fp, " %s", rleg_joint_names[i].c_str());
-  for (unsigned int i=0;i<head_joint_names.size();i++) fprintf(output_fp, " %s", head_joint_names[i].c_str());
-  for (unsigned int i=0;i<torso_joint_names.size();i++) fprintf(output_fp, " %s", torso_joint_names[i].c_str());
 
+  fprintf(output_fp, "     ;; links\n");
+  fprintf(output_fp, "     (setq links (list");
+  BOOST_FOREACH(name_link_pair& it, limbs) {
+    vector<string> link_names = it.second;
+    for (unsigned int i=0;i<link_names.size();i++) fprintf(output_fp, " %s", link_names[i].c_str());
+  }
+  fprintf(output_fp, "))\n");
+
+  vector<string> joints[]
+    = { larm_joint_names, rarm_joint_names,
+        lleg_joint_names, rleg_joint_names,
+        head_joint_names, torso_joint_names };
+  fprintf(output_fp, ";; joint-list\n");
+  fprintf(output_fp, "     (setq joint-list (list");
+  BOOST_FOREACH(vector<string>& joint_names, joints) {
+    for (unsigned int i=0;i<joint_names.size();i++) fprintf(output_fp, " %s", joint_names[i].c_str());
+  }
   fprintf(output_fp, "))\n");
   fprintf(output_fp, "\n");
+
 #if 0
   // all link name
   fprintf(output_fp, "     ;; links\n");
