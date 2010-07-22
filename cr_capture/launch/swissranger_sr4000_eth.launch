@@ -7,8 +7,9 @@
     <param name="frame_id" type="string" value="/sr4000_room_cam"/>
     <!-- 15.5MHz / mudulation_freq = 11 -->
     <param name="modulation_freq" value="11"/>
+    <!-- -1:no change, 0: manual, 1:auto -->
     <param name="auto_exposure" value="0"/>
-    <param name="integration_time" value="255"/>
+    <param name="integration_time" value="200"/>
     <!--
     <param name="camera_info_url"
 	   value="file:///$(find cr_capture)/launch/2010-04-20-19-14-52-sr4000.yaml"/>

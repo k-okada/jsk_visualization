@@ -8,19 +8,19 @@
   <node name="snapshotter" pkg="jskpointcloud"
         type="cloud_snapshotter" output="screen"
         clear_params="true" ns="snapshot"
-	machine="localhost"
+	machine="kombu"
 	>
     <param name="append_size" value="11"/>
     <param name="filter_outlier" value="true"/>
-    <param name="mean_k" value="60"/>
-    <param name="mul_thresh" value="2.0"/>
+    <param name="mean_k" value="50"/>
+    <param name="mul_thresh" value="0.8"/>
     <remap from="points_old_in" to="/cr_capture_room/color_pcloud"/>
   </node>
 
   <node name="downsampler" pkg="jskpointcloud"
 	type="downsample_cloud2" output="screen"
 	clear_params="true" ns="downsample"
-	machine="localhost"
+	machine="kombu"
 	>
     <remap from="points_in" to="/snapshot/appended_points"/>
 

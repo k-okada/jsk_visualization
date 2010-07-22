@@ -18,11 +18,11 @@
     <!-- <param name="max_range" value="5.0"/> -->
     <param name="max_range" value="9.68"/>
     <param name="calculation_pixel" value="false"/>
-    <param name="use_filter" value="true"/>
+    <param name="use_filter" value="false"/>
 
     <!-- -->
     <param name="use_images" value="true"/>
-    <!-- <param name="intensity_threshold" value="0"/> -->
-    <!-- <param name="confidence_threshold" value="100"/> -->
+    <param name="intensity_threshold" value="2"/> 
+    <param name="confidence_threshold" value="200"/>
   </node>
 </launch>
