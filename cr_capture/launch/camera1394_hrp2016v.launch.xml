@@ -11,6 +11,15 @@
 	<param name="frame_id" type="string" value="/HRP2JSKNT/FLEA-LEFT_CAMERA"/>
 	<param name="camera_info_url"
 	       value="file:///$(find cr_capture)/launch/2010-02-16-15-14-42-stereo-left.yaml"/>
+	<param name="auto_white_balance" value="3"/> <!-- Manual(3) -->
+        <param name="white_balance_BU" value="670"/>
+        <param name="white_balance_RV" value="550"/>
+        <param name="auto_exposure" value="3"/>
+        <param name="exposure" value="450"/>
+        <param name="auto_gain" value="3"/>
+        <param name="gain" value="125"/>
+        <param name="auto_shutter" value="3"/>
+        <param name="shutter" value="550"/>
       </node>
       <node name="image_proc" pkg="image_proc" type="image_proc"
 	    ns="camera" machine="vision"/>
@@ -25,6 +34,15 @@
 	<param name="frame_id" type="string" value="/HRP2JSKNT/FLEA-RIGHT_CAMERA"/>
 	<param name="camera_info_url"
 	       value="file:///$(find cr_capture)/launch/2010-02-16-15-14-42-stereo-right.yaml"/>
+		<param name="auto_white_balance" value="3"/> <!-- Manual(3) -->
+        <param name="white_balance_BU" value="670"/>
+        <param name="white_balance_RV" value="550"/>
+        <param name="auto_exposure" value="3"/>
+        <param name="exposure" value="450"/>
+        <param name="auto_gain" value="3"/>
+        <param name="gain" value="125"/>
+        <param name="auto_shutter" value="3"/>
+        <param name="shutter" value="550"/>
       </node>
       <node name="image_proc" pkg="image_proc" type="image_proc"
 	    ns="camera" machine="vision"/>
