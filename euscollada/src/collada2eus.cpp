@@ -543,12 +543,7 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, "\n");
   fprintf(output_fp, "(defclass %s-robot\n", thisNode->getName());
   fprintf(output_fp, "  :super robot-model\n");
-  fprintf(output_fp, "  :slots ())\n");
-  fprintf(output_fp, "(defmethod %s-robot\n", thisNode->getName());
-  fprintf(output_fp, "  (:init\n");
-  fprintf(output_fp, "   (&rest args)\n");
-  fprintf(output_fp, "   (let (");
-
+  fprintf(output_fp, "  :slots (");
   // all joint and link name
   for(int currentJoint=0;currentJoint<(int)(g_dae->getDatabase()->getElementCount(NULL, "joint", NULL));currentJoint++) {
     domJoint *thisJoint;
@@ -560,7 +555,12 @@ int main(int argc, char* argv[]){
     g_dae->getDatabase()->getElement((daeElement**)&thisLink, currentLink, NULL, "link");
     fprintf(output_fp, "%s ", thisLink->getName());
   }
-  fprintf(output_fp, ")\n");
+  fprintf(output_fp, "))\n");
+
+  fprintf(output_fp, "(defmethod %s-robot\n", thisNode->getName());
+  fprintf(output_fp, "  (:init\n");
+  fprintf(output_fp, "   (&rest args)\n");
+  fprintf(output_fp, "   (let ()\n");
 
   // send super :init
   fprintf(output_fp, "     (send-super* :init args)\n");
@@ -679,6 +679,18 @@ int main(int argc, char* argv[]){
       fprintf(output_fp, ")))\n");
     }
   } catch(YAML::RepresentationException& e) {
+  }
+
+  // all joint and link name
+  for(int currentJoint=0;currentJoint<(int)(g_dae->getDatabase()->getElementCount(NULL, "joint", NULL));currentJoint++) {
+    domJoint *thisJoint;
+    g_dae->getDatabase()->getElement((daeElement**)&thisJoint, currentJoint, NULL, "joint");
+    fprintf(output_fp, "    (:%s (&rest args) (forward-message-to %s args))\n", thisJoint->getName(), thisJoint->getName());
+  }
+  for(int currentLink=0;currentLink<(int)(g_dae->getDatabase()->getElementCount(NULL, "link", NULL));currentLink++) {
+    domJoint *thisLink;
+    g_dae->getDatabase()->getElement((daeElement**)&thisLink, currentLink, NULL, "link");
+    fprintf(output_fp, "    (:%s (&rest args) (forward-message-to %s args))\n", thisLink->getName(), thisLink->getName());
   }
 
   fprintf(output_fp, "  )\n\n");
