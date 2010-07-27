@@ -12,6 +12,7 @@
   <depend package="colladadom"/>
   <depend package="yaml_cpp"/>
   <depend package="collada_urdf_jsk_patch"/>
+  <depend package="euslisp"/>
 
 </package>
 
