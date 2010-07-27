@@ -3,7 +3,7 @@
 rosrun collada_urdf_jsk_patch urdf_to_collada `rospack find pr2_mechanism_model`/pr2.urdf pr2.dae
 if [ "$?" != 0 ] ;  then exit ; fi
 
-rosrun collada_eus collada2eus pr2.dae pr2.yaml pr2.l
+rosrun euscollada collada2eus pr2.dae pr2.yaml pr2.l
 if [ "$?" != 0 ] ;  then exit ; fi
 
 irteusgl -e "(progn (load \"pr2.l\") (load \"~/prog/eus/irteus/irtrobot.l\") \
