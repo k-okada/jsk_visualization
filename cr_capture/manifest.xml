@@ -16,6 +16,7 @@
   <depend package="image_proc"/>
   <depend package="swissranger_camera"/>
   <depend package="camera1394" />
+  <depend package="pcl" />
 </package>
 
 
