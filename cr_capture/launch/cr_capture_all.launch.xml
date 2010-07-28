@@ -11,7 +11,7 @@
         clear_params="true">
     <remap from="points_old_in"
            to="/HRP2016V/cr_capture/color_pcloud" />
-    <remap from="/points_out"
+    <remap from="points_out"
            to="/HRP2016V/cr_capture/color_pcloud_cleared" />
     <param name="mean_k" value="50" />
     <param name="mul_thresh" value="2.0" />
