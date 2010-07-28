@@ -6,7 +6,8 @@ if [ "$?" != 0 ] ;  then exit ; fi
 rosrun euscollada collada2eus pr2.dae pr2.yaml pr2.l
 if [ "$?" != 0 ] ;  then exit ; fi
 
-irteusgl -e "(progn (load \"pr2.l\") (load \"~/prog/eus/irteus/irtrobot.l\") \
+rosrun euslisp irteusgl -e \
+            "(progn (load \"pr2.l\") \
                     (pr2) \
                     (send *pr2* :reset-pose) \
                     (make-irtviewer)(objects (list *pr2*)) \

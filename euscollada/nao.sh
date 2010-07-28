@@ -6,4 +6,4 @@ if [ "$?" != 0 ] ;  then exit ; fi
 rosrun euscollada collada2eus nao.dae nao.yaml nao.l
 if [ "$?" != 0 ] ;  then exit ; fi
 
-irteusgl -e "(progn (load \"~/prog/eus/irteus/irtmodel.l\")(load \"nao.l\")(nao)(make-irtviewer)(objects (list *nao*)))"
+rosrun euslisp irteusgl -e "(progn (load \"nao.l\")(nao)(make-irtviewer)(objects (list *nao*)))"
