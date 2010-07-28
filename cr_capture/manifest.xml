@@ -15,7 +15,7 @@
   <depend package="sensor_msgs"/>
   <depend package="image_proc"/>
   <depend package="swissranger_camera"/>
-
+  <depend package="camera1394" />
 </package>
 
 
