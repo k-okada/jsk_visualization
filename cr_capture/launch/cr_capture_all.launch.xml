@@ -1,5 +1,5 @@
 <launch>
-  <machine name="vision" address="caigua"/>
+  <machine name="vision" address="carola"/>
            
   <group ns="HRP2016V">
   <include file="$(find cr_capture)/launch/camera1394_hrp2016v.launch.xml"/>
