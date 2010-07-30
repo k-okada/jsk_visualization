@@ -5,12 +5,13 @@
   <include file="$(find cr_capture)/launch/camera1394_hrp2016v.launch.xml"/>
   <include file="$(find cr_capture)/launch/swissranger_sr4000.launch.xml"/>
   <include file="$(find cr_capture)/launch/cr_capture.launch.xml"/>
+  <include file="$(find cr_capture)/launch/robot_self_filter.launch"/>
   <node pkg="jskpointcloud"
         name="$(anon remove_outlier)"
         type="remove_outlier"
         clear_params="true">
     <remap from="points_old_in"
-           to="/HRP2016V/cr_capture/color_pcloud" />
+           to="/HRP2016V/cr_capture/color_pcloud_fullbody_filtered" />
     <remap from="points_out"
            to="/HRP2016V/cr_capture/color_pcloud_cleared" />
     <param name="mean_k" value="50" />

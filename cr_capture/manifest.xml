@@ -17,6 +17,7 @@
   <depend package="swissranger_camera"/>
   <depend package="camera1394" />
   <depend package="pcl" />
+  <depend package="robot_self_filter" />
 </package>
 
 
