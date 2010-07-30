@@ -1,14 +1,14 @@
 self_see_links:
   - name: HRP2JSKNT/LHAND/HRP3-HAND-PALM
-    padding: 0.05
+    padding: 0.02
   - name: HRP2JSKNT/LHAND/HRP3-HAND-INDEX-FINGER1
-    padding: 0.05
+    padding: 0.02
   - name: HRP2JSKNT/LHAND/HRP3-HAND-INDEX-FINGER2
-    padding: 0.05
+    padding: 0.02
   - name: HRP2JSKNT/LHAND/HRP3-HAND-THUMB-FINGER1
-    padding: 0.05
+    padding: 0.02
   - name: HRP2JSKNT/LHAND/HRP3-HAND-THUMB-FINGER2
-    padding: 0.05
+    padding: 0.02
   - name: HRP2JSKNT/LHAND/HRP3-HAND-MIDDLE-FINGER1
-    padding: 0.05
+    padding: 0.02
 
