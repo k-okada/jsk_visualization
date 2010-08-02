@@ -486,12 +486,13 @@ int main(int argc, char* argv[]){
   typedef pair<vector<string> &, vector<string> & > link_joint;
   typedef pair<string, link_joint > link_joint_pair;
   link_joint_pair limbs[]
-    = {  link_joint_pair("larm", link_joint(larm_link_names, larm_joint_names)),
+    = {  link_joint_pair("torso", link_joint(torso_link_names, torso_joint_names)),
+	 link_joint_pair("larm", link_joint(larm_link_names, larm_joint_names)),
          link_joint_pair("rarm", link_joint(rarm_link_names, rarm_joint_names)),
          link_joint_pair("lleg", link_joint(lleg_link_names, lleg_joint_names)),
          link_joint_pair("rleg", link_joint(rleg_link_names, rleg_joint_names)),
-         link_joint_pair("head", link_joint(head_link_names, head_joint_names)),
-         link_joint_pair("torso", link_joint(torso_link_names, torso_joint_names)) };
+         link_joint_pair("head", link_joint(head_link_names, head_joint_names))
+         };
 
   ifstream fin(yaml_filename);
   if (fin.fail()) {
