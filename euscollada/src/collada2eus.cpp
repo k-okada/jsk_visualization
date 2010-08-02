@@ -698,6 +698,8 @@ int main(int argc, char* argv[]){
 
   writeGeometry(output_fp, g_dae->getDatabase());
 
+  fprintf(output_fp, "\n\n(provide :%s \"%s\")\n\n", thisNode->getName(), get_current_dir_name());
+
   return 0;
 }
 
