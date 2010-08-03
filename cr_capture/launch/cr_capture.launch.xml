@@ -1,7 +1,8 @@
 <!-- -*- mode: xml -*- -->
 <launch>
   <node name="cr_capture" pkg="cr_capture" type="cr_capture"
-	output="screen" machine="vision">
+	output="screen" machine="vision"
+        clear_params="true">
     <remap from="~left/image" to="FleaCam/left/camera/image_rect_color"/>
     <remap from="~left/camera_info" to="FleaCam/left/camera/camera_info"/>
     <remap from="~right/image" to="FleaCam/right/camera/image_rect_color"/>
@@ -17,7 +18,8 @@
     <param name="calculation_pixel" value="false"/>
     <param name="use_filter" value="true"/>
     <param name="use_images" value="true"/>
-    <!-- <param name="intensity_threshold" value="0"/> -->
-    <!-- <param name="confidence_threshold" value="100"/> -->
+    <!-- <param name="use_smooth" value="true"/>-->
+    <param name="intensity_threshold" value="1"/> 
+    <param name="confidence_threshold" value="200"/>
   </node>
 </launch>

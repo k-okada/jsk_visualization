@@ -106,7 +106,7 @@ public:
     ROS_INFO("rotation : [%f, %f, %f, %f]", trans_quat[0], trans_quat[1],
              trans_quat[2], trans_quat[3]);
 
-    nh_.param("use_filter", use_filter, false);
+    nh_.param("use_filter", use_filter, true);
     ROS_INFO("use_filter : %d", use_filter);
 
     nh_.param("use_images", use_images, false);
@@ -253,11 +253,11 @@ public:
       cv::Mat in_img16(ipl_depth_);
       cv::Mat in_img(in_img16.rows, in_img16.cols, CV_8UC1);
       cv::Mat out_img(in_img16.rows, in_img16.cols, CV_8UC1);
-      in_img16.convertTo(in_img, CV_8UC1);
+      in_img16.convertTo(in_img, CV_8UC1, 1.0 / ( 1.0 * 256.0));
 
-      cv::Canny(in_img, out_img, 8.0, 40.0);
-      //cv::dilate(out_img, out_img, cv::Mat());
-      cv::dilate(out_img, out_img, cv::Mat(), cv::Point(-1, -1), 2);
+      cv::Canny(in_img, out_img, 4.0, 20.0);
+      cv::dilate(out_img, out_img, cv::Mat());
+      //cv::dilate(out_img, out_img, cv::Mat(), cv::Point(-1, -1), 2);
 
       unsigned short *sptr = (unsigned short *)in_img16.data;
       unsigned char *cptr = (unsigned char *)out_img.data;
@@ -722,7 +722,7 @@ public:
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "cr_capture");
-
+  //cv::namedWindow(std::string("window"), );
   CRCaptureNode cap_node;
 
   ros::spin();
