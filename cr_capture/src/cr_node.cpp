@@ -47,6 +47,9 @@ private:
   bool use_images;
   int intensity_threshold, confidence_threshold;
   bool clear_uncolored_points;
+  bool use_smooth;
+  int smooth_size_;
+  double smooth_depth_,smooth_space_;
 
   // buffers
   //sensor_msgs::PointCloud pts_;
@@ -109,7 +112,18 @@ public:
     nh_.param("use_images", use_images, false);
     ROS_INFO("use_images : %d", use_images);
 
+    nh_.param("use_smooth", use_smooth, false);
+    ROS_INFO("use_smooth : %d", use_smooth);
+    if (use_smooth) {
+      nh_.param("smooth_size", smooth_size_, 6);
+      ROS_INFO("smooth_size : %d", smooth_size_);
+      nh_.param("smooth_depth", smooth_depth_, 500.0);
+      ROS_INFO("smooth_depth : %f", smooth_depth_);
+      nh_.param("smooth_space", smooth_space_, 6.0);
+      ROS_INFO("smooth_space : %f", smooth_space_);
+    }
     nh_.param("clear_uncolored_points", clear_uncolored_points, true);
+    ROS_INFO("clear_uncolored_points : %d", clear_uncolored_points);
 
     // ros node setting
     //cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1, msg_connect, msg_disconnect);
@@ -223,7 +237,18 @@ public:
 
   void calculate_color(const sensor_msgs::ImageConstPtr &img,
 		       const sensor_msgs::CameraInfoConstPtr &info) {
-    // filter
+
+    // smooth birateral filter
+    if (use_smooth) {
+      cv::Mat in_img16(ipl_depth_);
+      cv::Mat in_imgf32(ipl_depth_->height, ipl_depth_->width, CV_32FC1);
+      cv::Mat out_imgf32(ipl_depth_->height, ipl_depth_->width, CV_32FC1);
+      in_img16.convertTo(in_imgf32, CV_32FC1);
+      cv::bilateralFilter(in_imgf32, out_imgf32, smooth_size_, smooth_depth_, smooth_space_, cv::BORDER_REPLICATE);
+      out_imgf32.convertTo(in_img16, CV_16UC1);
+    }
+
+    // filter outlier
     if (use_filter) {
       cv::Mat in_img16(ipl_depth_);
       cv::Mat in_img(in_img16.rows, in_img16.cols, CV_8UC1);

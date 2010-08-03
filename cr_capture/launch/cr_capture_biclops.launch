@@ -15,15 +15,19 @@
     <!-- <rosparam command="load" file="$(find cr_capture)/launch/2010-04-20-19-14-52-external.yaml"/> -->
     <rosparam command="load"
 	      file="$(find cr_capture)/launch/2010-07-18-14-00-26-external.yaml"/>
-    <!-- <param name="max_range" value="5.0"/> -->
+
     <!-- <param name="max_range" value="9.6677"/> -->
      <param name="max_range" value="9.507"/> <!--calibrated value -->
     <param name="calculation_pixel" value="false"/>
     <param name="use_filter" value="false"/>
-
-    <!-- -->
+    <!--
+    <param name="use_smooth" value="true"/>
+    <param name="smooth_depth" value="1000.0"/>
+    <param name="smooth_size" value="6"/>
+    <param name="smooth_space" value="6.0"/>
+    -->
     <param name="use_images" value="true"/>
-    <param name="intensity_threshold" value="2"/> 
+    <param name="intensity_threshold" value="2"/>
     <param name="confidence_threshold" value="200"/>
   </node>
 </launch>
