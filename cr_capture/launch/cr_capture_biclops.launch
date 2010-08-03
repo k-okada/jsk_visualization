@@ -16,7 +16,8 @@
     <rosparam command="load"
 	      file="$(find cr_capture)/launch/2010-07-18-14-00-26-external.yaml"/>
     <!-- <param name="max_range" value="5.0"/> -->
-    <param name="max_range" value="9.68"/>
+    <!-- <param name="max_range" value="9.6677"/> -->
+     <param name="max_range" value="9.507"/> <!--calibrated value -->
     <param name="calculation_pixel" value="false"/>
     <param name="use_filter" value="false"/>
 

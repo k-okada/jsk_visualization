@@ -10,6 +10,7 @@
         clear_params="true" ns="snapshot"
 	machine="kombu"
 	>
+    <param name="base_frame" value="/map"/>
     <param name="append_size" value="11"/>
     <param name="filter_outlier" value="true"/>
     <param name="mean_k" value="50"/>
@@ -27,12 +28,12 @@
     <param name="leaf_size_x" value="0.04"/>
     <param name="leaf_size_y" value="0.04"/>
     <param name="leaf_size_z" value="0.04"/>
-    <param name="max_x" value="5.0"/>
-    <param name="min_x" value="-5.0"/>
-    <param name="max_y" value="3.0"/>
-    <param name="min_y" value="-0.5"/>
-    <param name="max_z" value="7.0"/>
-    <param name="min_z" value="0.0"/>
+    <param name="max_x" value="8.0"/>
+    <param name="min_x" value="0.0"/>
+    <param name="max_y" value="6.0"/>
+    <param name="min_y" value="-4.0"/>
+    <param name="max_z" value="2.0"/>
+    <param name="min_z" value="-0.2"/>
   </node>
 
 </launch>
