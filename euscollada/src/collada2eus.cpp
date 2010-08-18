@@ -188,7 +188,7 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
       fprintf(fp, "#+:jsk\n");
       fprintf(fp, "     (sys::mutex-unlock gl::*opengl-lock*)\n");
       fprintf(fp, "     (unless newlis (send self :draw vwr))\n");
-      fprintf(fp, "     )))\n");
+      fprintf(fp, "     ))\n");
       fprintf(fp, "  )\n");
     }
 
