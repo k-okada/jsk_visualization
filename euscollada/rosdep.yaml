@@ -1,0 +1,2 @@
+libqhull:
+  ubuntu: libqhull-dev

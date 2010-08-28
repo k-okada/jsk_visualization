@@ -14,6 +14,8 @@
   <depend package="collada_urdf_jsk_patch"/>
   <depend package="euslisp"/>
 
+  <rosdep name="libqhull" />
+
 </package>
 
 
