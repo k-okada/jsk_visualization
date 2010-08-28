@@ -11,6 +11,11 @@ using namespace std;
 
 #include <boost/foreach.hpp>
 
+extern "C" {
+#include <qhull/qhull_a.h>
+}
+
+
 daeDocument *g_document;
 DAE* g_dae = NULL;
 
@@ -29,6 +34,7 @@ unsigned int getMaxOffset( domInput_local_offset_Array &input_array )
 }
 
 void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
+  std::vector<coordT> points;
 
   // get mesh
   domMesh *thisMesh = thisGeometry->getMesh();
@@ -39,7 +45,8 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
   fprintf(fp, "  :slots ())\n");
   fprintf(fp, "(defmethod %s\n", thisGeometry->getId());
   fprintf(fp, "  (:init (&key (name))\n");
-  fprintf(fp, "         (replace-object self (make-cube 100 100 100))\n");
+  fprintf(fp, "         ;; (replace-object self (make-cube 100 100 100))\n");
+  fprintf(fp, "         (replace-object self (send self :qhull-faceset))\n");
   fprintf(fp, "         (if name (send self :name name))\n");
   fprintf(fp, "         self)\n");
   fprintf(fp, "  (:draw (vwr)\n");
@@ -171,11 +178,16 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
           }
 
           // vertex vector
+          float a0,a1,a2;
+          a0 = thisMesh->getSource_array()[0]->getFloat_array()->getValue().get(index*3);
+          a1 = thisMesh->getSource_array()[0]->getFloat_array()->getValue().get(index*3+1);
+          a2 = thisMesh->getSource_array()[0]->getFloat_array()->getValue().get(index*3+2);
           fprintf(fp, "         (gl::glVertex3fv (float-vector %f %f %f))\n",
-                  1000*thisMesh->getSource_array()[0]->getFloat_array()->getValue().get(index*3),
-                  1000*thisMesh->getSource_array()[0]->getFloat_array()->getValue().get(index*3+1),
-                  1000*thisMesh->getSource_array()[0]->getFloat_array()->getValue().get(index*3+2)
-                  );
+                  1000*a0,1000*a1,1000*a2);
+          // store vertex vector to qhull
+          points.push_back(a0);
+          points.push_back(a1);
+          points.push_back(a2);
         }
       fprintf(fp, "         (gl::glEnd)\n");
       fprintf(fp, "         (gl::glEndList)\n");
@@ -189,7 +201,35 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
       fprintf(fp, "     (sys::mutex-unlock gl::*opengl-lock*)\n");
       fprintf(fp, "     (unless newlis (send self :draw vwr))\n");
       fprintf(fp, "     ))\n");
-      fprintf(fp, "  )\n");
+
+      // do qhull
+      int ret = qh_new_qhull (3, points.size()/3, &points[0], 0, "qhull C-0.001", NULL, NULL);
+      if ( ! ret ) {
+        fprintf(fp, "  (:qhull-faceset ()\n");
+        fprintf(fp, "   ;; qhull %d -> %d faces\n", points.size()/3, qh num_facets);
+        fprintf(fp, "   (instance faceset :init :faces (list\n");
+        // get faces
+        facetT *facet;
+        vertexT *vertex, **vertexp;
+        FORALLfacets {
+          fprintf(fp, "    (instance face :init :vertices (list");
+          setT *vertices = qh_facet3vertex(facet); // ccw?
+          FOREACHvertex_(vertices) {
+            fprintf(fp, " #f(%f %f %f)", 1000*vertex->point[0], 1000*vertex->point[1], 1000*vertex->point[2]);
+          }
+          fprintf(fp, "))\n");
+          qh_settempfree(&vertices);
+        }
+        fprintf(fp, ")))\n");
+      }
+      qh_freeqhull(!qh_ALL);
+      int curlong, totlong;    // memory remaining after qh_memfreeshort
+      qh_memfreeshort (&curlong, &totlong);    // free short memory and memory allocator
+      if (curlong || totlong) {
+        fprintf (stderr, "qhull internal warning (user_eg, #1): did not free %d bytes of long memory (%d pieces)\n", totlong, curlong);
+      }
+
+      fprintf(fp, "  )\n\n");
     }
 
   // Polylist
