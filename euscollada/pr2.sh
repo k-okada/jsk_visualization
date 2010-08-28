@@ -12,5 +12,7 @@ rosrun euslisp irteusgl -e \
                     (send *pr2* :reset-pose) \
                     (make-irtviewer)(objects (list *pr2*)) \
                     (send *pr2* :larm :inverse-kinematics (send *pr2* :rarm :end-coords) :debug-view t :rotation-axis nil :stop 100) \
-                    (send *pr2* :head :look-at (send *pr2* :rarm :end-coords :worldpos) :debug-view t) \
+                    (send *pr2* :head :look-at (send *pr2* :rarm :end-coords :worldpos) :debug-view t)
+                    (send-all (send *pr2* :links) :draw-on :flush t)
+\
              )"
