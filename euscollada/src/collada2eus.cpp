@@ -670,7 +670,12 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, "\n");
 
   fprintf(output_fp, "     ;; links\n");
-  fprintf(output_fp, "     (setq links (list");
+
+  domNode *rootNode = thisNode->getNode_array()[0];
+  while (rootNode->getNode_array()[0]->getInstance_geometry_array().getCount()==0) {
+    rootNode = rootNode->getNode_array()[0];
+  }
+  fprintf(output_fp, "     (setq links (list %s", rootNode->getName());
   BOOST_FOREACH(link_joint_pair& limb, limbs) {
     string limb_name = limb.first;
     vector<string> link_names = limb.second.first;
