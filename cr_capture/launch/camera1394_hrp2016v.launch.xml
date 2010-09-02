@@ -40,7 +40,7 @@
         <param name="auto_exposure" value="3"/>
         <param name="exposure" value="450"/>
         <param name="auto_gain" value="3"/>
-        <param name="gain" value="125"/>
+        <param name="gain" value="220"/>
         <param name="auto_shutter" value="3"/>
         <param name="shutter" value="550"/>
       </node>
