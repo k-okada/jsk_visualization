@@ -9,6 +9,8 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/PointCloud.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/point_cloud_conversion.h>
 
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>
@@ -27,6 +29,7 @@ private:
   image_transport::CameraSubscriber camera_sub_l_, camera_sub_r_, camera_sub_depth_;
   tf::TransformListener tf_;
   ros::Publisher cloud_pub_;
+  ros::Publisher cloud2_pub_;
   std::string left_ns_, right_ns_, range_ns_;
 
   // all subscriber
@@ -128,6 +131,7 @@ public:
     // ros node setting
     //cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1, msg_connect, msg_disconnect);
     cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1);
+    cloud2_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("color_pcloud2", 1);
 
     left_ns_ = nh_.resolveName("left");
     right_ns_ = nh_.resolveName("right");
@@ -313,9 +317,21 @@ public:
 
     // advertise
     //pts_.header = info->header;
-    pts_.header = img->header;
-    sensor_msgs::PointCloudPtr ptr = boost::make_shared <sensor_msgs::PointCloud> (pts_);
-    cloud_pub_.publish(ptr);
+    if (cloud_pub_.getNumSubscribers() > 0) {
+      pts_.header = img->header;
+      sensor_msgs::PointCloudPtr ptr = boost::make_shared <sensor_msgs::PointCloud> (pts_);
+      cloud_pub_.publish(ptr);
+    }
+    if (cloud2_pub_.getNumSubscribers() > 0) {
+      pts_.header = img->header;
+      sensor_msgs::PointCloud2 outbuf;
+      if(!sensor_msgs::convertPointCloudToPointCloud2 (pts_, outbuf)) {
+	ROS_ERROR ("[cr_capture] Conversion from sensor_msgs::PointCloud2 to sensor_msgs::PointCloud failed!");
+	return;
+      }
+      sensor_msgs::PointCloud2Ptr ptr = boost::make_shared <sensor_msgs::PointCloud2> (outbuf);
+      cloud2_pub_.publish(ptr);
+    }
   }
 
   void makeConvertMap () {
