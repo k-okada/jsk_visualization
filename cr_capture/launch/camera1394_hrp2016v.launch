@@ -1,5 +1,5 @@
+<!-- -*- mode: xml -*- -->
 <launch>
-  <!-- <machine name="vision" address="caigua"/> -->
   <group ns="FleaCam">
     <group ns="left">
       <node name="left_dev" pkg="camera1394" type="camera1394_node"

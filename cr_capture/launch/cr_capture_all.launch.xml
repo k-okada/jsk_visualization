@@ -1,10 +1,13 @@
+<!-- -*- mode: xml -*- -->
 <launch>
-  <machine name="vision" address="carola"/>
-           
+  <!-- -->
+  <arg name="vision_machine" default="carola" />
+  <machine name="vision" address="$(arg vision_machine)" />
+  <!-- -->
   <group ns="HRP2016V">
-  <include file="$(find cr_capture)/launch/camera1394_hrp2016v.launch.xml"/>
-  <include file="$(find cr_capture)/launch/swissranger_sr4000.launch.xml"/>
-  <include file="$(find cr_capture)/launch/cr_capture.launch.xml"/>
+  <include file="$(find cr_capture)/launch/camera1394_hrp2016v.launch"/>
+  <include file="$(find cr_capture)/launch/swissranger_sr4000.launch"/>
+  <include file="$(find cr_capture)/launch/cr_capture.launch"/>
   <!-- <include file="$(find cr_capture)/launch/robot_self_filter.launch"/> -->
   <node pkg="jskpointcloud"
         name="$(anon remove_outlier)"

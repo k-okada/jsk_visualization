@@ -1,3 +1,4 @@
+<!-- -*- mode: xml -*- -->
 <launch>
   <group ns="RangeSensor">
     <node name="sr4000" pkg="swissranger_camera"
