@@ -51,6 +51,7 @@ private:
   int intensity_threshold, confidence_threshold;
   bool clear_uncolored_points;
   bool use_smooth;
+  bool short_range;
   int smooth_size_;
   double smooth_depth_,smooth_space_;
 
@@ -127,6 +128,9 @@ public:
     }
     nh_.param("clear_uncolored_points", clear_uncolored_points, true);
     ROS_INFO("clear_uncolored_points : %d", clear_uncolored_points);
+
+    nh_.param("short_range", short_range, false);
+    ROS_INFO("short_range : %d", short_range);
 
     // ros node setting
     //cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1, msg_connect, msg_disconnect);
@@ -401,6 +405,16 @@ public:
 
     for(int i=0;i<lng;i++){
       double scl = (max_range *  ibuf[i]) / (double)0xFFFF;
+
+      if(short_range) {
+	// magic process from calibration results
+	if(scl < 1.0) {
+	  scl *= ((-7.071927e+02*pow(scl,3) + 1.825608e+03*pow(scl,2) - 1.571370E+03*scl + 1.454931e+03)/1000.0);
+	} else if (scl < 1.1) {
+	  scl *= ((1000 + (1.9763 / 100.0) * (1100.0 - 1000.0*scl)) /1000.0);
+	}
+      }
+
       if(ibuf[i] >= 0xFFF8) { // saturate
 	pt->x = 0.0;
 	pt->y = 0.0;
