@@ -82,8 +82,10 @@ public:
     // parameter
     nh_.param("max_range", max_range, 5.0);
     ROS_INFO("max_range : %f", max_range);
-    nh_.param("calculation_pixel", calc_pixelpos, false);
+
+    nh_.param("calculation_pixel", calc_pixelpos, false); // not using
     ROS_INFO("calculation_pixel : %d", calc_pixelpos);
+
     trans_pos[0] = trans_pos[1] = trans_pos[2] = 0;
     if (nh_.hasParam("translation")) {
       XmlRpc::XmlRpcValue param_val;
@@ -95,6 +97,7 @@ public:
       }
     }
     ROS_INFO("translation : [%f, %f, %f]", trans_pos[0], trans_pos[1], trans_pos[2]);
+
     trans_quat[0] = trans_quat[1] = trans_quat[2] = 0;
     trans_quat[3] = 1;
     if (nh_.hasParam("rotation")) {
@@ -121,11 +124,13 @@ public:
     if (use_smooth) {
       nh_.param("smooth_size", smooth_size_, 6);
       ROS_INFO("smooth_size : %d", smooth_size_);
-      nh_.param("smooth_depth", smooth_depth_, 500.0);
+      nh_.param("smooth_depth", smooth_depth_, 0.04);
       ROS_INFO("smooth_depth : %f", smooth_depth_);
+      smooth_depth_ = (smooth_depth_ / max_range) * 0xFFFF;
       nh_.param("smooth_space", smooth_space_, 6.0);
       ROS_INFO("smooth_space : %f", smooth_space_);
     }
+
     nh_.param("clear_uncolored_points", clear_uncolored_points, true);
     ROS_INFO("clear_uncolored_points : %d", clear_uncolored_points);
 
