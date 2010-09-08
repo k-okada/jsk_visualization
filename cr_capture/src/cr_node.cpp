@@ -434,8 +434,8 @@ public:
     float cx = info_left_.P[2];
     float fy = info_left_.P[5];
     float cy = info_left_.P[6];
-    //float tr = info_right_.P[3]; //
-    float tr = (info_right_.P[3])/1000.0; // for jsk projection matrix (unit = mm)
+    float tr = info_right_.P[3]; // for ROS projection matrix (unit = m)
+    //float tr = (info_right_.P[3])/1000.0; // for jsk projection matrix (unit = mm)
 
     float *lu_ptr = NULL, *ru_ptr = NULL, *v_ptr = NULL;
     if (calc_pixelpos) {
