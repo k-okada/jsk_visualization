@@ -606,7 +606,7 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, "   (let ()\n");
 
   // send super :init
-  fprintf(output_fp, "     (send-super* :init args :name \"%s\")\n", thisNode->getName());
+  fprintf(output_fp, "     (send-super* :init :name \"%s\" args)\n", thisNode->getName());
   fprintf(output_fp, "\n");
 
   // write kinemtaics
