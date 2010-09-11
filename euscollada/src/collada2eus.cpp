@@ -215,7 +215,7 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
           fprintf(fp, "    (instance face :init :vertices (list");
           setT *vertices = qh_facet3vertex(facet); // ccw?
           FOREACHvertex_(vertices) {
-            fprintf(fp, " #f(%f %f %f)", 1000*vertex->point[0], 1000*vertex->point[1], 1000*vertex->point[2]);
+            fprintf(fp, " (float-vector %f %f %f)", 1000*vertex->point[0], 1000*vertex->point[1], 1000*vertex->point[2]);
           }
           fprintf(fp, "))\n");
           qh_settempfree(&vertices);
