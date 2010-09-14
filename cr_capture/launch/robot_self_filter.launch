@@ -1,0 +1,45 @@
+<!-- -*- mode: xml -*- -->
+<launch>
+  <node pkg="robot_self_filter"
+        type="self_filter"
+        name="midboy_cloud_filter"
+        clear_params="true">
+    <remap from="cloud_in"
+           to="/HRP2016V/cr_capture/color_pcloud" />
+    <remap from="cloud_out"
+           to="/HRP2016V/cr_capture/color_pcloud_midbody_filtered" />
+    <param name="sensor_frame"
+           value="/HRP2JSKNT/SR4000_SR4000-SENSOR"/>
+    <rosparam command="load"
+              file="$(find cr_capture)/config/midbody_links.yaml" />
+    <remap from="robot_description" to="/robot_description" />
+  </node>
+  <node pkg="robot_self_filter"
+        type="self_filter"
+        name="rhand_cloud_filter"
+        clear_params="true">
+    <remap from="cloud_in"
+           to="/HRP2016V/cr_capture/color_pcloud_midbody_filtered" />
+    <remap from="cloud_out"
+           to="/HRP2016V/cr_capture/color_pcloud_midbody_rhand_filtered" />
+    <remap from="robot_description" to="/rhand_description"/>
+    <param name="sensor_frame"
+           value="/HRP2JSKNT/SR4000_SR4000-SENSOR"/>
+    <rosparam command="load"
+              file="$(find cr_capture)/config/rhand_links.yaml" />
+  </node>
+  <node pkg="robot_self_filter"
+        type="self_filter"
+        name="lhand_cloud_filter"
+        clear_params="true">
+    <remap from="cloud_in"
+           to="/HRP2016V/cr_capture/color_pcloud_midbody_rhand_filtered" />
+    <remap from="cloud_out"
+           to="/HRP2016V/cr_capture/color_pcloud_fullbody_filtered" />
+    <remap from="robot_description" to="/lhand_description"/>
+    <param name="sensor_frame"
+           value="/HRP2JSKNT/SR4000_SR4000-SENSOR"/>
+    <rosparam command="load"
+              file="$(find cr_capture)/config/lhand_links.yaml" />
+  </node>
+</launch>
