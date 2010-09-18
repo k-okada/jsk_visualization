@@ -18,6 +18,8 @@
   <depend package="camera1394" />
   <depend package="pcl" />
   <depend package="robot_self_filter" />
+  <depend package="dynamic_reconfigure" />
+  <depend package="driver_base" />
 </package>
 
 

@@ -22,6 +22,9 @@
 
 #include <tf/transform_listener.h>
 
+#include <dynamic_reconfigure/server.h>
+#include "cr_capture/CRCaptureConfig.h"
+
 class CRCaptureNode {
 private:
   ros::NodeHandle nh_;
@@ -52,8 +55,14 @@ private:
   bool clear_uncolored_points;
   bool use_smooth;
   bool short_range;
-  int smooth_size_;
-  double smooth_depth_,smooth_space_;
+  int smooth_size;
+  double smooth_depth,smooth_space;
+  double edge1, edge2;
+  int dilate_times;
+
+  // dynamic reconfigure
+  typedef dynamic_reconfigure::Server<cr_capture::CRCaptureConfig> ReconfigureServer;
+  ReconfigureServer reconfigure_server_;
 
   // buffers
   //sensor_msgs::PointCloud pts_;
@@ -78,6 +87,10 @@ public:
     cvSetZero(cam_matrix);
     cvSetZero(dist_coeff);
     cvmSet(cam_matrix, 2, 2, 1.0);
+
+    // Set up dynamic reconfiguration
+    ReconfigureServer::CallbackType f = boost::bind(&CRCaptureNode::config_cb, this, _1, _2);
+    reconfigure_server_.setCallback(f);
 
     // parameter
     nh_.param("max_range", max_range, 5.0);
@@ -115,20 +128,18 @@ public:
 
     nh_.param("use_filter", use_filter, true);
     ROS_INFO("use_filter : %d", use_filter);
-
-    nh_.param("use_images", use_images, false);
-    ROS_INFO("use_images : %d", use_images);
+    edge1 = 40.0; edge2 = 80; dilate_times = 1;
 
     nh_.param("use_smooth", use_smooth, false);
     ROS_INFO("use_smooth : %d", use_smooth);
     if (use_smooth) {
-      nh_.param("smooth_size", smooth_size_, 6);
-      ROS_INFO("smooth_size : %d", smooth_size_);
-      nh_.param("smooth_depth", smooth_depth_, 0.04);
-      ROS_INFO("smooth_depth : %f", smooth_depth_);
-      smooth_depth_ = (smooth_depth_ / max_range) * 0xFFFF;
-      nh_.param("smooth_space", smooth_space_, 6.0);
-      ROS_INFO("smooth_space : %f", smooth_space_);
+      nh_.param("smooth_size", smooth_size, 6);
+      ROS_INFO("smooth_size : %d", smooth_size);
+      nh_.param("smooth_depth", smooth_depth, 0.04);
+      ROS_INFO("smooth_depth : %f", smooth_depth);
+      smooth_depth = (smooth_depth / max_range) * 0xFFFF;
+      nh_.param("smooth_space", smooth_space, 6.0);
+      ROS_INFO("smooth_space : %f", smooth_space);
     }
 
     nh_.param("clear_uncolored_points", clear_uncolored_points, true);
@@ -149,6 +160,9 @@ public:
     camera_sub_l_ = it_.subscribeCamera(left_ns_ + "/image", 1, &CRCaptureNode::cameraleftCB, this);
     camera_sub_r_ = it_.subscribeCamera(right_ns_ + "/image", 1, &CRCaptureNode::camerarightCB, this);
 
+    // use images for confidence, intensity threshold
+    nh_.param("use_images", use_images, false);
+    ROS_INFO("use_images : %d", use_images);
     if(use_images) {
       // all subscribe
       nh_.param("intensity_threshold", intensity_threshold, -1);
@@ -171,6 +185,26 @@ public:
       // not all subscribe
       camera_sub_depth_ = it_.subscribeCamera(range_ns_ + "/image", 1, &CRCaptureNode::camerarangeCB, this);
     }
+  }
+
+  void config_cb(cr_capture::CRCaptureConfig &config, uint32_t level) {
+    //ROS_INFO("config_");
+    clear_uncolored_points = config.clear_uncolored;
+    short_range = config.short_range;
+
+    use_filter   = config.use_filter;
+    edge1        = config.canny_parameter1;
+    edge2        = config.canny_parameter2;
+    dilate_times = config.dilate_times;
+
+    use_smooth   = config.use_smooth;
+    smooth_size  = config.smooth_size;
+    smooth_space = config.smooth_space;
+    smooth_depth = config.smooth_depth;
+    smooth_depth = (smooth_depth / max_range) * 0xFFFF;
+
+    intensity_threshold = config.intensity_threshold;
+    confidence_threshold = config.confidence_threshold;
   }
 
   void cameraleftCB(const sensor_msgs::ImageConstPtr &img,
@@ -257,7 +291,7 @@ public:
       cv::Mat in_imgf32(ipl_depth_->height, ipl_depth_->width, CV_32FC1);
       cv::Mat out_imgf32(ipl_depth_->height, ipl_depth_->width, CV_32FC1);
       in_img16.convertTo(in_imgf32, CV_32FC1);
-      cv::bilateralFilter(in_imgf32, out_imgf32, smooth_size_, smooth_depth_, smooth_space_, cv::BORDER_REPLICATE);
+      cv::bilateralFilter(in_imgf32, out_imgf32, smooth_size, smooth_depth, smooth_space, cv::BORDER_REPLICATE);
       out_imgf32.convertTo(in_img16, CV_16UC1);
     }
 
@@ -268,9 +302,11 @@ public:
       cv::Mat out_img(in_img16.rows, in_img16.cols, CV_8UC1);
       in_img16.convertTo(in_img, CV_8UC1, 1.0 / ( 1.0 * 256.0));
 
-      cv::Canny(in_img, out_img, 4.0, 20.0);
-      cv::dilate(out_img, out_img, cv::Mat());
-      //cv::dilate(out_img, out_img, cv::Mat(), cv::Point(-1, -1), 2);
+      cv::Canny(in_img, out_img, edge1, edge2);
+      //cv::dilate(out_img, out_img, cv::Mat());
+      if(dilate_times >= 1) {
+	cv::dilate(out_img, out_img, cv::Mat(), cv::Point(-1, -1), dilate_times);
+      }
 
       unsigned short *sptr = (unsigned short *)in_img16.data;
       unsigned char *cptr = (unsigned char *)out_img.data;
