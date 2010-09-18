@@ -9,6 +9,7 @@
   <include file="$(find cr_capture)/launch/swissranger_sr4000.launch"/>
   <include file="$(find cr_capture)/launch/cr_capture.launch"/>
   <!-- <include file="$(find cr_capture)/launch/robot_self_filter.launch"/> -->
+  <ignore>
   <node pkg="jskpointcloud"
         name="$(anon remove_outlier)"
         type="remove_outlier"
@@ -20,5 +21,6 @@
     <param name="mean_k" value="70" />
     <param name="mul_thresh" value="2.0" />
   </node>
+  </ignore>
   </group>
 </launch>
