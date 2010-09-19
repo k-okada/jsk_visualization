@@ -374,6 +374,9 @@ public:
 	ROS_ERROR ("[cr_capture] Conversion from sensor_msgs::PointCloud2 to sensor_msgs::PointCloud failed!");
 	return;
       }
+      outbuf.width = srwidth;
+      outbuf.height = srheight;
+      outbuf.row_step = srwidth * outbuf.point_step;
       sensor_msgs::PointCloud2Ptr ptr = boost::make_shared <sensor_msgs::PointCloud2> (outbuf);
       cloud2_pub_.publish(ptr);
     }
