@@ -24,6 +24,8 @@
 
 #include <dynamic_reconfigure/server.h>
 #include "cr_capture/CRCaptureConfig.h"
+#include "cr_capture/RawCloudData.h"
+#include "cr_capture/PullRawData.h"
 
 class CRCaptureNode {
 private:
@@ -33,6 +35,8 @@ private:
   tf::TransformListener tf_;
   ros::Publisher cloud_pub_;
   ros::Publisher cloud2_pub_;
+  ros::ServiceServer rawdata_service_;
+
   std::string left_ns_, right_ns_, range_ns_;
 
   // all subscriber
@@ -59,6 +63,7 @@ private:
   double smooth_depth,smooth_space;
   double edge1, edge2;
   int dilate_times;
+  bool pull_raw_data;
 
   // dynamic reconfigure
   typedef dynamic_reconfigure::Server<cr_capture::CRCaptureConfig> ReconfigureServer;
@@ -72,6 +77,7 @@ private:
   int srheight, srwidth;
   CvMat *cam_matrix, *dist_coeff;
   tf::StampedTransform cam_trans_;
+  cr_capture::RawCloudData raw_cloud_;
 
 public:
   CRCaptureNode () : nh_("~"), it_(nh_),
@@ -148,7 +154,9 @@ public:
     nh_.param("short_range", short_range, false);
     ROS_INFO("short_range : %d", short_range);
 
+    //
     // ros node setting
+    //
     //cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1, msg_connect, msg_disconnect);
     cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud> ("color_pcloud", 1);
     cloud2_pub_ = nh_.advertise<sensor_msgs::PointCloud2> ("color_pcloud2", 1);
@@ -185,6 +193,17 @@ public:
       // not all subscribe
       camera_sub_depth_ = it_.subscribeCamera(range_ns_ + "/image", 1, &CRCaptureNode::camerarangeCB, this);
     }
+    nh_.param("pull_raw_data", pull_raw_data, false);
+    ROS_INFO("pull_raw_data : %d", pull_raw_data);
+    if(pull_raw_data) {
+      rawdata_service_ = nh_.advertiseService("pull_raw_data", &CRCaptureNode::pullData, this);
+    }
+  }
+
+  bool pullData(cr_capture::PullRawDataRequest &req,
+		cr_capture::PullRawDataResponse &res) {
+    res.data = raw_cloud_;
+    return true;
   }
 
   void config_cb(cr_capture::CRCaptureConfig &config, uint32_t level) {
@@ -217,6 +236,10 @@ public:
     sensor_msgs::CvBridge bridge;
     cvResize(bridge.imgMsgToCv(img, "rgb8"), ipl_left_);
     info_left_ = *info;
+    if(pull_raw_data) {
+      raw_cloud_.left_image = *img;
+      raw_cloud_.left_info = *info;
+    }
   }
   void camerarightCB(const sensor_msgs::ImageConstPtr &img,
                     const sensor_msgs::CameraInfoConstPtr &info) {
@@ -228,6 +251,10 @@ public:
     sensor_msgs::CvBridge bridge;
     cvResize(bridge.imgMsgToCv(img, "rgb8"), ipl_right_);
     info_right_ = *info;
+    if(pull_raw_data) {
+      raw_cloud_.right_image = *img;
+      raw_cloud_.right_info = *info;
+    }
   }
 
   void cameraallCB (const sensor_msgs::ImageConstPtr &img_c,
@@ -258,6 +285,11 @@ public:
 	  (intent_img[i] < intensity_threshold) ) {
 	depth_img[i] = 0;
       }
+    }
+    if(pull_raw_data) {
+      raw_cloud_.intensity = *img_i;
+      raw_cloud_.confidence = *img_c;
+      raw_cloud_.depth16 = *img_d;
     }
     //
     calculate_color(img_d, info);
@@ -367,7 +399,7 @@ public:
       sensor_msgs::PointCloudPtr ptr = boost::make_shared <sensor_msgs::PointCloud> (pts_);
       cloud_pub_.publish(ptr);
     }
-    if (cloud2_pub_.getNumSubscribers() > 0) {
+    if (cloud2_pub_.getNumSubscribers() > 0 || pull_raw_data) {
       pts_.header = img->header;
       sensor_msgs::PointCloud2 outbuf;
       if(!sensor_msgs::convertPointCloudToPointCloud2 (pts_, outbuf)) {
@@ -377,8 +409,13 @@ public:
       outbuf.width = srwidth;
       outbuf.height = srheight;
       outbuf.row_step = srwidth * outbuf.point_step;
-      sensor_msgs::PointCloud2Ptr ptr = boost::make_shared <sensor_msgs::PointCloud2> (outbuf);
-      cloud2_pub_.publish(ptr);
+      if(pull_raw_data) {
+	raw_cloud_.point_cloud = outbuf;
+      }
+      if (cloud2_pub_.getNumSubscribers() > 0 ) {
+	sensor_msgs::PointCloud2Ptr ptr = boost::make_shared <sensor_msgs::PointCloud2> (outbuf);
+	cloud2_pub_.publish(ptr);
+      }
     }
   }
 
