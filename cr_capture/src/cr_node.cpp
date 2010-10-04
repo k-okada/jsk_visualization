@@ -102,8 +102,8 @@ public:
     nh_.param("max_range", max_range, 5.0);
     ROS_INFO("max_range : %f", max_range);
 
-    nh_.param("calculation_pixel", calc_pixelpos, false); // not using
-    ROS_INFO("calculation_pixel : %d", calc_pixelpos);
+    nh_.param("calc_pixel_color", calc_pixelpos, false); // not using
+    ROS_INFO("calc_pixel_color : %d", calc_pixelpos);
 
     trans_pos[0] = trans_pos[1] = trans_pos[2] = 0;
     if (nh_.hasParam("translation")) {
@@ -193,6 +193,8 @@ public:
       // not all subscribe
       camera_sub_depth_ = it_.subscribeCamera(range_ns_ + "/image", 1, &CRCaptureNode::camerarangeCB, this);
     }
+
+    // pull raw data service
     nh_.param("pull_raw_data", pull_raw_data, false);
     ROS_INFO("pull_raw_data : %d", pull_raw_data);
     if(pull_raw_data) {
@@ -369,11 +371,11 @@ public:
       pts_.channels.resize(4);
       pts_.channels[0].name = "rgb";
       pts_.channels[0].values.resize(srwidth*srheight);
-      pts_.channels[1].name = "lu";
+      pts_.channels[1].name = "lx_pixel";
       pts_.channels[1].values.resize(srwidth*srheight);
-      pts_.channels[2].name = "ru";
+      pts_.channels[2].name = "rx_pixel";
       pts_.channels[2].values.resize(srwidth*srheight);
-      pts_.channels[3].name = "v";
+      pts_.channels[3].name = "y_pixel";
       pts_.channels[3].values.resize(srwidth*srheight);
     } else {
 #if 1 // use rgb
@@ -523,6 +525,11 @@ public:
       lu_ptr = &(pts.channels[1].values[0]);
       ru_ptr = &(pts.channels[2].values[0]);
       v_ptr = &(pts.channels[3].values[0]);
+      for(int i=0; i < srheight*srwidth; i++) {
+	lu_ptr[i] = -1;
+	ru_ptr[i] = -1;
+	v_ptr[i] = -1; 
+      }
     }
     // ROS_INFO("CHECK/ %f %f %f %f - %f", fx, cx, fy, cy, tr);
     unsigned char *imgl = (unsigned char *)ipl_left_->imageData;
@@ -542,19 +549,13 @@ public:
     int col_x[srwidth];
     int lr_use[srwidth];
 
-    // if(calc_pixelpos) for(int i=0; i < 3*srheight*srwidth; i++) pix[i] = -1;
-
     for(int y=0;y<srheight;y++) {
       for(int x=0;x<srwidth;x++) {
         int index = y*srwidth + x;
         // convert camera coordinates
         btVector3 pos(point_ptr[index].x, point_ptr[index].y, point_ptr[index].z);
         pos = cam_trans_ * pos;
-#if 0
-        float posx = point_ptr[index].x;
-        float posy = point_ptr[index].y;
-        float posz = point_ptr[index].z;
-#endif
+
         float posx = pos[0];
         float posy = pos[1];
         float posz = pos[2];
@@ -630,12 +631,6 @@ public:
                 (0xFF & ((lcolb + rcolb)/2));
               //if(pix){
               if(calc_pixelpos) {
-#if 0
-                int pptr = 3*(x + y*srwidth);
-                pix[pptr] = lx;
-                pix[pptr+1] = rx;
-                pix[pptr+2] = yy;
-#endif
                 int ptr_pos = (x + y*srwidth);
                 lu_ptr[ptr_pos] = lx;
                 ru_ptr[ptr_pos] = rx;
@@ -651,13 +646,7 @@ public:
             //imgl->getPixel(lx, yy, &lcolr, &lcolg, &lcolb);
             getPixel(imgl, lx, yy, lcolr, lcolg, lcolb);
             col_x[x] = ((0xFF & lcolr) << 16) | ((0xFF & lcolg) << 8) | (0xFF & lcolb);
-#if 0
-            if(pix){
-              int pptr = 3*(x + y*srwidth);
-              pix[pptr] = lx;
-              pix[pptr+2] = yy;
-            }
-#endif
+
             if(calc_pixelpos) {
               int ptr_pos = (x + y*srwidth);
               lu_ptr[ptr_pos] = lx;
@@ -669,13 +658,7 @@ public:
             //imgr->getPixel(rx, yy, &rcolr, &rcolg, &rcolb);
             getPixel(imgr, rx, yy, rcolr, rcolg, rcolb);
             col_x[x] = ((0xFF & rcolr) << 16) | ((0xFF & rcolg) << 8) | (0xFF & rcolb);
-#if 0
-            if(pix){
-              int pptr = 3*(x + y*srwidth);
-              pix[pptr+1] = rx;
-              pix[pptr+2] = yy;
-            }
-#endif
+
             if(calc_pixelpos) {
               int ptr_pos = (x + y*srwidth);
               ru_ptr[ptr_pos] = rx;
@@ -698,13 +681,7 @@ public:
           //imgl->getPixel(lx, ly, &lcolr, &lcolg, &lcolb);
           getPixel(imgl, lx, ly, lcolr, lcolg, lcolb);
           col_x[x] = ((0xFF & lcolr) << 16) | ((0xFF & lcolg) << 8) | (0xFF & lcolb);
-#if 0
-          if(pix){
-            int pptr = 3*(x + y*srwidth);
-            pix[pptr] = lx;
-            pix[pptr+2] = ly;
-          }
-#endif
+
           if(calc_pixelpos) {
             int ptr_pos = (x + y*srwidth);
             lu_ptr[ptr_pos] = lx;
@@ -717,13 +694,7 @@ public:
           //imgr->getPixel(rx, ry, &rcolr, &rcolg, &rcolb);
           getPixel(imgr, rx, ry, rcolr, rcolg, rcolb);
           col_x[x] = ((0xFF & rcolr) << 16) | ((0xFF & rcolg) << 8) | (0xFF & rcolb);
-#if 0
-          if(pix){
-            int pptr = 3*(x + y*srwidth);
-            pix[pptr+1] = rx;
-            pix[pptr+2] = ry;
-          }
-#endif
+
           if(calc_pixelpos) {
             int ptr_pos = (x + y*srwidth);
             ru_ptr[ptr_pos] = rx;
@@ -769,13 +740,7 @@ public:
             int dif_r = abs(clr - rcolr) + abs(clg - rcolg) + abs(clb - rcolb);
             if(dif_l < dif_r) {
               col_x[x] = ((0xFF & lcolr) << 16) | ((0xFF & lcolg) << 8) | (0xFF & lcolb);
-#if 0
-              if(pix){
-                int pptr = 3*(x + y*srwidth);
-                pix[pptr] = lx;
-                pix[pptr+2] = yy;
-              }
-#endif
+
               if(calc_pixelpos) {
                 int ptr_pos = (x + y*srwidth);
                 lu_ptr[ptr_pos] = lx;
@@ -783,13 +748,7 @@ public:
               }
             } else {
               col_x[x] = ((0xFF & rcolr) << 16) | ((0xFF & rcolg) << 8) | (0xFF & rcolb);
-#if 0
-              if(pix){
-                int pptr = 3*(x + y*srwidth);
-                pix[pptr+1] = rx;
-                pix[pptr+2] = yy;
-              }
-#endif
+
               if(calc_pixelpos) {
                 int ptr_pos = (x + y*srwidth);
                 ru_ptr[ptr_pos] = rx;
