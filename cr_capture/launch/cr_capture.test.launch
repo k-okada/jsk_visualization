@@ -1,0 +1,37 @@
+<!-- -*- mode: xml -*- -->
+<launch>
+  <group ns="CRCap">
+  <node name="cr_capture" pkg="cr_capture" type="cr_capture"
+	output="screen" clear_params="true">
+    <remap from="~left/image" to="/HRP2016V/FleaCam/left/camera/image_rect_color"/>
+    <remap from="~left/camera_info" to="/HRP2016V/FleaCam/left/camera/camera_info"/>
+    <remap from="~right/image" to="/HRP2016V/FleaCam/right/camera/image_rect_color"/>
+    <remap from="~right/camera_info" to="/HRP2016V/FleaCam/right/camera/camera_info"/>
+
+    <remap from="~range" to="/HRP2016V/RangeSensor/sr4000"/>
+    <rosparam command="load" file="$(find cr_capture)/launch/2010-02-16-15-14-42-external.yaml"/>
+
+    <!-- calc pixel color -->
+    <param name="calc_pixel_color" value="true" />
+
+    <param name="max_range" value="5.0"/>
+
+    <param name="use_filter" value="true"/>
+    <param name="use_images" value="true"/>
+
+    <!-- birateral smooth filter -->
+    <param name="use_smooth" value="true" />
+    <param name="smooth_size" value="6" />
+    <param name="smooth_depth" value="0.02" />
+    <param name="smooth_space" value="6.0" />
+
+    <!-- use short range calibration result-->
+    <param name="short_range" value="true" />
+
+    <param name="intensity_threshold" value="0"/>
+    <param name="confidence_threshold" value="200"/>
+
+    <param name="pull_raw_data" value="true"/>
+  </node>
+  </group>
+</launch>
