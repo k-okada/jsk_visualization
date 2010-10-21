@@ -16,8 +16,10 @@
 	    (if (send node :submachine)
 		(send (send node :submachine) :reset-state))
 	    (setq active-state node))
-	    (t (setq active-state (find-if #'identity
-		(send-all (send-all (send self :sub-sm-node) :submachine) :active-state node)))))))
+	   (t (setq active-state (find-if
+		 #'(lambda(n)(send (send n :submachine) :active-state node))
+		 (send self :sub-sm-node)))))
+     ))
   (:reset-state () (send self :active-state start-state))
   (:start-state
    (&optional ss)
