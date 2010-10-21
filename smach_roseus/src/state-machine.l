@@ -10,10 +10,15 @@
   (:init () self)
   (:active-state
    (&rest args)
-   (if (car args) (setq active-state (car args))) active-state)
-  (:reset-state () (setq active-state start-state)
-		(if (send active-state :submachine)
-		    (send (send active-state :submachine) :reset-state)))
+   (let ((node (car args)))
+     (cond ((not node) active-state)
+	   ((memq node nodes)
+	    (if (send node :submachine)
+		(send (send node :submachine) :reset-state))
+	    (setq active-state node))
+	    (t (setq active-state (find-if #'identity
+		(send-all (send-all (send self :sub-sm-node) :submachine) :active-state node)))))))
+  (:reset-state () (send self :active-state start-state))
   (:start-state
    (&optional ss)
    (cond ((null ss) start-state)
