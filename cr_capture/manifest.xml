@@ -20,6 +20,7 @@
   <depend package="robot_self_filter" />
   <depend package="dynamic_reconfigure" />
   <depend package="driver_base" />
+  <depend package="stereo_synchronizer" />
 </package>
 
 
