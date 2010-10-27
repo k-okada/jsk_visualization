@@ -3,14 +3,14 @@
   <node name="cr_capture" pkg="cr_capture" type="cr_capture"
 	output="screen" machine="vision"
         clear_params="true">
-    <remap from="~left/image" to="FleaCam/left/camera/image_rect_color"/>
-    <remap from="~left/camera_info" to="FleaCam/left/camera/camera_info"/>
-    <remap from="~right/image" to="FleaCam/right/camera/image_rect_color"/>
-    <remap from="~right/camera_info" to="FleaCam/right/camera/camera_info"/>
+    <remap from="~left/image" to="wide_stereo/left/image_rect_color"/>
+    <remap from="~left/camera_info" to="wide_stereo/left/camera_info"/>
+    <remap from="~right/image" to="wide_stereo/right/image_rect_color"/>
+    <remap from="~right/camera_info" to="wide_stereo/right/camera_info"/>
     <!--
-    <remap from="~range/image" to="RangeSensor/sr4000/image_depth"/>
-    <remap from="~range/camera_info" to="RangeSensor/sr4000/camera_info"/>
-    -->
+       <remap from="~range/image" to="RangeSensor/sr4000/image_depth"/>
+       <remap from="~range/camera_info" to="RangeSensor/sr4000/camera_info"/>
+       -->
     <remap from="~range" to="RangeSensor/sr4000"/>
     <rosparam command="load" file="$(find cr_capture)/launch/2010-02-16-15-14-42-external.yaml"/>
 
@@ -22,13 +22,13 @@
     <!-- birateral smooth filter -->
     <param name="use_smooth" value="true" />
     <param name="smooth_size" value="6" />
-    <param name="smooth_depth" value="0.03" />
+    <param name="smooth_depth" value="0.01" />
     <param name="smooth_space" value="6.0" />
 
     <!-- use short range calibration result-->
     <param name="short_range" value="true" />
 
-    <param name="intensity_threshold" value="1"/> 
+    <param name="intensity_threshold" value="1"/>
     <param name="confidence_threshold" value="200"/>
   </node>
 </launch>
