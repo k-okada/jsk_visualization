@@ -32,7 +32,6 @@ private:
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
   image_transport::CameraSubscriber camera_sub_l_, camera_sub_r_, camera_sub_depth_;
-  tf::TransformListener tf_;
   ros::Publisher cloud_pub_;
   ros::Publisher cloud2_pub_;
   ros::ServiceServer rawdata_service_;
@@ -81,7 +80,7 @@ private:
 
 public:
   CRCaptureNode () : nh_("~"), it_(nh_),
-		     tf_(ros::Duration(30.0), true), sync_(5),
+		     sync_(5),
 		     map_x(0), map_y(0), map_z(0) {
     // initialize
     ipl_left_ = new IplImage();
