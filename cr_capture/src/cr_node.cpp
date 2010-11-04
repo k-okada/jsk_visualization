@@ -63,6 +63,7 @@ private:
   double edge1, edge2;
   int dilate_times;
   bool pull_raw_data;
+  double depth_scale;
 
   // dynamic reconfigure
   typedef dynamic_reconfigure::Server<cr_capture::CRCaptureConfig> ReconfigureServer;
@@ -103,6 +104,9 @@ public:
 
     nh_.param("calc_pixel_color", calc_pixelpos, false); // not using
     ROS_INFO("calc_pixel_color : %d", calc_pixelpos);
+
+    nh_.param("depth_scale", depth_scale, 1.0); // not using
+    ROS_INFO("depth_scale : %f", depth_scale);
 
     trans_pos[0] = trans_pos[1] = trans_pos[2] = 0;
     if (nh_.hasParam("translation")) {
@@ -287,6 +291,14 @@ public:
 	depth_img[i] = 0;
       }
     }
+
+    if(depth_scale != 1.0) {
+      srwidth = (int) (srwidth * depth_scale);
+      srheight = (int) (srheight * depth_scale);
+      ipl_depth_ = cvCreateImage(cvSize(srwidth, srheight), IPL_DEPTH_16U, 1);
+      cvResize(bridge.imgMsgToCv(img_d), ipl_depth_);
+    }
+
     if(pull_raw_data) {
       raw_cloud_.intensity = *img_i;
       raw_cloud_.confidence = *img_c;
@@ -426,10 +438,10 @@ public:
         (info_depth_.D[2] != cvmGet(dist_coeff, 0, 2)) ||
         (info_depth_.D[3] != cvmGet(dist_coeff, 0, 3)) ||
         (info_depth_.D[4] != cvmGet(dist_coeff, 0, 4)) ||
-        (info_depth_.K[3*0 + 0] != cvmGet(cam_matrix, 0, 0)) ||
-        (info_depth_.K[3*0 + 2] != cvmGet(cam_matrix, 0, 2)) ||
-        (info_depth_.K[3*1 + 1] != cvmGet(cam_matrix, 1, 1)) ||
-        (info_depth_.K[3*1 + 2] != cvmGet(cam_matrix, 1, 2)) ) {
+        ((depth_scale*info_depth_.K[3*0 + 0]) != cvmGet(cam_matrix, 0, 0)) ||
+        ((depth_scale*info_depth_.K[3*0 + 2]) != cvmGet(cam_matrix, 0, 2)) ||
+        ((depth_scale*info_depth_.K[3*1 + 1]) != cvmGet(cam_matrix, 1, 1)) ||
+        ((depth_scale*info_depth_.K[3*1 + 2]) != cvmGet(cam_matrix, 1, 2)) ) {
       //
       cvmSet(dist_coeff, 0, 0, info_depth_.D[0]);
       cvmSet(dist_coeff, 0, 1, info_depth_.D[1]);
@@ -439,10 +451,10 @@ public:
       //
       cvSetZero(cam_matrix);
       cvmSet(cam_matrix, 2, 2, 1.0);
-      cvmSet(cam_matrix, 0, 0, info_depth_.K[3*0 + 0]);
-      cvmSet(cam_matrix, 0, 2, info_depth_.K[3*0 + 2]);
-      cvmSet(cam_matrix, 1, 1, info_depth_.K[3*1 + 1]);
-      cvmSet(cam_matrix, 1, 2, info_depth_.K[3*1 + 2]);
+      cvmSet(cam_matrix, 0, 0, depth_scale*(info_depth_.K[3*0 + 0]));//kx
+      cvmSet(cam_matrix, 0, 2, depth_scale*(info_depth_.K[3*0 + 2]));//cx
+      cvmSet(cam_matrix, 1, 1, depth_scale*(info_depth_.K[3*1 + 1]));//ky
+      cvmSet(cam_matrix, 1, 2, depth_scale*(info_depth_.K[3*1 + 2]));//cy
       //
       CvMat *src = cvCreateMat(srheight*srwidth, 1, CV_32FC2);
       CvMat *dst = cvCreateMat(srheight*srwidth, 1, CV_32FC2);
