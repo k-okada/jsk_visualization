@@ -100,21 +100,20 @@
    (if (car args) (setq remap-list (car args))) remap-list)
   (:remap (userdata &key (invert nil))
 	  (dolist (ft remap-list)
+	    (when (and (not invert) (not (assoc (cdr ft) userdata)))
+	      (nconc (list (cons (cdr ft) nil)) userdata))
 	    (if invert
 		(setf (car (assoc (car ft) userdata)) (cdr ft))
 	      (setf (car (assoc (cdr ft) userdata)) (car ft)))))
   ;;
   (:execute
    (userdata &key (step nil))
-   (let (res (tmpdata (copy-seq userdata)))
-     (send self :remap tmpdata :invert nil) ;; remap
+   (let (res)
+     (send self :remap userdata :invert nil) ;; remap
      (setq res (cond ((send self :submachine)
 		      (send action :execute userdata :step step))
 		     ((functionp action) (funcall action userdata))
 		     (t (send self :name))))
-     (send self :remap tmpdata :invert t) ;; unremap
-     (dolist (item userdata)
-       (if (assoc (car item) tmpdata)
-	   (setf (cdr item) (cdr (assoc (car item) tmpdata)))))
+     (send self :remap userdata :invert t) ;; unremap
      res ))
   )

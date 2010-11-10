@@ -62,3 +62,66 @@
      ))
   )
 
+
+;; manipulate a list of cons as a associative array
+(defun nacons-unique (k v alist &key (key 'car) (test 'eq))
+  (let ((cur-cons (assoc k alist :key key :test test)))
+    (if cur-cons
+	(progn (setf (cdr cur-cons) v) alist)
+      (nconc alist (list (cons k v))))))
+
+;; execute state machine as action server
+;; (Maniptask action server Compatible, atm_task_controller)
+(ros::roseus-add-msgs "maniptask_msgs")
+(defclass state-machine-action-server
+  :super ros::simple-action-server
+  :slots (sm userdata))
+(defmethod state-machine-action-server
+  (:init
+   (ns spec &optional (_sm nil) (_userdata nil))
+   (send-super :init ns spec)
+   (setq sm _sm userdata _userdata)
+   (setq userdata (nacons-unique :cancel nil userdata))) ;; userdata may be nil
+  (:goal-callback
+   (msg)
+   (send-super :goal-callback msg)
+   (nacons-unique :goal (send msg :goal) userdata) ;; TODO: parse msg
+   (nacons-unique :result (send (send self :result) :result) userdata)
+   (nacons-unique :feedback (send (send self :feedback) :feedback) userdata)
+   (send sm :reset-state))
+  (:cancel-callback
+   (msg)
+   (send-super :cancel-callback msg)
+   (setf (cdr (assoc :cancel userdata)) t))
+  (:execute-cb
+   ()
+   (cond
+    ((null sm) nil)
+    ((send self :is-active)
+     (let ((result-msg (send self :result)))
+       (cond
+	((send sm :goal-reached) ;; TODO set-abort when failed
+	 (send result-msg :result (cdr (assoc :result userdata)))
+	 (send self :set-succeeded result-msg))
+	((send self :is-preempt-requested)
+	 (send self :set-preempted result-msg))
+	(t
+	 (send sm :execute userdata :step -1)
+	 (let ((feedback-msg (send self :feedback)))
+	   (send feedback-msg :feedback (cdr (assoc :feedback userdata)))
+	   (send self :publish-feedback feedback-msg)))
+	)))
+    (t nil))
+   (send-super :execute-cb))
+  )
+
+;; simple usage
+;; (instance state-machine-action-server :init "/action_name")
+;; (do-until-key (send s :worker))
+
+
+;; need?
+;; converter-func: goal -> userdata
+;;                 userdata -> feedback
+;;                 userdata -> result
+
