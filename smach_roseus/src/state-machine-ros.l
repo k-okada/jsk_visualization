@@ -64,7 +64,7 @@
 
 
 ;; manipulate a list of cons as a associative array
-(defun nacons-unique (k v alist &key (key 'car) (test 'eq))
+(defun set-alist (k v alist &key (key 'car) (test 'eq))
   (let ((cur-cons (assoc k alist :key key :test test)))
     (if cur-cons
 	(progn (setf (cdr cur-cons) v) alist)
@@ -86,13 +86,13 @@
 		      :accept-cb  `(lambda(s g)(send ,self :accept-cb g))
 		      :preempt-cb `(lambda(s g)(send ,self :preempt-cb g)))
 	 sm _sm userdata _userdata)
-   (setq userdata (nacons-unique :cancel nil userdata)) ;; userdata may be nil
+   (setq userdata (set-alist :cancel nil userdata)) ;; userdata may be nil
    self)
   (:accept-cb
    (msg)
-   (nacons-unique :goal (send msg :goal) userdata)
-   (nacons-unique :result (send (send self :result) :result) userdata)
-   (nacons-unique :feedback (send (send self :feedback) :feedback) userdata)
+   (set-alist :goal (send msg :goal) userdata)
+   (set-alist :result (send (send self :result) :result) userdata)
+   (set-alist :feedback (send (send self :feedback) :feedback) userdata)
    (send sm :reset-state))
   (:preempt-cb
    (msg)
