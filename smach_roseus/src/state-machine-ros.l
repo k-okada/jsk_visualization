@@ -72,26 +72,30 @@
 
 ;; execute state machine as action server
 ;; (Maniptask action server Compatible, atm_task_controller)
-(ros::roseus-add-msgs "maniptask_msgs")
 (defclass state-machine-action-server
-  :super ros::simple-action-server
-  :slots (sm userdata))
+  :super propertied-object
+  :slots ((ac :forward (:set-succeeded :set-abortef :set-preempted
+			:publish-feedback :goal :feedback :result
+			:worker :is-active :is-preempt-requested))
+	  sm userdata))
 (defmethod state-machine-action-server
   (:init
    (ns spec &optional (_sm nil) (_userdata nil))
-   (send-super :init ns spec)
-   (setq sm _sm userdata _userdata)
-   (setq userdata (nacons-unique :cancel nil userdata))) ;; userdata may be nil
-  (:goal-callback
+   (setq ac (instance ros::simple-action-server :init ns spec
+		      :execute-cb `(lambda(s g)(send ,self :execute-cb))
+		      :accept-cb  `(lambda(s g)(send ,self :accept-cb g))
+		      :preempt-cb `(lambda(s g)(send ,self :preempt-cb g)))
+	 sm _sm userdata _userdata)
+   (setq userdata (nacons-unique :cancel nil userdata)) ;; userdata may be nil
+   self)
+  (:accept-cb
    (msg)
-   (send-super :goal-callback msg)
-   (nacons-unique :goal (send msg :goal) userdata) ;; TODO: parse msg
+   (nacons-unique :goal (send msg :goal) userdata)
    (nacons-unique :result (send (send self :result) :result) userdata)
    (nacons-unique :feedback (send (send self :feedback) :feedback) userdata)
    (send sm :reset-state))
-  (:cancel-callback
+  (:preempt-cb
    (msg)
-   (send-super :cancel-callback msg)
    (setf (cdr (assoc :cancel userdata)) t))
   (:execute-cb
    ()
@@ -111,8 +115,7 @@
 	   (send feedback-msg :feedback (cdr (assoc :feedback userdata)))
 	   (send self :publish-feedback feedback-msg)))
 	)))
-    (t nil))
-   (send-super :execute-cb))
+    (t nil)))
   )
 
 ;; simple usage

@@ -2,8 +2,8 @@
 ;;;
 ;;; steta-machine version of ~/ros/ros_pkg_tutorials/actionlib_tutorials/simple_action_servers/fibonacci_server.py
 ;;;
-(load "state-machine-ros.l")
-(load "state-machine-sample.l")
+(load "package://smach_roseus/src/state-machine-ros.l")
+(load "package://smach_roseus/src/state-machine-sample.l")
 (ros::roseus-add-msgs "actionlib_tutorials")
 
 (ros::roseus "fibonacci")
