@@ -66,7 +66,7 @@
 ;; (Maniptask action server Compatible, atm_task_controller)
 (defclass state-machine-action-server
   :super propertied-object
-  :slots ((ac :forward (:set-succeeded :set-abortef :set-preempted
+  :slots ((ac :forward (:set-succeeded :set-aborted :set-preempted
 			:publish-feedback :goal :feedback :result
 			:worker :is-active :is-preempt-requested))
 	  sm userdata successes))
