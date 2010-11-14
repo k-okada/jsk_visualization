@@ -1,11 +1,18 @@
 (load "euslib/jsk/graph.l")
 
+;; manipulate a list of cons as a associative array
+(defun set-alist (k v alist &key (key 'car) (test 'eq))
+  (let ((cur-cons (assoc k alist :key key :test test)))
+    (if cur-cons
+	(progn (setf (cdr cur-cons) v) alist)
+      (nconc alist (list (cons k v))))))
+
 ;; State machine is a direction graph.
 ;; Nodes defines state, and have action.
 ;; Goal states do nothing and returns its name.
 (defclass state-machine
   :super graph
-  :slots (active-state))
+  :slots (active-state arg-keys))
 (defmethod state-machine
   (:init () self)
   (:active-state
@@ -45,6 +52,9 @@
    (if (not (derivedp to state))(setq to (or (send self :node to) to)))
    (send from :add-transition (cons exec-result to))
    (send-super :add-arc from to))
+  ;; arg-keys is a list of userdata keys used by this state-machine
+  (:arg-keys (&rest names)
+   (if names (setq arg-keys names) arg-keys))
 
   (:execute-impl
    (userdata &key (step 0))
@@ -70,13 +80,17 @@
   ;; 0->this 1->sub 2->subsub ... -1->deepest
   (:execute
    (userdata &key (step nil))
-   (let (result)
+   (let (result
+	 (args (mapcar #'(lambda(k)(cons k (cdr (assoc k userdata)))) arg-keys)))
      (if (null active-state) (send self :reset-state))
-     (cond ((null step)
-	    (while (not (send self :goal-reached))
-	      (send self :execute-impl userdata))
-	    (send (send self :active-state) :name)) ;; reached state
-	   (t (send self :execute-impl userdata :step step)))))
+     (prog1
+	 (cond ((null step)
+		(while (not (send self :goal-reached))
+		  (send self :execute-impl args))
+		(send (send self :active-state) :name)) ;; reached state
+	       (t (send self :execute-impl args :step step)))
+       (dolist (item args) (set-alist (car item) (cdr item) userdata))
+       )))
   )
 
 ;; action is function or state-machine instance

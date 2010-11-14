@@ -69,6 +69,8 @@
 
 (defun smach-userdata ()
   (let ((sm (instance state-machine :init)))
+    ;; declare use all userdata keyword
+    (send sm :arg-keys 'count)
     ;; remap from variable names in function to names in userdata
     (send sm :add-node
 	  (instance state :init :FOO 'func-foo-data

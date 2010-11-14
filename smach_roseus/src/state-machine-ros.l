@@ -62,14 +62,6 @@
      ))
   )
 
-
-;; manipulate a list of cons as a associative array
-(defun set-alist (k v alist &key (key 'car) (test 'eq))
-  (let ((cur-cons (assoc k alist :key key :test test)))
-    (if cur-cons
-	(progn (setf (cdr cur-cons) v) alist)
-      (nconc alist (list (cons k v))))))
-
 ;; execute state machine as action server
 ;; (Maniptask action server Compatible, atm_task_controller)
 (defclass state-machine-action-server
@@ -77,7 +69,7 @@
   :slots ((ac :forward (:set-succeeded :set-abortef :set-preempted
 			:publish-feedback :goal :feedback :result
 			:worker :is-active :is-preempt-requested))
-	  sm userdata))
+	  sm userdata successes))
 (defmethod state-machine-action-server
   (:init
    (ns spec &optional (_sm nil) (_userdata nil))
@@ -87,7 +79,11 @@
 		      :preempt-cb `(lambda(s g)(send ,self :preempt-cb g)))
 	 sm _sm userdata _userdata)
    (setq userdata (set-alist :cancel nil userdata)) ;; userdata may be nil
+   (send self :success-state (send sm :goal-state)) ;; all terminal-state(temp)
    self)
+  (:success-state
+   (&optional states)
+   (if states (setq successes states) successes))
   (:accept-cb
    (msg)
    (set-alist :goal (send msg :goal) userdata)
@@ -96,7 +92,7 @@
    (send sm :reset-state))
   (:preempt-cb
    (msg)
-   (setf (cdr (assoc :cancel userdata)) t))
+   (setf (cdr (assoc :cancel userdata)) (vector nil)))
   (:execute-cb
    ()
    (cond
@@ -104,9 +100,11 @@
     ((send self :is-active)
      (let ((result-msg (send self :result)))
        (cond
-	((send sm :goal-reached) ;; TODO set-abort when failed
+	((send sm :goal-reached)
 	 (send result-msg :result (cdr (assoc :result userdata)))
-	 (send self :set-succeeded result-msg))
+	 (if (member (send (send sm :active-state) :name) successes)
+	     (send self :set-succeeded result-msg)
+	   (send self :set-aborted result-msg)))
 	((send self :is-preempt-requested)
 	 (send self :set-preempted result-msg))
 	(t
@@ -121,10 +119,3 @@
 ;; simple usage
 ;; (instance state-machine-action-server :init "/action_name")
 ;; (do-until-key (send s :worker))
-
-
-;; need?
-;; converter-func: goal -> userdata
-;;                 userdata -> feedback
-;;                 userdata -> result
-
