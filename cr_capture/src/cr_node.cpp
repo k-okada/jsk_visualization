@@ -26,6 +26,7 @@
 #include "cr_capture/CRCaptureConfig.h"
 #include "cr_capture/RawCloudData.h"
 #include "cr_capture/PullRawData.h"
+#include "cr_capture/PixelIndices.h"
 
 class CRCaptureNode {
 private:
@@ -34,6 +35,7 @@ private:
   image_transport::CameraSubscriber camera_sub_l_, camera_sub_r_, camera_sub_depth_;
   ros::Publisher cloud_pub_;
   ros::Publisher cloud2_pub_;
+  ros::Publisher index_pub_;
   ros::ServiceServer rawdata_service_;
 
   std::string left_ns_, right_ns_, range_ns_;
@@ -101,9 +103,6 @@ public:
     // parameter
     nh_.param("max_range", max_range, 5.0);
     ROS_INFO("max_range : %f", max_range);
-
-    nh_.param("calc_pixel_color", calc_pixelpos, false); // not using
-    ROS_INFO("calc_pixel_color : %d", calc_pixelpos);
 
     nh_.param("depth_scale", depth_scale, 1.0); // not using
     ROS_INFO("depth_scale : %f", depth_scale);
@@ -202,6 +201,12 @@ public:
     ROS_INFO("pull_raw_data : %d", pull_raw_data);
     if(pull_raw_data) {
       rawdata_service_ = nh_.advertiseService("pull_raw_data", &CRCaptureNode::pullData, this);
+    }
+
+    nh_.param("calc_pixel_color", calc_pixelpos, false); // not using
+    ROS_INFO("calc_pixel_color : %d", calc_pixelpos);
+    if(calc_pixelpos) {
+      index_pub_ = nh_.advertise<cr_capture::PixelIndices>("pixel_indices", 1);
     }
   }
 
@@ -303,6 +308,9 @@ public:
       raw_cloud_.intensity = *img_i;
       raw_cloud_.confidence = *img_c;
       raw_cloud_.depth16 = *img_d;
+      raw_cloud_.range_info = *info;
+
+      raw_cloud_.header = info->header;
     }
     //
     calculate_color(img_d, info);
@@ -379,15 +387,9 @@ public:
 
     // add color
     if(calc_pixelpos) {
-      pts_.channels.resize(4);
+      pts_.channels.resize(1);
       pts_.channels[0].name = "rgb";
       pts_.channels[0].values.resize(srwidth*srheight);
-      pts_.channels[1].name = "lx_pixel";
-      pts_.channels[1].values.resize(srwidth*srheight);
-      pts_.channels[2].name = "rx_pixel";
-      pts_.channels[2].values.resize(srwidth*srheight);
-      pts_.channels[3].name = "y_pixel";
-      pts_.channels[3].values.resize(srwidth*srheight);
     } else {
 #if 1 // use rgb
       pts_.channels.resize(1);
@@ -531,15 +533,15 @@ public:
     float tr = info_right_.P[3]; // for ROS projection matrix (unit = m)
     //float tr = (info_right_.P[3])/1000.0; // for jsk projection matrix (unit = mm)
 
-    float *lu_ptr = NULL, *ru_ptr = NULL, *v_ptr = NULL;
+    int *lu_ptr = NULL, *ru_ptr = NULL, *v_ptr = NULL;
     if (calc_pixelpos) {
-      lu_ptr = &(pts.channels[1].values[0]);
-      ru_ptr = &(pts.channels[2].values[0]);
-      v_ptr = &(pts.channels[3].values[0]);
+      lu_ptr = new int[srheight*srwidth];
+      ru_ptr = new int[srheight*srwidth];
+      v_ptr = new int[srheight*srwidth];
       for(int i=0; i < srheight*srwidth; i++) {
 	lu_ptr[i] = -1;
 	ru_ptr[i] = -1;
-	v_ptr[i] = -1; 
+	v_ptr[i] = -1;
       }
     }
     // ROS_INFO("CHECK/ %f %f %f %f - %f", fx, cx, fy, cy, tr);
@@ -786,17 +788,25 @@ public:
 	colb[x] = (col & 0xFF) / 255.0;
       }
 #endif
-#if 0
-      // setting color
-      for(int x=0;x<srwidth;x++,tmp_ptr+=3) {
-        int col = col_x[x];
-        //printf("col = %X, %d\n", col, tmp_ptr);
-        colv[tmp_ptr] = ((float)((col >> 16) & 0xFF))/255.0;
-        colv[tmp_ptr+1] = ((float)((col >> 8) & 0xFF))/255.0;
-        colv[tmp_ptr+2] = ((float)(col & 0xFF))/255.0;
-      }
-#endif
     } // y_loop
+
+    if(calc_pixelpos) {
+      cr_capture::PixelIndices pidx;
+      pidx.header = pts.header;
+      pidx.indices.resize(srwidth*srheight*3);
+      for(int i=0; i < srwidth*srheight; i++) {
+	pidx.indices[3*i + 0] = lu_ptr[i];
+	pidx.indices[3*i + 1] = ru_ptr[i];
+	pidx.indices[3*i + 2] = v_ptr[i];
+      }
+      delete lu_ptr;
+      delete ru_ptr;
+      delete v_ptr;
+      index_pub_.publish(pidx);
+      if(pull_raw_data) {
+	raw_cloud_.pixel_indices = pidx;
+      }
+    }
   }
 };
 
