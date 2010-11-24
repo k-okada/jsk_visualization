@@ -24,6 +24,9 @@ CR Captureキャリブレーション
 roslaunch cr_calibration stereo_calib.launch
 キャリブボードの設定等はlaunchファイル内で適当な値に設定のこと
 
+"calibrate"ボタンの色が変わるまでボードを動かす。
+"calibrate", "save"ボタンを押す
+./calib_date_convert.sh -> left.yaml, right.yaml ができる
 
 ステップ2) 単眼キャリブレーション(レンジセンサ)
 必要トピックは以下の通り
@@ -32,6 +35,9 @@ roslaunch cr_calibration stereo_calib.launch
 roslaunch cr_calibration range_calib.launch
 キャリブボードの設定等はlaunchファイル内で適当な値に設定のこと
 
+"calibrate"ボタンの色が変わるまでボードを動かす。
+"calibrate", "save"ボタンを押す
+./calib_date_convert.sh -> mono.yaml ができる
 
 ステップ3) ステレオと単眼カメラの外部パラメータを求める
 必要トピックは以下の通り、ステップ1,2で求めたパラメータがそれぞれの
