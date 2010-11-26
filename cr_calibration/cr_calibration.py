@@ -111,7 +111,7 @@ class CrCalibration:
 
             # finish check
             if len(self.result_list) > 7 and self.last_err < 0.1:
-                rospy.loginfo("Finished size = %d, err = %f" % (len(self.result_list, self.last_err)))
+                rospy.loginfo("Finished size = %d, err = %f" % (len(self.result_list), self.last_err))
                 print "translation: [%f, %f, %f]\nrotation: [%f, %f, %f, %f]" % (ret.p.x(), ret.p.y(), ret.p.z(), qx, qy, qz, qw)
                 exit(-1)
 
