@@ -95,3 +95,9 @@
   (list (cons :upper (deg2rad (send _joint :max-angle)))
         (cons :lower (deg2rad (send _joint :min-angle)))))
 
+;; accessor
+(defun eusmodel-link-description (description)
+  (car description))
+
+(defun eusmodel-joint-description (description)
+  (cdr description))
