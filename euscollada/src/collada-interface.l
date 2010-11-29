@@ -374,7 +374,7 @@
     (articulated_system
      (@ (id "kinsystem_motion")
 	(name "kinsystem_motion"))
-      (motion
+     (motion
        (instance_articulated_system
 	(@ (url "#kinsystem")
 	   (sid "kinsystem_inst"))
@@ -403,8 +403,27 @@
                (let ((joint-name (cdr (assoc :name j))))
                  `(axis_info
                    (@ (axis ,(format nil "kinsystem/~A_info" joint-name))))))
-           (eusmodel-joint-description desc)))))))
-  
+           (eusmodel-joint-description desc))))
+     ;; for openrave profile
+     ,@(mapcar
+        #'(lambda (e)
+            (eusmodel-endcoords-description->openrave-manipulator e desc))
+        (eusmodel-endcoords-description desc))
+     )))
+
+(defun eusmodel-endcoords-description->openrave-manipulator (end-coords description)
+  (let ((name (car end-coords))
+        (origin-link-name (car (cdr end-coords)))
+        (tip-link-name (car (last (cdr end-coords)))))
+    `(extra
+      (@ (name ,name)
+         (type "manipulator"))
+      (technique
+       (@ (profile "OpenRAVE"))
+       (frame_origin
+        (@ (link ,(format nil "kinmodel/~A_link" origin-link-name))))
+       (frame_tip
+        (@ (link ,(format nil "kinmodel/~A_link" tip-link-name))))))))
 
 (defun eusmodel-description->collada-links-tree (target links joints)
   ;; recursive function call!
@@ -413,7 +432,7 @@
     (let ((name (cdr (assoc :name target))))
       ;; output xml of the target and call itself
       `(link
-        (@ (sid ,name)
+        (@ (sid ,(format nil "~A_link" name))
            (name ,(format nil "~A_link" name)))
         ,@(mapcar
            #'(lambda (l)

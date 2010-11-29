@@ -98,21 +98,27 @@
 
 
 (defun eusmodel-endcoords-specs (model)
-  (let ((head (if (find-method model :head) (send model :head)))
-        (larm (if (find-method model :larm) (send model :larm)))
-        (rarm (if (find-method model :rarm) (send model :rarm)))
-        (lleg (if (find-method model :lleg) (send model :lleg)))
-        (rleg (if (find-method model :rleg) (send model :rleg))))
-    (list (cons :head
-                (send-all head :name))
-          (cons :larm
-                (send-all larm :name))
-          (cons :rarm
-                (send-all rarm :name))
-          (cons :lleg
-                (send-all lleg :name))
-          (cons :rleg
-                (send-all rleg :name)))))
+  (labels ((get-links
+            (link)
+            (if (find-method model link)
+                (let ((tmp (send model link)))
+                  (if tmp
+                      (cons (send (car tmp) :parent) tmp))))))
+    (let ((head (get-links :head))
+          (larm (get-links :larm))
+          (rarm (get-links :rarm))
+          (lleg (get-links :lleg))
+          (rleg (get-links :rleg)))
+      (list (cons "head"
+                  (mapcar #'string (send-all head :name)))
+            (cons "larm"
+                  (mapcar #'string (send-all larm :name)))
+            (cons "rarm"
+                  (mapcar #'string (send-all rarm :name)))
+            (cons "lleg"
+                  (mapcar #'string (send-all lleg :name)))
+            (cons "rleg"
+                  (mapcar #'string (send-all rleg :name)))))))
 
 ;; accessor
 (defun eusmodel-link-description (description)
