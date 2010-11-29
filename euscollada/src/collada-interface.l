@@ -152,7 +152,7 @@
                              (if j
                                  `((rotate
                                     (@ (sid
-                                        ,(format nil "~A_axis0" (eusmodel-joint-description (assoc :name j)))))
+                                        ,(format nil "~A_axis0" (cdr (assoc :name j)))))
                                     "1 0 0 0")))))
                        parent-links))))
 

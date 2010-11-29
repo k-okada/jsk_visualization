@@ -31,8 +31,9 @@
     ;; verification
     (verificate-unique-strings (mapcar #'string (send-all links :name)))
     (verificate-unique-strings (mapcar #'string (send-all joints :name)))
-    (cons (eusmodel-link-specs links)
-          (eusmodel-joint-specs joints))))
+    (list (eusmodel-link-specs links)
+          (eusmodel-joint-specs joints)
+          (eusmodel-endcoords-specs model))))
 
 (defun verificate-unique-strings (names)
   (if (not (= (length names)
@@ -95,9 +96,30 @@
   (list (cons :upper (deg2rad (send _joint :max-angle)))
         (cons :lower (deg2rad (send _joint :min-angle)))))
 
+
+(defun eusmodel-endcoords-specs (model)
+  (let ((head (if (find-method model :head) (send model :head)))
+        (larm (if (find-method model :larm) (send model :larm)))
+        (rarm (if (find-method model :rarm) (send model :rarm)))
+        (lleg (if (find-method model :lleg) (send model :lleg)))
+        (rleg (if (find-method model :rleg) (send model :rleg))))
+    (list (cons :head
+                (send-all head :name))
+          (cons :larm
+                (send-all larm :name))
+          (cons :rarm
+                (send-all rarm :name))
+          (cons :lleg
+                (send-all lleg :name))
+          (cons :rleg
+                (send-all rleg :name)))))
+
 ;; accessor
 (defun eusmodel-link-description (description)
   (car description))
 
 (defun eusmodel-joint-description (description)
-  (cdr description))
+  (cadr description))
+
+(defun eusmodel-endcoords-description (description)
+  (caddr description))
