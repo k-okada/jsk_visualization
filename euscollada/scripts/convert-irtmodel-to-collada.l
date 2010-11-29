@@ -1,8 +1,8 @@
 #!/usr/bin/env roseus
 
-(ros::load-ros-manifest "eusurdf")
-(load "package://eusurdf/src/eusmodel-description.l")
-(load "package://eusurdf/src/collada-interface.l")
+(ros::load-ros-manifest "euscollada")
+(load "package://euscollada/src/eusmodel-description.l")
+(load "package://euscollada/src/collada-interface.l")
 
 (defvar *model-file* (car lisp::*eustop-argument*))
 (defvar *model-name* (cadr lisp::*eustop-argument*))
