@@ -1,18 +1,15 @@
 <!-- -*- mode: xml -*- -->
 <launch>
   <group ns="CRCap">
-  <node name="cr_capture" pkg="cr_capture" type="cr_capture"
+  <node name="cr_capture" pkg="cr_capture" type="cr_capture_sync"
 	output="screen" clear_params="true">
-    <remap from="~left/image" to="/HRP2016V/FleaCam/left/camera/image_rect_color"/>
-    <remap from="~left/camera_info" to="/HRP2016V/FleaCam/left/camera/camera_info"/>
-    <remap from="~right/image" to="/HRP2016V/FleaCam/right/camera/image_rect_color"/>
-    <remap from="~right/camera_info" to="/HRP2016V/FleaCam/right/camera/camera_info"/>
+    <remap from="~left/image" to="/HRP2016V/wide_stereo/left/image_rect_color"/>
+    <remap from="~left/camera_info" to="/HRP2016V/wide_stereo/left/camera_info"/>
+    <remap from="~right/image" to="/HRP2016V/wide_stereo/right/image_rect_color"/>
+    <remap from="~right/camera_info" to="/HRP2016V/wide_stereo/right/camera_info"/>
 
     <remap from="~range" to="/HRP2016V/RangeSensor/sr4000"/>
     <rosparam command="load" file="$(find cr_capture)/launch/2010-02-16-15-14-42-external.yaml"/>
-
-    <!-- calc pixel color -->
-    <param name="calc_pixel_color" value="true" />
 
     <param name="max_range" value="5.0"/>
 
@@ -31,7 +28,9 @@
     <param name="intensity_threshold" value="0"/>
     <param name="confidence_threshold" value="200"/>
 
-    <param name="pull_raw_data" value="true"/>
+    <!-- calc pixel color -->
+   <param name="pull_raw_data" value="true"/>
+    <param name="calc_pixel_color" value="true" />
   </node>
   </group>
 </launch>
