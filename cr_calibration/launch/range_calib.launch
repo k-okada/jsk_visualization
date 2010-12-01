@@ -16,6 +16,7 @@
       <remap from="intensity/camera_info" to="camera_info" />
     </node>
     -->
+    <!-- test calibration result -->
     <!-- rosrun camera_calibration cameracheck.py monocular:=/CR/range -->
   </group>
 </launch>
