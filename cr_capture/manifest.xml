@@ -4,7 +4,7 @@
      cr_capture
 
   </description>
-  <author>youhei kakiuchi</author>
+  <author>JSK, youhei kakiuchi</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/cr_capture</url>
@@ -13,14 +13,11 @@
   <depend package="opencv2"/>
   <depend package="cv_bridge"/>
   <depend package="sensor_msgs"/>
-  <depend package="image_proc"/>
-  <depend package="swissranger_camera"/>
-  <depend package="camera1394" />
-  <depend package="pcl" />
-  <depend package="robot_self_filter" />
+  <depend package="geometry_msgs"/>
+  <depend package="image_transport"/>
+  <depend package="tf" />
   <depend package="dynamic_reconfigure" />
   <depend package="driver_base" />
-  <depend package="stereo_synchronizer" />
 </package>
 
 

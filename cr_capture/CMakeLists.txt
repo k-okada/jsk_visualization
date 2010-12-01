@@ -30,6 +30,6 @@ rosbuild_find_ros_package(dynamic_reconfigure)
 include(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
 gencfg()
 
-rosbuild_add_executable(cr_capture src/cr_node.cpp)
-rosbuild_add_executable(cr_capture_sync src/cr_node_sync.cpp)
+rosbuild_add_executable(cr_capture src/cr_node.cpp src/CRLib.cpp src/SRCalibratedLib.cpp)
+rosbuild_add_executable(cr_capture_sync src/cr_node_sync.cpp src/CRLib.cpp src/SRCalibratedLib.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
