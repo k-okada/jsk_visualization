@@ -1,5 +1,5 @@
 <launch>
-  <group ns="CR/range">
+  <group ns="range">
     <node name="range_calibrator"
 	  pkg="camera_calibration"
 	  type="cameracalibrator.py"

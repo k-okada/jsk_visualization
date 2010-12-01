@@ -1,5 +1,5 @@
 <launch>
-  <group ns="CR/wide_stereo">
+  <group ns="/HRP2016V/wide_stereo">
     <node name="stereo_calibrator"
 	  pkg="camera_calibration"
 	  type="cameracalibrator.py"

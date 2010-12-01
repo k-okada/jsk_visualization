@@ -1,5 +1,5 @@
 <launch>
-  <group ns="CR">
+  <group ns="HRP2016V">
     <!-- range image proc -->
     <node name="range_proc" pkg="image_proc" type="image_proc"
 	  output="screen" clear_params="true" ns="range">
