@@ -2,12 +2,13 @@
 
 CRLib::CRLib ()
 {
-
+  ipl_left_ = new IplImage();
+  ipl_right_ = new IplImage();
 }
 
 void
-CRLib::  setLeftImg (const sensor_msgs::ImageConstPtr &img,
-                     const sensor_msgs::CameraInfoConstPtr &info)
+CRLib::setLeftImg (const sensor_msgs::ImageConstPtr &img,
+                   const sensor_msgs::CameraInfoConstPtr &info)
 {
   if( (ipl_left_->width != (int)img->width) ||
       (ipl_left_->height != (int)img->height) )
@@ -34,7 +35,7 @@ CRLib::setRightImg (const sensor_msgs::ImageConstPtr &img,
 }
 
 bool
-CRLib::calcColor (sensor_msgs::PointCloud &pts, int srheight,  int srwidth,
+CRLib::calcColor (sensor_msgs::PointCloud &pts, int srwidth, int srheight,
                   cr_capture::PixelIndices *pidx)
 {
   if ( (ipl_right_->width != ipl_left_->width) ||

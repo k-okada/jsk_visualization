@@ -33,7 +33,7 @@ public:
                const sensor_msgs::CameraInfoConstPtr &info);
 
   bool
-  calcColor (sensor_msgs::PointCloud &pts, int srheight,  int srwidth,
+  calcColor (sensor_msgs::PointCloud &pts, int srwidth, int srheight,
              cr_capture::PixelIndices *pidx = NULL);
 
 };
