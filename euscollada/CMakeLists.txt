@@ -33,33 +33,30 @@ rosbuild_add_executable(collada2eus src/collada2eus.cpp)
 target_link_libraries(collada2eus qhull)
 
 macro(convert_to_collada)
-  if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
-    set(convert_exe "convert-irtmodel-to-collada.l")
-    rosbuild_invoke_rospack("euscollada" _rospack euscollada_path find)
-    set(convert_exe_full_path "${_rospack_euscollada_path}/scripts/${convert_exe}")
-    #message("${convert_exe_full_path}") #debug
-    # search all irtmodels
-    rosbuild_invoke_rospack("euslisp" _rospack euslisp_path find)
-    rosbuild_invoke_rospack("${PROJECT_NAME}" _rospack current_package_path find)
-    set(irtmodel_directory "${_rospack_euslisp_path}/jskeus/eus/models")
-    set(collada_output_directory "${_rospack_current_package_path}/collada")
-    execute_process(COMMAND "find" "${irtmodel_directory}" "-name" "*robot.l" "-o" "-name" "*object.l"
-      OUTPUT_VARIABLE irtmodels)
-    
-    string(REPLACE "\n" ";" irtmodels "${irtmodels}") #space separated list
-    set(irtmodels_list ${irtmodels})
-    set(_autogen "")
-    foreach(_model ${irtmodels_list})
-      string(REGEX REPLACE ".l" "" _model_name1 ${_model})
-      string(REGEX REPLACE ".*/" "" _model_name ${_model_name1})
-      add_custom_command(OUTPUT "${collada_output_directory}/${_model_name}.dae"
-        COMMAND "${convert_exe_full_path}" ${_model} ${_model_name} "package://${PROJECT_NAME}")
-      list(APPEND _autogen "${collada_output_directory}/${_model_name}.dae")
-    endforeach(_model)
-    add_custom_target(CONVERT_EUS_TO_COLLADA ALL DEPENDS ${_autogen})
-  else("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
-    message(WARNING "sorry, collada converter does not support ${CMAKE_SYSTEM_PROCESSOR} architecture")
-  endif("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+  set(convert_exe "convert-irtmodel-to-collada.l")
+  rosbuild_invoke_rospack("euscollada" _rospack euscollada_path find)
+  set(convert_exe_full_path "${_rospack_euscollada_path}/scripts/${convert_exe}")
+  #message("${convert_exe_full_path}") #debug
+  # search all irtmodels
+  rosbuild_invoke_rospack("euslisp" _rospack euslisp_path find)
+  rosbuild_invoke_rospack("${PROJECT_NAME}" _rospack current_package_path find)
+  set(irtmodel_directory "${_rospack_euslisp_path}/jskeus/eus/models")
+  set(collada_output_directory "${_rospack_current_package_path}/collada")
+  execute_process(COMMAND "find" "${irtmodel_directory}" "-name" "*robot.l" "-o" "-name" "*object.l"
+    OUTPUT_VARIABLE irtmodels)
+  
+  string(REPLACE "\n" ";" irtmodels "${irtmodels}") #space separated list
+  set(irtmodels_list ${irtmodels})
+  set(_autogen "")
+  foreach(_model ${irtmodels_list})
+    string(REGEX REPLACE ".l" "" _model_name1 ${_model})
+    string(REGEX REPLACE ".*/" "" _model_name ${_model_name1})
+    add_custom_command(OUTPUT "${collada_output_directory}/${_model_name}.dae"
+      COMMAND "${convert_exe_full_path}" ${_model} ${_model_name} "package://${PROJECT_NAME}")
+    list(APPEND _autogen "${collada_output_directory}/${_model_name}.dae")
+  endforeach(_model)
+  add_custom_target(CONVERT_EUS_TO_COLLADA ALL DEPENDS ${_autogen})
+  message(WARNING "sorry, collada converter does not support ${CMAKE_SYSTEM_PROCESSOR} architecture")
 endmacro(convert_to_collada)
 
 convert_to_collada()
