@@ -113,6 +113,8 @@ class CrCalibration:
             if len(self.result_list) > 7 and self.last_err < 0.1:
                 rospy.loginfo("Finished size = %d, err = %f" % (len(self.result_list), self.last_err))
                 print "translation: [%f, %f, %f]\nrotation: [%f, %f, %f, %f]" % (ret.p.x(), ret.p.y(), ret.p.z(), qx, qy, qz, qw)
+                print "(make-coords :pos #f(%f %f %f) :rot (quaternion2matrix #f(%f %f %f %f)))" % (1000*ret.p.x(), 1000*ret.p.y(), 1000*ret.p.z(), qw, qx, qy, qz)
+                #print "<node pkg=\"tf\" type=\"static_transform_publisher\" name=\"cam_link_broadcaster\" args=\"%f %f %f %f %f %f %f link1 link2 30\" />" % (ret.p.x(), ret.p.y(), ret.p.z(), qw, qx, qy, qz)
                 exit(-1)
 
             return True
