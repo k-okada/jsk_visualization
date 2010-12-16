@@ -5,7 +5,7 @@
 
 (defun eusmodel-description->collada (name description &key (scale 0.001))
   "convert eusmodel-descrption to collada sxml"
-  (warn "start to converting to collada sxml~%")
+  (warn "start converting to collada sxml~%")
   `(collada
     (@ (version "1.5.0")
        (xmlns "http://www.collada.org/2008/03/COLLADASchema")
@@ -15,7 +15,7 @@
        )
     (asset
      (contributor (authoring_tool 
-                    "Eus2Collada written by R.Ueda"))
+                    "Eus2Collada"))
      (unit (@ (meter ,scale)
               (name "millimeter")))
      (up_axis "Z_UP"))
@@ -53,12 +53,13 @@
       (let ((sxml (eusmodel-description->collada
                    name descrpition :scale scale)))
         (setup-collada-filesystem name full-root-dir) ;mkdir for collada
-        (let ((xml-file (format nil "~A/collada/~A.dae" full-root-dir name))
+        (let ((xml-file (format nil "~Acollada/~A.dae" full-root-dir name))
               (xml (sxml->xml sxml)))
           (with-open-file (f xml-file :direction :output)
             (format f "<?xml version=\"1.0\"?>~%")
             (xml-output-to-string-stream f xml)
             nil))))))
+
 
 (defun collada-node-id (link-descrption)
   (format nil "~A.node" (cdr (assoc :name link-descrption))))

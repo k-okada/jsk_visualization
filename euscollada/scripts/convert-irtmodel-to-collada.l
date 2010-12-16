@@ -4,10 +4,6 @@
 (load "package://euscollada/src/eusmodel-description.l")
 (load "package://euscollada/src/collada-interface.l")
 
-(defvar *model-file* (car lisp::*eustop-argument*))
-(defvar *model-name* (cadr lisp::*eustop-argument*))
-(defvar *output-uri* (caddr lisp::*eustop-argument*))
-
 (if (not (and *model-file* *output-uri*))
     (progn
       (warn "usage: convert-to-urdf.l <modelfile> <output-directory-uri>~%")
@@ -30,3 +26,5 @@
   (let ((model (instance (eval (intern model-class-name)) :init)))
     (send model :name *model-name*)
     (eus2collada model *output-uri*)))
+
+(exit)

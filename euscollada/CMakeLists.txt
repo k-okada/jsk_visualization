@@ -44,19 +44,19 @@ macro(convert_to_collada)
   set(collada_output_directory "${_rospack_current_package_path}/collada")
   execute_process(COMMAND "find" "${irtmodel_directory}" "-name" "*robot.l" "-o" "-name" "*object.l"
     OUTPUT_VARIABLE irtmodels)
-  
+
   string(REPLACE "\n" ";" irtmodels "${irtmodels}") #space separated list
   set(irtmodels_list ${irtmodels})
   set(_autogen "")
   foreach(_model ${irtmodels_list})
     string(REGEX REPLACE ".l" "" _model_name1 ${_model})
     string(REGEX REPLACE ".*/" "" _model_name ${_model_name1})
+    set(_command_arg "\"\\(progn \\(defvar *model-file* \\\"${_model}\\\"\\) \\(defvar *model-name* \\\"${_model_name}\\\"\\) \\(defvar  *output-uri* \\\"package://${PROJECT_NAME}\\\"\\)\\)\" ")
     add_custom_command(OUTPUT "${collada_output_directory}/${_model_name}.dae"
-      COMMAND "${convert_exe_full_path}" ${_model} ${_model_name} "package://${PROJECT_NAME}")
+      COMMAND "roseus" "\"${_command_arg}\"" "${convert_exe_full_path}")
     list(APPEND _autogen "${collada_output_directory}/${_model_name}.dae")
   endforeach(_model)
   add_custom_target(CONVERT_EUS_TO_COLLADA ALL DEPENDS ${_autogen})
-  message(WARNING "sorry, collada converter does not support ${CMAKE_SYSTEM_PROCESSOR} architecture")
 endmacro(convert_to_collada)
 
 convert_to_collada()
