@@ -203,7 +203,8 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
       fprintf(fp, "     ))\n");
 
       // do qhull
-      int ret = qh_new_qhull (3, points.size()/3, &points[0], 0, "qhull C-0.001", NULL, NULL);
+      char qhull_attr[] = "qhull C-0.001";
+      int ret = qh_new_qhull (3, points.size()/3, &points[0], 0, qhull_attr, NULL, NULL);
       if ( ! ret ) {
         fprintf(fp, "  (:qhull-faceset ()\n");
         fprintf(fp, "   ;; qhull %d -> %d faces\n", points.size()/3, qh num_facets);
@@ -261,9 +262,17 @@ domJoint *findJointFromName(const char *jointName) {
   int jointElementCount;
   jointElementCount = g_dae->getDatabase()->getElementCount(NULL, "joint", NULL);
   for(int currentJoint=0;currentJoint<jointElementCount;currentJoint++) {
-    domJoint *thisJoint;
+    domJoint *thisJoint = NULL;
     // get current geometry
     g_dae->getDatabase()->getElement((daeElement**)&thisJoint, currentJoint, NULL, "joint");
+    if ( thisJoint == NULL ) {
+      fprintf(stderr, "Counld not found joint %s\n", jointName);
+      exit(1);
+    }
+    if ( thisJoint->getSid() == NULL ) {
+      fprintf(stderr, "Counld not found Sid of joint %s\n", jointName);
+      exit(1);
+    }
     string jointSid_str = string(((domKinematics_model *)(thisJoint->getParentElement()->getParentElement()))->getId())+string("/")+string(thisJoint->getSid());
     if ( jointSid_str.compare(jointName) == 0 ||
          strcmp(thisJoint->getName(),jointName) == 0 ) {
@@ -493,7 +502,7 @@ int main(int argc, char* argv[]){
   FILE *output_fp;
   char *input_filename, *yaml_filename, *output_filename;
   if (argc!=4) {
-    fprintf(stderr, "Usage: %s <input dae filename> <input yaml filename> <output dae filename>\n",argv[0]);
+    fprintf(stderr, "Usage: %s <input dae filename> <input yaml filename> <output lisp filename>\n",argv[0]);
     exit(-1);
   }
 
