@@ -104,9 +104,12 @@
                 (let ((tmp (send model link)))
                   (if (and tmp (send model link :end-coords)
                            (send (send model link :end-coords) :parent))
-                      (send model :link-list
-                            (send (send model link :end-coords) :parent)
-                            (car tmp)))))))
+                      (let ((link-list
+                             (send model :link-list
+                                   (send (send model link :end-coords) :parent)
+                                   (car tmp))))
+                        (cons (send (car tmp) :parent-link)
+                              link-list)))))))
     (let ((head (get-links :head))
           (larm (get-links :larm))
           (rarm (get-links :rarm))
