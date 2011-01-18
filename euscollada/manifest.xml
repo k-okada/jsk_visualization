@@ -13,7 +13,7 @@
   <depend package="yaml_cpp"/>
   <depend package="collada_urdf_jsk_patch"/>
   <depend package="euslisp"/>
-
+  <depend package="roseus" />
   <rosdep name="libqhull" />
 
 </package>
