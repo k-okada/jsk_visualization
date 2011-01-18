@@ -31,7 +31,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 rosbuild_add_executable(collada2eus src/collada2eus.cpp)
 target_link_libraries(collada2eus qhull)
-
+message("${CMAKE_SYSTEM_PROCESSOR}")
 macro(convert_to_collada)
   set(convert_exe "convert-irtmodel-to-collada.l")
   rosbuild_invoke_rospack("euscollada" _rospack euscollada_path find)
