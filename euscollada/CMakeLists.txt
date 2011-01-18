@@ -53,7 +53,10 @@ macro(convert_to_collada)
     string(REGEX REPLACE ".*/" "" _model_name ${_model_name1})
     set(_command_arg "\"\\(progn \\(defvar *model-file* \\\"${_model}\\\"\\) \\(defvar *model-name* \\\"${_model_name}\\\"\\) \\(defvar  *output-uri* \\\"package://${PROJECT_NAME}\\\"\\)\\)\" ")
     add_custom_command(OUTPUT "${collada_output_directory}/${_model_name}.dae"
-      COMMAND "roseus" "\"${_command_arg}\"" "${convert_exe_full_path}")
+      COMMAND "roseus" "\"${_command_arg}\"" "${convert_exe_full_path}"
+      DEPENDS "${convert_exe_full_path}"
+      "${_rospack_euscollada_path}/src/collada-interface.l"
+      "${_rospack_euscollada_path}/src/eusmodel-description.l")
     list(APPEND _autogen "${collada_output_directory}/${_model_name}.dae")
   endforeach(_model)
   add_custom_target(CONVERT_EUS_TO_COLLADA ALL DEPENDS ${_autogen})
