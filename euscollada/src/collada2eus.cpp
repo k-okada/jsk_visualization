@@ -91,11 +91,12 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
 	domEffect* thisEffect = daeSafeCast<domEffect>(g_dae->getDatabase()->idLookup(thisInstanceEffect->getUrl().id(),g_document));
 
 	fprintf(fp, "         (gl::glColor3fv (float-vector 0.1 0.1 0.1))\n");
+	// euslisp uses diffuse for ambient
 	fprintf(fp, "         (gl::glMaterialfv gl::GL_FRONT gl::GL_AMBIENT (float-vector %f %f %f %f))\n",
-		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[0],
-		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[1],
-		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[2],
-		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[3]);
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[0],
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[1],
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[2],
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[3]);
 	fprintf(fp, "         (gl::glMaterialfv gl::GL_FRONT gl::GL_DIFFUSE (float-vector %f %f %f %f))\n",
 		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[0],
 		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[1],
@@ -170,9 +171,12 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
                 thisMesh->getSource_array()[0]->getFloat_array()->getValue().get((normal_index_0)*3+2);
               float aa = sqrt(a0*a0+a1*a1+a2*a2); a0 /= aa; a1 /= aa; a2 /= aa;
               float bb = sqrt(b0*b0+b1*b1+b2*b2); b0 /= bb; b1 /= bb; b2 /= bb;
-	      if ( isnormal(a0*a1*a2*b0*b1*b2) ) {
+	      if ( !(isnan(a0*a1*a2*b0*b1*b2) || isinf(a0*a1*a2*b0*b1*b2)) ) {
 		fprintf(fp, "         (gl::glNormal3fv (float-vector %f %f %f))\n",
 			(a1*b2 - a2*b1), (a2*b0 - a0*b2), (a0*b1 - a1*b0));
+	      } else {
+		fprintf(stderr, "calcNormal error : %f %f %f -> %f -> %f %f %f\n", a0, a1, a2, aa, a0, a1, a2);
+		fprintf(stderr, "calcNormal error : %f %f %f -> %f -> %f %f %f\n", b0, b1, b2, bb, b0, b1, b2);
 	      }
             }
           }
@@ -416,30 +420,43 @@ void writeKinematics(FILE *fp, domLink::domAttachment_full_Array thisAttachmentA
   }
 }
 
-void writeTranslate(FILE *fp, const char *indent, const char *name, domTranslate_Array thisArray) {
+void writeTranslate(FILE *fp, const char *indent, const char *name, domNode *thisNode) {
+  domTranslate_Array thisArray = thisNode->getTranslate_array();
   int translateCount = thisArray.getCount();
-  for(int currentTranslate=0;currentTranslate<translateCount;currentTranslate++){
+  for(int currentTranslate=translateCount-1;currentTranslate>=0;currentTranslate--){
     domTranslateRef thisTranslate = thisArray[currentTranslate];
-    if ( thisTranslate->getSid() ) continue;
+    fprintf(stderr, "%s:%d/%d\n", name, currentTranslate, translateCount);
+    if ( thisTranslate->getSid() ) {
+      fprintf(stderr, "skip %s : %s\n", name, thisTranslate->getSid());
+      continue;
+    }
     fprintf(fp, "%s(send %s :translate (float-vector %f %f %f))\n",
             indent, name,
             1000*thisTranslate->getValue()[0],
             1000*thisTranslate->getValue()[1],
             1000*thisTranslate->getValue()[2]);
+    thisNode->removeFromParent(thisTranslate);
+    return;
   }
 }
 
-void writeRotate(FILE *fp, const char *indent, const char *name, domRotate_Array thisArray) {
+void writeRotate(FILE *fp, const char *indent, const char *name, domNode *thisNode) {
+  domRotate_Array thisArray = thisNode->getRotate_array();
   int rotateCount = thisArray.getCount();
-  for(int currentRotate=0;currentRotate<rotateCount;currentRotate++){
+  for(int currentRotate=rotateCount-1;currentRotate>=0;currentRotate--){
     domRotateRef thisRotate = thisArray[currentRotate];
-    if ( thisRotate->getSid() ) continue;
+    if ( thisRotate->getSid() ) {
+      fprintf(stderr, "skip %s : %s\n", name, thisRotate->getSid());
+      continue;
+    }
     fprintf(fp, "%s(send %s :rotate %f (float-vector %f %f %f))\n",
             indent, name,
             (thisRotate->getValue()[3])*M_PI/180.0,
             thisRotate->getValue()[0],
             thisRotate->getValue()[1],
             thisRotate->getValue()[2]);
+    thisNode->removeFromParent(thisRotate);
+    return;
   }
 }
 
@@ -455,6 +472,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
             thisNode->getSid(), thisNode->getName(),thisNode->getNode_array().getCount() );
 
     // geometry we assume Node_array()[0] contatins geometry
+    fprintf(fp, "     (let (");
     if ( thisNode->getInstance_geometry_array().getCount() > 0 ) {
       int geometryCount = thisNode->getInstance_geometry_array().getCount();
       vector<pair<domInstance_geometry*, string> > geometryNameArray;
@@ -466,33 +484,32 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
       }
 
 
-      fprintf(fp, "     ;; define bodyset-link for %s : %s\n", thisNode->getName(), thisNode->getId());
-      fprintf(fp, "     (let (");
       for(vector<pair<domInstance_geometry*, string> >::iterator it=geometryNameArray.begin();it!=geometryNameArray.end();it++){
 	fprintf(fp, "%s ", it->second.c_str());
       }
       fprintf(fp, ")\n");
+      fprintf(fp, "       ;; define bodyset-link for %s : %s\n", thisNode->getName(), thisNode->getId());
       for(vector<pair<domInstance_geometry *, string> >::iterator it=geometryNameArray.begin();it!=geometryNameArray.end();it++){
 	domInstance_geometry *thisGeometry = it->first;
 	const char * geometryName = it->second.c_str();
 	fprintf(fp, "       (setq %s (instance %s :init))\n",  geometryName, thisGeometry->getUrl().id().c_str());
 	// translate
-	writeTranslate(fp, "       ", geometryName, thisNode->getTranslate_array());
+	writeTranslate(fp, "       ", geometryName, thisNode);
 	// rotate
-	writeRotate(fp, "       ", geometryName, thisNode->getRotate_array());
+	writeRotate(fp, "       ", geometryName, thisNode);
       }
 
+      if ( geometryNameArray.size() > 0 ) {
+	const char *rootName = geometryNameArray.begin()->second.c_str();
+	for(vector<pair<domInstance_geometry *, string> >::iterator it=geometryNameArray.begin();(++it)!=geometryNameArray.end();){
+	  const char * geometryName = it->second.c_str();
+	  fprintf(fp, "       (send %s :assoc %s)\n", rootName, geometryName);
+	}
+      }
       // bodyset link
       fprintf(fp, "       (setq %s\n", thisNode->getName());
       fprintf(fp, "             (instance bodyset-link\n");
-      // NEED ROTATION?
-      float fx = 0, fy = 0, fz = 0;
-      if ( thisNode->getTranslate_array().getCount() >  0 ) {
-	fx = 1000*thisNode->getTranslate_array()[0]->getValue()[0];
-	fy = 1000*thisNode->getTranslate_array()[0]->getValue()[1];
-	fz = 1000*thisNode->getTranslate_array()[0]->getValue()[2];
-      }
-      fprintf(fp, "                       :init (make-cascoords :pos (float-vector %f %f %f))\n", fx, fy, fz);
+      fprintf(fp, "                       :init (make-cascoords)\n");
       fprintf(fp, "                       :bodies (list");
       for(vector<pair<domInstance_geometry *, string> >::iterator it=geometryNameArray.begin();it!=geometryNameArray.end();it++){
 	const char * geometryName = it->second.c_str();
@@ -501,45 +518,30 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
       fprintf(fp, ")\n");
       fprintf(fp, "                       :name :%s))\n", thisNode->getName());
 
-      // assoc
-      for(unsigned int currentNodeArray=0;currentNodeArray<thisNode->getNode_array().getCount();currentNodeArray++) {
-        if ( strcmp(thisNode->getNode_array()[currentNodeArray]->getName(),"visual") == 0 ) continue; //@@@ OK??
-        fprintf(fp, "       (send %s :assoc %s)\n",
-                thisNode->getName(),
-                thisNode->getNode_array()[currentNodeArray]->getName());
-      }
-      fprintf(fp, "       )\n");
     } else if ( thisNode->getNode_array().getCount() > 0 &&
                 strcmp(thisNode->getNode_array()[0]->getName(),"visual") != 0 ) {
+      fprintf(fp, ")\n"); // let(
       cerr << ";; WARNING link without geometry : " << thisNode->getName() << endl;
       fprintf(fp, "     ;; define bodyset-link for %s\n", thisNode->getName());
       fprintf(fp, "     (setq %s (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 10 10 10)) :name :%s))\n", thisNode->getName(), thisNode->getName());
-
-      // assoc
-      for(unsigned int currentNodeArray=0;currentNodeArray<thisNode->getNode_array().getCount();currentNodeArray++) {
-        if ( strcmp(thisNode->getNode_array()[currentNodeArray]->getName(),"visual") == 0 ) continue; //@@@ OK??
-        fprintf(fp, "     (send %s :assoc %s)\n",
-                thisNode->getName(),
-                thisNode->getNode_array()[currentNodeArray]->getName());
-      }
     } else {
+      fprintf(fp, ")\n"); // let(
       fprintf(fp, "     ;; define cascaded-coords for %s\n", thisNode->getName());
       fprintf(fp, "     (setq %s (make-cascoords :name :%s))\n", thisNode->getName(), thisNode->getName());
-
-      // assoc
-      for(unsigned int currentNodeArray=0;currentNodeArray<thisNode->getNode_array().getCount();currentNodeArray++) {
-        if ( strcmp(thisNode->getNode_array()[currentNodeArray]->getName(),"visual") == 0 ) continue; //@@@ OK??
-        fprintf(fp, "     (send %s :assoc %s)\n",
-                thisNode->getName(),
-                thisNode->getNode_array()[currentNodeArray]->getName());
-      }
     }
-    fprintf(stderr, ")\n");
-
+    // assoc
+    for(unsigned int currentNodeArray=0;currentNodeArray<thisNode->getNode_array().getCount();currentNodeArray++) {
+      if ( strcmp(thisNode->getNode_array()[currentNodeArray]->getName(),"visual") == 0 ) continue; //@@@ OK??
+      fprintf(fp, "       (send %s :assoc %s)\n",
+	      thisNode->getName(),
+	      thisNode->getNode_array()[currentNodeArray]->getName());
+    }
     // translate
-    writeTranslate(fp, "     ", thisNode->getName(), thisNode->getTranslate_array());
+    writeTranslate(fp, "       ", thisNode->getName(), thisNode);
     // rotate
-    writeRotate(fp, "     ", thisNode->getName(), thisNode->getRotate_array());
+    writeRotate(fp, "       ", thisNode->getName(), thisNode);
+
+    fprintf(fp, "       )\n");
 
     fprintf(fp, "\n");
   }
