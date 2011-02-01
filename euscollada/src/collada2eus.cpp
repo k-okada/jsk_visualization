@@ -170,9 +170,10 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
                 thisMesh->getSource_array()[0]->getFloat_array()->getValue().get((normal_index_0)*3+2);
               float aa = sqrt(a0*a0+a1*a1+a2*a2); a0 /= aa; a1 /= aa; a2 /= aa;
               float bb = sqrt(b0*b0+b1*b1+b2*b2); b0 /= bb; b1 /= bb; b2 /= bb;
-
-              fprintf(fp, "         (gl::glNormal3fv (float-vector %f %f %f))\n",
-                      (a1*b2 - a2*b1), (a2*b0 - a0*b2), (a0*b1 - a1*b0));
+	      if ( isnormal(a0*a1*a2*b0*b1*b2) ) {
+		fprintf(fp, "         (gl::glNormal3fv (float-vector %f %f %f))\n",
+			(a1*b2 - a2*b1), (a2*b0 - a0*b2), (a0*b1 - a1*b0));
+	      }
             }
           }
 
@@ -456,22 +457,35 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
     // geometry we assume Node_array()[0] contatins geometry
     if ( thisNode->getInstance_geometry_array().getCount() > 0 ) {
       int geometryCount = thisNode->getInstance_geometry_array().getCount();
-      domInstance_geometry *thisGeometry  = thisNode->getInstance_geometry_array()[0];
-      const char * geometryName = (string("b_")+thisGeometry->getUrl().id()).c_str();
-      fprintf(stderr, "%s ",geometryName);
-      assert(geometryCount == 1);
+      vector<pair<domInstance_geometry*, string> > geometryNameArray;
+      for(int currentGeometryCount=0;currentGeometryCount<geometryCount;currentGeometryCount++) {
+	domInstance_geometry *thisGeometry  = thisNode->getInstance_geometry_array()[currentGeometryCount];
+	const char * geometryName = (string("b_")+thisGeometry->getUrl().id()).c_str();
+	fprintf(stderr, "%s ",geometryName);
+	geometryNameArray.push_back(pair<domInstance_geometry*, string>(thisGeometry, geometryName));
+      }
+
+
       fprintf(fp, "     ;; define bodyset-link for %s : %s\n", thisNode->getName(), thisNode->getId());
-      fprintf(fp, "     (let (%s)\n", geometryName);
-      fprintf(fp, "       (setq %s (instance %s :init))\n",  geometryName, thisGeometry->getUrl().id().c_str());
-      // translate
-      writeTranslate(fp, "       ", geometryName, thisNode->getTranslate_array());
-      // rotate
-      writeRotate(fp, "       ", geometryName, thisNode->getRotate_array());
+      fprintf(fp, "     (let (");
+      for(vector<pair<domInstance_geometry*, string> >::iterator it=geometryNameArray.begin();it!=geometryNameArray.end();it++){
+	fprintf(fp, "%s ", it->second.c_str());
+      }
+      fprintf(fp, ")\n");
+      for(vector<pair<domInstance_geometry *, string> >::iterator it=geometryNameArray.begin();it!=geometryNameArray.end();it++){
+	domInstance_geometry *thisGeometry = it->first;
+	const char * geometryName = it->second.c_str();
+	fprintf(fp, "       (setq %s (instance %s :init))\n",  geometryName, thisGeometry->getUrl().id().c_str());
+	// translate
+	writeTranslate(fp, "       ", geometryName, thisNode->getTranslate_array());
+	// rotate
+	writeRotate(fp, "       ", geometryName, thisNode->getRotate_array());
+      }
 
       // bodyset link
       fprintf(fp, "       (setq %s\n", thisNode->getName());
       fprintf(fp, "             (instance bodyset-link\n");
-      // NEED FIX!!!
+      // NEED ROTATION?
       float fx = 0, fy = 0, fz = 0;
       if ( thisNode->getTranslate_array().getCount() >  0 ) {
 	fx = 1000*thisNode->getTranslate_array()[0]->getValue()[0];
@@ -479,7 +493,12 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 	fz = 1000*thisNode->getTranslate_array()[0]->getValue()[2];
       }
       fprintf(fp, "                       :init (make-cascoords :pos (float-vector %f %f %f))\n", fx, fy, fz);
-      fprintf(fp, "                       :bodies (list %s)\n", geometryName);
+      fprintf(fp, "                       :bodies (list");
+      for(vector<pair<domInstance_geometry *, string> >::iterator it=geometryNameArray.begin();it!=geometryNameArray.end();it++){
+	const char * geometryName = it->second.c_str();
+	fprintf(fp, " %s", geometryName);
+      }
+      fprintf(fp, ")\n");
       fprintf(fp, "                       :name :%s))\n", thisNode->getName());
 
       // assoc
