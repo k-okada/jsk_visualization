@@ -388,8 +388,8 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
     jointAxis_array = thisJoint->getRevolute_array();
     jointCount = thisJoint->getRevolute_array().getCount();
     if ( jointAxis_array[0]->getLimits() ) {
-      min = 180/M_PI*jointAxis_array[0]->getLimits()->getMin()->getValue();
-      max = 180/M_PI*jointAxis_array[0]->getLimits()->getMax()->getValue();
+      min = jointAxis_array[0]->getLimits()->getMin()->getValue();
+      max = jointAxis_array[0]->getLimits()->getMax()->getValue();
     }
   }
   axis[0] = jointAxis_array[0]->getAxis()->getValue()[0];
