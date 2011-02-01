@@ -6,7 +6,7 @@ if [ "$?" != 0 ] ;  then exit ; fi
 rosrun euscollada collada2eus pr2.dae pr2.yaml pr2.l
 if [ "$?" != 0 ] ;  then exit ; fi
 
-echo "									\
+rosrun roseus roseus "\
 (progn									\
   (load \"package://pr2eus/pr2-utils.l\")				\
   (if (not (boundp '*irtviewer*)) (make-irtviewer))			\
@@ -36,4 +36,4 @@ echo "									\
    )									\
   (send-all (send *pr2* :links) :draw-on :flush t)			\
   )									\
-" | rosrun roseus roseus 
+"
