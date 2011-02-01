@@ -75,22 +75,33 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
   for(int currentTriangle=0;currentTriangle<triangleElementCount;currentTriangle++)
     {
       domTriangles* thisTriangles = thisMesh->getTriangles_array().get(0);
-      domMaterial* thisMaterial = daeSafeCast<domMaterial>(g_dae->getDatabase()->idLookup(string(thisGeometry->getId())+string(".mat"), g_document));
-      domInstance_effect* thisInstanceEffect = thisMaterial->getInstance_effect();
-      domEffect* thisEffect = daeSafeCast<domEffect>(g_dae->getDatabase()->idLookup(thisInstanceEffect->getUrl().id(),g_document));
 
-      fprintf(fp, "         (gl::glColor3fv (float-vector 0.1 0.1 0.1))\n");
-      fprintf(fp, "         (gl::glMaterialfv gl::GL_FRONT gl::GL_AMBIENT (float-vector %f %f %f %f))\n",
-              thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[0],
-              thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[1],
-              thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[2],
-              thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[3]);
-      fprintf(fp, "         (gl::glMaterialfv gl::GL_FRONT gl::GL_DIFFUSE (float-vector %f %f %f %f))\n",
-              thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[0],
-              thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[1],
-              thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[2],
-              thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[3]);
+      // NEED FIX, we mut get matriar target name from database
+      domMaterial* thisMaterial; string materialTarget;
+      materialTarget = string(thisGeometry->getId())+string(".mat");
+      thisMaterial = daeSafeCast<domMaterial>(g_dae->getDatabase()->idLookup(materialTarget, g_document));
+      if ( thisMaterial == NULL ) {
+	materialTarget = string(thisGeometry->getId())+string("_mat");
+	thisMaterial = daeSafeCast<domMaterial>(g_dae->getDatabase()->idLookup(materialTarget, g_document));
+      }
+      if ( thisMaterial == NULL ) {
+	fprintf(stderr, "Could not find material %s\n", materialTarget.c_str());
+      } else {
+	domInstance_effect* thisInstanceEffect = thisMaterial->getInstance_effect();
+	domEffect* thisEffect = daeSafeCast<domEffect>(g_dae->getDatabase()->idLookup(thisInstanceEffect->getUrl().id(),g_document));
 
+	fprintf(fp, "         (gl::glColor3fv (float-vector 0.1 0.1 0.1))\n");
+	fprintf(fp, "         (gl::glMaterialfv gl::GL_FRONT gl::GL_AMBIENT (float-vector %f %f %f %f))\n",
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[0],
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[1],
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[2],
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getAmbient()->getColor()->getValue()[3]);
+	fprintf(fp, "         (gl::glMaterialfv gl::GL_FRONT gl::GL_DIFFUSE (float-vector %f %f %f %f))\n",
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[0],
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[1],
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[2],
+		thisEffect->getFx_profile_array()[0]->getProfile_COMMON()->getTechnique()->getPhong()->getDiffuse()->getColor()->getValue()[3]);
+      }
 
       int numberOfInputs = (int)getMaxOffset(thisTriangles->getInput_array()) +1;// offset
       int numberOfTriangles = (int)(thisTriangles->getP()->getValue().getCount() / numberOfInputs);	// elements
@@ -207,7 +218,7 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
       int ret = qh_new_qhull (3, points.size()/3, &points[0], 0, qhull_attr, NULL, NULL);
       if ( ! ret ) {
         fprintf(fp, "  (:qhull-faceset ()\n");
-        fprintf(fp, "   ;; qhull %d -> %d faces\n", points.size()/3, qh num_facets);
+        fprintf(fp, "   ;; qhull %zd -> %d faces\n", points.size()/3, qh num_facets);
         fprintf(fp, "   (instance faceset :init :faces (list\n");
         // get faces
         facetT *facet;
@@ -266,12 +277,10 @@ domJoint *findJointFromName(const char *jointName) {
     // get current geometry
     g_dae->getDatabase()->getElement((daeElement**)&thisJoint, currentJoint, NULL, "joint");
     if ( thisJoint == NULL ) {
-      fprintf(stderr, "Counld not found joint %s\n", jointName);
-      exit(1);
+      break;
     }
     if ( thisJoint->getSid() == NULL ) {
-      fprintf(stderr, "Counld not found Sid of joint %s\n", jointName);
-      exit(1);
+      break;
     }
     string jointSid_str = string(((domKinematics_model *)(thisJoint->getParentElement()->getParentElement()))->getId())+string("/")+string(thisJoint->getSid());
     if ( jointSid_str.compare(jointName) == 0 ||
@@ -279,7 +288,19 @@ domJoint *findJointFromName(const char *jointName) {
       return thisJoint;
     }
   }
-  fprintf(stderr, "Counld not found joint %s\n", jointName);
+  fprintf(stderr, "\n[ERROR] Counld not found joint [%s]\n", jointName);
+  fprintf(stderr, "[ERROR] you have to set joint name from followings\n");
+  for(int currentJoint=0;currentJoint<jointElementCount;currentJoint++) {
+    domJoint *thisJoint = NULL;
+    g_dae->getDatabase()->getElement((daeElement**)&thisJoint, currentJoint, NULL, "joint");
+    fprintf(stderr, "%d : ", currentJoint);
+    if ( thisJoint != NULL ) fprintf(stderr, "%s ", thisJoint->getName());
+    if ( thisJoint->getSid() != NULL ) {
+      string jointSid_str = string(((domKinematics_model *)(thisJoint->getParentElement()->getParentElement()))->getId())+string("/")+string(thisJoint->getSid());
+      fprintf(stderr, "(%s)", jointSid_str.c_str());
+    }
+    fprintf(stderr, "\n");
+  }
   exit(1);
 }
 
@@ -348,7 +369,6 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   int jointElementCount;
   jointElementCount = g_dae->getDatabase()->getElementCount(NULL, "joint", NULL);
   domJoint *thisJoint = findJointFromName(jointSid);
-  cerr << "writeJoint " << thisJoint->getName() << ", parent = " << parentLink->getName() << ", child = " << childLink->getName()  << endl;
   fprintf(fp, "     (setq %s\n", thisJoint->getName());
   fprintf(fp, "           (instance %s :init\n",
           (thisJoint->getPrismatic_array().getCount()>0)?"linear-joint":"rotational-joint");
@@ -367,13 +387,14 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
     jointAxis_array = thisJoint->getRevolute_array();
     jointCount = thisJoint->getRevolute_array().getCount();
     if ( jointAxis_array[0]->getLimits() ) {
-      min = jointAxis_array[0]->getLimits()->getMin()->getValue();
-      max = jointAxis_array[0]->getLimits()->getMax()->getValue();
+      min = 180/M_PI*jointAxis_array[0]->getLimits()->getMin()->getValue();
+      max = 180/M_PI*jointAxis_array[0]->getLimits()->getMax()->getValue();
     }
   }
   axis[0] = jointAxis_array[0]->getAxis()->getValue()[0];
   axis[1] = jointAxis_array[0]->getAxis()->getValue()[1];
   axis[2] = jointAxis_array[0]->getAxis()->getValue()[2];
+  cerr << "writeJoint " << thisJoint->getName() << ", parent = " << parentLink->getName() << ", child = " << childLink->getName()  << ", limit = " << min << "/" << max << endl;
   fprintf(fp, "                     :axis (float-vector %f %f %f)\n", axis[0], axis[1], axis[2]);
   fprintf(fp, "                     :min %f :max %f\n", min, max);
   fprintf(fp, "                     ))\n");
@@ -429,16 +450,22 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 
     if ( strcmp(thisNode->getName(),"visual") == 0 ) continue; //@@@ OK??
     // link
-    fprintf(stderr, "link sid:%s name:%s node_array:%d\n",
+    fprintf(stderr, "link sid:%s name:%s node_array:%zd (",
             thisNode->getSid(), thisNode->getName(),thisNode->getNode_array().getCount() );
 
     // geometry we assume Node_array()[0] contatins geometry
     if ( thisNode->getNode_array().getCount() > 0 &&
          thisNode->getNode_array()[0]->getInstance_geometry_array().getCount() > 0 ) {
-      domNode *thisNode2 = thisNode->getNode_array()[0];
+      domNode *thisNode2;
+      if ( thisNode->getInstance_geometry_array().getCount() > 0 ) {
+	thisNode2 = thisNode;
+      } else {
+	thisNode2 = thisNode->getNode_array()[0];
+      }
       int geometryCount = thisNode2->getInstance_geometry_array().getCount();
-      domInstance_geometry *thisGeometry = thisNode2->getInstance_geometry_array()[0];
+      domInstance_geometry *thisGeometry  = thisNode2->getInstance_geometry_array()[0];
       const char * geometryName = (string("b_")+thisGeometry->getUrl().id()).c_str();
+      fprintf(stderr, "%s ",geometryName);
       assert(geometryCount == 1);
       fprintf(fp, "     ;; define bodyset-link for %s : %s\n", thisNode->getName(), thisNode->getId());
       fprintf(fp, "     (let (%s)\n", geometryName);
@@ -451,7 +478,14 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
       // bodyset link
       fprintf(fp, "       (setq %s\n", thisNode->getName());
       fprintf(fp, "             (instance bodyset-link\n");
-      fprintf(fp, "                       :init (make-cascoords)\n");
+      // NEED FIX!!!
+      float fx = 0, fy = 0, fz = 0;
+      if ( thisNode2->getTranslate_array().getCount() >  0 ) {
+	fx = 1000*thisNode2->getTranslate_array()[0]->getValue()[0];
+	fy = 1000*thisNode2->getTranslate_array()[0]->getValue()[1];
+	fz = 1000*thisNode2->getTranslate_array()[0]->getValue()[2];
+      }
+      fprintf(fp, "                       :init (make-cascoords :pos (float-vector %f %f %f))", fx, fy, fz);
       fprintf(fp, "                       :bodies (list %s)\n", geometryName);
       fprintf(fp, "                       :name :%s))\n", thisNode->getName());
 
@@ -488,6 +522,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
                 thisNode->getNode_array()[currentNodeArray]->getName());
       }
     }
+    fprintf(stderr, ")\n");
 
     // translate
     writeTranslate(fp, "     ", thisNode->getName(), thisNode->getTranslate_array());
@@ -719,7 +754,13 @@ int main(int argc, char* argv[]){
   }
   fprintf(output_fp, "))))\n\n");
 
-  fprintf(output_fp, "     (send self :reset-pose) ;; :set reset-pose\n\n");
+  // when - angle-vector: reset-pose is defined in yaml file
+  try {
+    doc["angle-vector"]["reset-pose"];
+    fprintf(output_fp, "     (send self :reset-pose) ;; :set reset-pose\n\n");
+  } catch(YAML::RepresentationException& e) {
+  }
+
   fprintf(output_fp, "     self)) ;; :init\n\n");
 
   try {
