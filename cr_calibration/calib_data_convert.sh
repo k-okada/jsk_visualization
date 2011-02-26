@@ -9,11 +9,10 @@ else
 fi
 
 LOCDIR=`pwd`
-cd /tmp
 tar xvf $LOCDIR/$CALIBLOCAL ost.txt
 LINENUM=(`grep -n -i ost ost.txt | sed -e 's/\([0-9]\+\).*/\1/'`)
-cd $LOCDIR
-cp ost.txt ost_$$.txt
+#cd $LOCDIR
+mv ost.txt ost_$$.txt
 
 if [ ${#LINENUM[@]} -eq 2 ]; then
     split ost_$$.txt -l ${LINENUM[1]}
