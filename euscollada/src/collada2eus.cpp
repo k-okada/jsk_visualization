@@ -119,6 +119,7 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
           if(strcmp(thisTriangles->getInput_array()[i]->getSemantic(), "NORMAL")==0)
             noroffset = thisTriangles->getInput_array()[i]->getOffset();
         }
+      fprintf(fp, "         ;; draw %d triangles\n", numberOfTriangles);
       fprintf(fp, "         (gl::glBegin gl::GL_TRIANGLES)\n");
       for(int i=0;i<numberOfTriangles;i++)
         {
@@ -220,9 +221,18 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
 
       // do qhull
       char qhull_attr[] = "qhull C-0.001";
-      int ret = qh_new_qhull (3, points.size()/3, &points[0], 0, qhull_attr, NULL, NULL);
-      if ( ! ret ) {
-        fprintf(fp, "  (:qhull-faceset ()\n");
+      int ret = qh_new_qhull (3, points.size()/3, &points[0], 0, qhull_attr, NULL, stderr);
+      fprintf(fp, "  (:qhull-faceset ()\n");
+      if ( ret ) {
+        fprintf(fp, "   (instance faceset :init :faces (list\n");
+	for (unsigned int i = 0; i < points.size()/9; i++ ) {
+          fprintf(fp, "    (instance face :init :vertices (list (float-vector %f %f %f) (float-vector %f %f %f) (float-vector %f %f %f)))\n",
+		  1000*points[i*9+0], 1000*points[i*9+1], 1000*points[i*9+2],
+		  1000*points[i*9+3], 1000*points[i*9+4], 1000*points[i*9+5],
+		  1000*points[i*9+6], 1000*points[i*9+7], 1000*points[i*9+8]);
+	}
+	fprintf(fp, "    ))\n");
+      } else {
         fprintf(fp, "   ;; qhull %zd -> %d faces\n", points.size()/3, qh num_facets);
         fprintf(fp, "   (instance faceset :init :faces (list\n");
         // get faces
@@ -237,8 +247,9 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
           fprintf(fp, "))\n");
           qh_settempfree(&vertices);
         }
-        fprintf(fp, ")))\n");
+        fprintf(fp, "    ))\n");
       }
+      fprintf(fp, "   )\n");
       qh_freeqhull(!qh_ALL);
       int curlong, totlong;    // memory remaining after qh_memfreeshort
       qh_memfreeshort (&curlong, &totlong);    // free short memory and memory allocator
@@ -420,43 +431,47 @@ void writeKinematics(FILE *fp, domLink::domAttachment_full_Array thisAttachmentA
   }
 }
 
-void writeTranslate(FILE *fp, const char *indent, const char *name, domNode *thisNode) {
+void writeTranslate(FILE *fp, const char *indent, const char *name, domNode *thisNode, int targetTranslate) {
   domTranslate_Array thisArray = thisNode->getTranslate_array();
   int translateCount = thisArray.getCount();
-  for(int currentTranslate=translateCount-1;currentTranslate>=0;currentTranslate--){
+  for(int currentTranslate=0;currentTranslate<translateCount;currentTranslate++){
     domTranslateRef thisTranslate = thisArray[currentTranslate];
-    fprintf(stderr, "%s:%d/%d\n", name, currentTranslate, translateCount);
+    fprintf(stderr, "writeTranslate ? %s:curr:%d/target:%d/max:%d\n", name, currentTranslate, targetTranslate, translateCount);
     if ( thisTranslate->getSid() ) {
       fprintf(stderr, "skip %s : %s\n", name, thisTranslate->getSid());
       continue;
     }
-    fprintf(fp, "%s(send %s :translate (float-vector %f %f %f))\n",
-            indent, name,
-            1000*thisTranslate->getValue()[0],
-            1000*thisTranslate->getValue()[1],
-            1000*thisTranslate->getValue()[2]);
-    thisNode->removeFromParent(thisTranslate);
-    return;
+    if ( targetTranslate == 0 ) {
+      fprintf(fp, "%s(send %s :translate (float-vector %f %f %f))\n",
+	      indent, name,
+	      1000*thisTranslate->getValue()[0],
+	      1000*thisTranslate->getValue()[1],
+	      1000*thisTranslate->getValue()[2]);
+      return;
+    }
+    targetTranslate--;
   }
 }
 
-void writeRotate(FILE *fp, const char *indent, const char *name, domNode *thisNode) {
+void writeRotate(FILE *fp, const char *indent, const char *name, domNode *thisNode, int targetRotate) {
   domRotate_Array thisArray = thisNode->getRotate_array();
   int rotateCount = thisArray.getCount();
-  for(int currentRotate=rotateCount-1;currentRotate>=0;currentRotate--){
+  for(int currentRotate=0;currentRotate<rotateCount;currentRotate++){
     domRotateRef thisRotate = thisArray[currentRotate];
     if ( thisRotate->getSid() ) {
       fprintf(stderr, "skip %s : %s\n", name, thisRotate->getSid());
       continue;
     }
-    fprintf(fp, "%s(send %s :rotate %f (float-vector %f %f %f))\n",
-            indent, name,
-            (thisRotate->getValue()[3])*M_PI/180.0,
-            thisRotate->getValue()[0],
-            thisRotate->getValue()[1],
-            thisRotate->getValue()[2]);
-    thisNode->removeFromParent(thisRotate);
-    return;
+    if ( targetRotate == 0 ) {
+      fprintf(fp, "%s(send %s :rotate %f (float-vector %f %f %f))\n",
+	      indent, name,
+	      (thisRotate->getValue()[3])*M_PI/180.0,
+	      thisRotate->getValue()[0],
+	      thisRotate->getValue()[1],
+	      thisRotate->getValue()[2]);
+      return;
+    }
+    targetRotate--;
   }
 }
 
@@ -489,16 +504,17 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
       }
       fprintf(fp, ")\n");
       fprintf(fp, "       ;; define bodyset-link for %s : %s\n", thisNode->getName(), thisNode->getId());
+      int geometryNameCount = geometryNameArray.size();
       for(vector<pair<domInstance_geometry *, string> >::iterator it=geometryNameArray.begin();it!=geometryNameArray.end();it++){
 	domInstance_geometry *thisGeometry = it->first;
 	const char * geometryName = it->second.c_str();
 	fprintf(fp, "       (setq %s (instance %s :init))\n",  geometryName, thisGeometry->getUrl().id().c_str());
 	// translate
-	writeTranslate(fp, "       ", geometryName, thisNode);
+	writeTranslate(fp, "       ", geometryName, thisNode, geometryNameCount);
 	// rotate
-	writeRotate(fp, "       ", geometryName, thisNode);
+	writeRotate(fp, "       ", geometryName, thisNode, geometryNameCount);
+	geometryNameCount--;
       }
-
       if ( geometryNameArray.size() > 0 ) {
 	const char *rootName = geometryNameArray.begin()->second.c_str();
 	for(vector<pair<domInstance_geometry *, string> >::iterator it=geometryNameArray.begin();(++it)!=geometryNameArray.end();){
@@ -544,9 +560,9 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 	      thisNode->getNode_array()[currentNodeArray]->getName());
     }
     // translate
-    writeTranslate(fp, "       ", thisNode->getName(), thisNode);
+    writeTranslate(fp, "       ", thisNode->getName(), thisNode, 0);
     // rotate
-    writeRotate(fp, "       ", thisNode->getName(), thisNode);
+    writeRotate(fp, "       ", thisNode->getName(), thisNode, 0);
 
     fprintf(fp, "       )\n");
 
