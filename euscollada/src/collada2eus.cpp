@@ -518,16 +518,23 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
       fprintf(fp, ")\n");
       fprintf(fp, "                       :name :%s))\n", thisNode->getName());
 
-    } else if ( thisNode->getNode_array().getCount() > 0 &&
-                strcmp(thisNode->getNode_array()[0]->getName(),"visual") != 0 ) {
+    } else if ( (thisNode->getNode_array().getCount() > 0 &&
+                 strcmp(thisNode->getNode_array()[0]->getName(),"visual") != 0 ) ||
+		(thisNode->getNode_array().getCount() > 1 &&
+                 strcmp(thisNode->getNode_array()[1]->getName(),"visual") != 0 ) ) {
       fprintf(fp, ")\n"); // let(
       cerr << ";; WARNING link without geometry : " << thisNode->getName() << endl;
-      fprintf(fp, "     ;; define bodyset-link for %s\n", thisNode->getName());
-      fprintf(fp, "     (setq %s (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 10 10 10)) :name :%s))\n", thisNode->getName(), thisNode->getName());
+      fprintf(fp, "       ;; define bodyset-link for %s\n", thisNode->getName());
+      fprintf(fp, "       (setq %s (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 10 10 10)) :name :%s))\n", thisNode->getName(), thisNode->getName());
     } else {
       fprintf(fp, ")\n"); // let(
-      fprintf(fp, "     ;; define cascaded-coords for %s\n", thisNode->getName());
-      fprintf(fp, "     (setq %s (make-cascoords :name :%s))\n", thisNode->getName(), thisNode->getName());
+      cerr << ";; WARNING link without geometry nor node: " << thisNode->getName() << " geometry : " << thisNode->getInstance_geometry_array().getCount() << ", node : " << thisNode->getNode_array().getCount();;
+      for (unsigned int i = 0; i < thisNode->getNode_array().getCount() ; i++) {
+	cerr << ", " << thisNode->getNode_array()[i]->getName();
+      }
+      cerr << endl;
+      fprintf(fp, "       ;; define cascaded-coords for %s\n", thisNode->getName());
+      fprintf(fp, "       (setq %s (make-cascoords :name :%s))\n", thisNode->getName(), thisNode->getName());
     }
     // assoc
     for(unsigned int currentNodeArray=0;currentNodeArray<thisNode->getNode_array().getCount();currentNodeArray++) {
