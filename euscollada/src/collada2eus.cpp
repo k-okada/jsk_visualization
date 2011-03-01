@@ -431,41 +431,47 @@ void writeKinematics(FILE *fp, domLink::domAttachment_full_Array thisAttachmentA
   }
 }
 
-void writeTranslate(FILE *fp, const char *indent, const char *name, domNode *thisNode, int targetTranslate) {
+void writeTranslate(FILE *fp, const char *indent, const char *name, domNode *thisNode, int targetTranslate, bool inverse=False) {
   domTranslate_Array thisArray = thisNode->getTranslate_array();
   int translateCount = thisArray.getCount();
   for(int currentTranslate=0;currentTranslate<translateCount;currentTranslate++){
     domTranslateRef thisTranslate = thisArray[currentTranslate];
-    fprintf(stderr, "writeTranslate ? %s:curr:%d/target:%d/max:%d\n", name, currentTranslate, targetTranslate, translateCount);
     if ( thisTranslate->getSid() ) {
-      fprintf(stderr, "skip %s : %s\n", name, thisTranslate->getSid());
+      fprintf(stderr, " skip %s : %s\n", name, thisTranslate->getSid());
       continue;
     }
     if ( targetTranslate == 0 ) {
-      fprintf(fp, "%s(send %s :translate (float-vector %f %f %f))\n",
-	      indent, name,
+      fprintf(stderr, " writeTranslate %s id:%d/%d %7.4f %7.4f %7.4f\n", name, currentTranslate, translateCount,
+	      thisTranslate->getValue()[0], thisTranslate->getValue()[1], thisTranslate->getValue()[2]);
+      fprintf(fp, "%s(send %s :translate ", indent, name);
+      if (inverse) { fprintf(fp, "(scale -1.0 "); }
+      fprintf(fp, "(float-vector %f %f %f)",
 	      1000*thisTranslate->getValue()[0],
 	      1000*thisTranslate->getValue()[1],
 	      1000*thisTranslate->getValue()[2]);
+      if (inverse) { fprintf(fp, ")"); }
+      fprintf(fp, ")\n");
       return;
     }
     targetTranslate--;
   }
 }
 
-void writeRotate(FILE *fp, const char *indent, const char *name, domNode *thisNode, int targetRotate) {
+void writeRotate(FILE *fp, const char *indent, const char *name, domNode *thisNode, int targetRotate, bool inverse=False) {
   domRotate_Array thisArray = thisNode->getRotate_array();
   int rotateCount = thisArray.getCount();
   for(int currentRotate=0;currentRotate<rotateCount;currentRotate++){
     domRotateRef thisRotate = thisArray[currentRotate];
     if ( thisRotate->getSid() ) {
-      fprintf(stderr, "skip %s : %s\n", name, thisRotate->getSid());
+      fprintf(stderr, " skip %s : %s\n", name, thisRotate->getSid());
       continue;
     }
     if ( targetRotate == 0 ) {
-      fprintf(fp, "%s(send %s :rotate %f (float-vector %f %f %f))\n",
-	      indent, name,
-	      (thisRotate->getValue()[3])*M_PI/180.0,
+      fprintf(fp, "%s(send %s :rotate ", indent, name);
+      if ( inverse ) fprintf(fp, "(* -1 ") ;
+      fprintf(fp, "%f", (thisRotate->getValue()[3])*M_PI/180.0);
+      if ( inverse ) fprintf(fp, ")") ;
+      fprintf(fp, " (float-vector %f %f %f))\n",
 	      thisRotate->getValue()[0],
 	      thisRotate->getValue()[1],
 	      thisRotate->getValue()[2]);
@@ -483,7 +489,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 
     if ( strcmp(thisNode->getName(),"visual") == 0 ) continue; //@@@ OK??
     // link
-    fprintf(stderr, "link sid:%s name:%s node_array:%zd (",
+    fprintf(stderr, "writeNodes link sid:%s name:%s node_array:%zd\n",
             thisNode->getSid(), thisNode->getName(),thisNode->getNode_array().getCount() );
 
     // geometry we assume Node_array()[0] contatins geometry
@@ -494,7 +500,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
       for(int currentGeometryCount=0;currentGeometryCount<geometryCount;currentGeometryCount++) {
 	domInstance_geometry *thisGeometry  = thisNode->getInstance_geometry_array()[currentGeometryCount];
 	const char * geometryName = (string("b_")+thisGeometry->getUrl().id()).c_str();
-	fprintf(stderr, "%s ",geometryName);
+	fprintf(stderr, " geometry:%d %s\n",currentGeometryCount, geometryName);
 	geometryNameArray.push_back(pair<domInstance_geometry*, string>(thisGeometry, geometryName));
       }
 
@@ -522,6 +528,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 	  fprintf(fp, "       (send %s :assoc %s)\n", rootName, geometryName);
 	}
       }
+
       // bodyset link
       fprintf(fp, "       (setq %s\n", thisNode->getName());
       fprintf(fp, "             (instance bodyset-link\n");
@@ -552,6 +559,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
       fprintf(fp, "       ;; define cascaded-coords for %s\n", thisNode->getName());
       fprintf(fp, "       (setq %s (make-cascoords :name :%s))\n", thisNode->getName(), thisNode->getName());
     }
+
     // assoc
     for(unsigned int currentNodeArray=0;currentNodeArray<thisNode->getNode_array().getCount();currentNodeArray++) {
       if ( strcmp(thisNode->getNode_array()[currentNodeArray]->getName(),"visual") == 0 ) continue; //@@@ OK??
@@ -559,14 +567,13 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 	      thisNode->getName(),
 	      thisNode->getNode_array()[currentNodeArray]->getName());
     }
+
     // translate
     writeTranslate(fp, "       ", thisNode->getName(), thisNode, 0);
     // rotate
     writeRotate(fp, "       ", thisNode->getName(), thisNode, 0);
 
-    fprintf(fp, "       )\n");
-
-    fprintf(fp, "\n");
+    fprintf(fp, "       )\n\n");
   }
 }
 
