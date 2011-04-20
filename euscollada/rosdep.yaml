@@ -1,2 +1,3 @@
 libqhull:
   ubuntu: libqhull-dev
+  rosdep: libqhull-dev
