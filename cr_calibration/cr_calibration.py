@@ -61,7 +61,7 @@ class CrCalibration:
         test = f1 * f2.Inverse()
         angle, axis = test.M.GetRotAngle()
         norm = test.p.Norm()
-        return (norm + angle)
+        return (norm + (angle / 10.0))
 
     def queue_cr(self, limg, linfo, rimg, rinfo):
         #
