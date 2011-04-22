@@ -14,11 +14,17 @@ SRCalibratedLib::makeConvertMap ()
       ((depth_scale*info_depth_.K[3*1 + 2]) != cvmGet(cam_matrix, 1, 2)))
   {
     //
-    cvmSet(dist_coeff, 0, 0, info_depth_.D[0]);
-    cvmSet(dist_coeff, 0, 1, info_depth_.D[1]);
-    cvmSet(dist_coeff, 0, 2, info_depth_.D[2]);
-    cvmSet(dist_coeff, 0, 3, info_depth_.D[3]);
-    cvmSet(dist_coeff, 0, 4, info_depth_.D[4]);
+    if ( info_depth_.D.size() == 5 ) {
+      for(int i=0; i < 5; i++) {
+        cvmSet(dist_coeff, 0, i, info_depth_.D[i]);
+      }
+    } else if ( info_depth_.D.size() == 8 ) {
+      ROS_INFO("using rational polynomial model");
+      dist_coeff = cvCreateMat(1, 8, CV_64F);
+      for(int i=0; i < 8; i++) {
+        cvmSet(dist_coeff, 0, i, info_depth_.D[i]);
+      }
+    }
     //
     cvSetZero(cam_matrix);
     cvmSet(cam_matrix, 2, 2, 1.0);
