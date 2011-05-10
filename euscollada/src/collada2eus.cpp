@@ -393,7 +393,7 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   fprintf(fp, "                     :parent-link %s :child-link %s\n", parentLink->getName(), childLink->getName());
   domAxis_constraint_Array jointAxis_array;
   int jointCount;
-  float axis[3], min = -360, max = 360;
+  float axis[3], min = FLT_MAX, max = -FLT_MAX;
   if ( thisJoint->getPrismatic_array().getCount() > 0 ) {
     jointAxis_array = thisJoint->getPrismatic_array();
     if ( jointAxis_array[0]->getLimits() ) {
@@ -413,7 +413,10 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   axis[2] = jointAxis_array[0]->getAxis()->getValue()[2];
   cerr << "writeJoint " << thisJoint->getName() << ", parent = " << parentLink->getName() << ", child = " << childLink->getName()  << ", limit = " << min << "/" << max << endl;
   fprintf(fp, "                     :axis (float-vector %f %f %f)\n", axis[0], axis[1], axis[2]);
-  fprintf(fp, "                     :min %f :max %f\n", min, max);
+  fprintf(fp, "                    ");
+  fprintf(fp, " :min "); if (min == FLT_MAX) fprintf(fp, "*-inf*"); else fprintf(fp, "%f", min);
+  fprintf(fp, " :max "); if (max ==-FLT_MAX) fprintf(fp,  "*inf*"); else fprintf(fp, "%f", max);
+  fprintf(fp, "\n");
   fprintf(fp, "                     ))\n");
 }
 
