@@ -8,6 +8,7 @@ if [ "$?" != 0 ] ;  then exit ; fi
 
 rosrun roseus roseus "\
 (progn									\
+  (load \"package://euscollada/pr2.l\")					\
   (load \"package://pr2eus/pr2-utils.l\")				\
   (if (not (boundp '*irtviewer*)) (make-irtviewer))			\
   (if (not (boundp '*pr2*)) (pr2))					\
