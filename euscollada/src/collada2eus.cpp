@@ -604,16 +604,24 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 int main(int argc, char* argv[]){
   FILE *output_fp;
   char *input_filename, *yaml_filename, *output_filename;
-  if (argc!=4) {
+  switch (argc) {
+  case 3:
+    input_filename  = argv[1];
+    output_filename = argv[2];
+    yaml_filename   = NULL;
+    break;
+  case 4:
+    input_filename  = argv[1];
+    yaml_filename   = argv[2];
+    output_filename = argv[3];
+    break;
+  default:
     fprintf(stderr, "Usage: %s <input dae filename> <input yaml filename> <output lisp filename>\n",argv[0]);
     exit(-1);
   }
-
-  input_filename  = argv[1];
-  yaml_filename   = argv[2];
-  output_filename = argv[3];
   output_fp = fopen(output_filename,"w");
   if ( output_fp == NULL ) {
+    fprintf(stderr, "could not write to %s\n", output_filename);
     exit(-1);
   }
   fprintf(stderr, "Convert %s to %s\n", input_filename, output_filename);
