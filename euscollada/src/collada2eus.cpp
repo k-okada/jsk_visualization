@@ -396,7 +396,7 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   fprintf(fp, "     (setq %s\n", thisJoint->getName());
   fprintf(fp, "           (instance %s :init\n",
           (thisJoint->getPrismatic_array().getCount()>0)?"linear-joint":"rotational-joint");
-  fprintf(fp, "                     :name :%s\n", findLinkName(thisJoint->getName()));
+  fprintf(fp, "                     :name :%s\n", thisJoint->getName());
   fprintf(fp, "                     :parent-link %s :child-link %s\n", parentLink->getName(), childLink->getName());
   domAxis_constraint_Array jointAxis_array;
   int jointCount;
@@ -871,15 +871,21 @@ int main(int argc, char* argv[]){
   }
 
   // all joint and link name
+  fprintf(output_fp, "\n    ;; all joints\n");
   for(int currentJoint=0;currentJoint<(int)(g_dae->getDatabase()->getElementCount(NULL, "joint", NULL));currentJoint++) {
     domJoint *thisJoint;
     g_dae->getDatabase()->getElement((daeElement**)&thisJoint, currentJoint, NULL, "joint");
     fprintf(output_fp, "    (:%s (&rest args) (forward-message-to %s args))\n", thisJoint->getName(), thisJoint->getName());
   }
+  fprintf(output_fp, "\n    ;; all links\n");
   for(int currentLink=0;currentLink<(int)(g_dae->getDatabase()->getElementCount(NULL, "link", NULL));currentLink++) {
     domJoint *thisLink;
     g_dae->getDatabase()->getElement((daeElement**)&thisLink, currentLink, NULL, "link");
     fprintf(output_fp, "    (:%s (&rest args) (forward-message-to %s args))\n", thisLink->getName(), thisLink->getName());
+  }
+  fprintf(output_fp, "\n    ;; user-defined joint\n");
+  for(vector<pair<string, string> >::iterator it=g_all_link_names.begin();it!=g_all_link_names.end();it++){
+    fprintf(output_fp, "    (:%s (&rest args) (forward-message-to %s args))\n", it->second.c_str(), it->first.c_str());
   }
 
   fprintf(output_fp, "  )\n\n");
