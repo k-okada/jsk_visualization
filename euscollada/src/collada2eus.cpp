@@ -447,7 +447,6 @@ void writeTransform(FILE *fp, const char *indent, const char *name, domNode *thi
       targetSkip++;
       continue;
     }
-    printf("%d %d %d\n", currentTranslate, targetSkip, targetCount);
     if ( currentTranslate-targetSkip == targetCount ) {
       thisTranslate = translateArray[currentTranslate];
       break;
