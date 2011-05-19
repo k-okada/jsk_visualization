@@ -63,3 +63,13 @@ macro(convert_to_collada)
 endmacro(convert_to_collada)
 
 convert_to_collada()
+
+
+## test
+rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/mitsubishi-pa10.zae test/mitsubishi-pa10.zae 2e995a1356befd581028b9fd0d55b10f)
+rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/unimation-pumaarm.zae test/unimation-pumaarm.zae fc43ed705335e77c3e1d9634b2bf39ce)
+rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/care-o-bot3.zae test/care-o-bot3.zae a745f8f4f4773cf3cedb9670619e472b)
+rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/darpa-arm.zae test/darpa-arm.zae a00ba4ab0a79c484894e5e9f7cccb790)
+
+rosbuild_add_pyunit(test/collada2eus_test.py)
+
