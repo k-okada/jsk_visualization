@@ -39,14 +39,20 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
 
   // get mesh
   domMesh *thisMesh = thisGeometry->getMesh();
-  int triangleElementCount = (int)(thisMesh->getTriangles_array().getCount());
 
   fprintf(fp, "(defclass %s\n", thisGeometry->getId());
   fprintf(fp, "  :super body\n");
   fprintf(fp, "  :slots ())\n");
   fprintf(fp, "(defmethod %s\n", thisGeometry->getId());
+  if ( thisMesh == NULL )  {
+    fprintf(fp, "  (:init (&key (name))\n");
+    fprintf(fp, "         (replace-object self (make-cube 100 100 100))\n");
+    fprintf(fp, "         (if name (send self :name name))\n");
+    fprintf(fp, "         self)\n");
+    fprintf(fp, "   )\n");
+    return;
+  }
   fprintf(fp, "  (:init (&key (name))\n");
-  fprintf(fp, "         ;; (replace-object self (make-cube 100 100 100))\n");
   fprintf(fp, "         (replace-object self (send self :qhull-faceset))\n");
   fprintf(fp, "         (if name (send self :name name))\n");
   fprintf(fp, "         self)\n");
@@ -73,6 +79,7 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
   fprintf(fp, "         (gl::glNewList newlis gl::GL_COMPILE)\n");
   // Triangulation
   // based on http://www.shader.jp/xoops/html/modules/mydownloads/singlefile.php?cid=5&lid=6
+  int triangleElementCount = (int)(thisMesh->getTriangles_array().getCount());
   for(int currentTriangle=0;currentTriangle<triangleElementCount;currentTriangle++)
     {
       domTriangles* thisTriangles = thisMesh->getTriangles_array().get(0);
@@ -505,6 +512,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
     if ( geomNode == NULL ) {
       fprintf(stderr, "writeNodes no visual found for link sid:%s name:%s node_array:%zd\n",
 	      thisNode->getSid(), thisNode->getName(),thisNode->getNode_array().getCount() );
+      geomNode = thisNode;
     }
     fprintf(fp, "     ;; node id=%s, name=%s, sid=%s\n", thisNode->getId(), thisNode->getName(), thisNode->getSid());
     // geometry we assume Node_array()[0] contatins geometry
@@ -532,8 +540,11 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 	fprintf(fp, "       (setq %s (instance %s :init))\n",  geometryName, thisGeometry->getUrl().id().c_str());
 
 	// note that geometryNameCount 0 means root node and >1 indicates the coordinates of each geometry
-	//writeTransform(fp, "       ", geometryName, thisNode, geometryNameCount--);
-	writeTransform(fp, "       ", geometryName, geomNode, 0);
+	if ( thisNode == geomNode ) {
+	  writeTransform(fp, "       ", geometryName, thisNode, geometryNameCount--);
+	} else {
+	  writeTransform(fp, "       ", geometryName, geomNode, 0);
+	}
       }
       if ( geometryNameArray.size() > 0 ) {
 	//int geometryNameCount = 1;
