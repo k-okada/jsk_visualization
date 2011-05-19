@@ -443,10 +443,11 @@ void writeTransform(FILE *fp, const char *indent, const char *name, domNode *thi
   int translateCount = translateArray.getCount();
   for(int currentTranslate=0,targetSkip=0;currentTranslate<translateCount;currentTranslate++){
     if ( translateArray[currentTranslate]->getSid() ) {
-      fprintf(stderr, " skip %s : %s\n", name, translateArray[currentTranslate]->getSid());
+      fprintf(stderr, " skip translate %s : %s\n", name, translateArray[currentTranslate]->getSid());
       targetSkip++;
       continue;
     }
+    printf("%d %d %d\n", currentTranslate, targetSkip, targetCount);
     if ( currentTranslate-targetSkip == targetCount ) {
       thisTranslate = translateArray[currentTranslate];
       break;
@@ -457,7 +458,7 @@ void writeTransform(FILE *fp, const char *indent, const char *name, domNode *thi
   int rotateCount = rotateArray.getCount();
   for(int currentRotate=0,targetSkip=0;currentRotate<rotateCount;currentRotate++){
     if ( rotateArray[currentRotate]->getSid() ) {
-      fprintf(stderr, " skip %s : %s\n", name, rotateArray[currentRotate]->getSid());
+      fprintf(stderr, " skip rotate %s : %s\n", name, rotateArray[currentRotate]->getSid());
       targetSkip++;
       continue;
     }
@@ -467,19 +468,20 @@ void writeTransform(FILE *fp, const char *indent, const char *name, domNode *thi
     }
   }
 
-  if ( thisTranslate == NULL || thisRotate == NULL ) return;
+  fprintf(fp, "\n");
+  fprintf(fp, "%s;; writeTransform(name=%s,domNode=%s,targetCount=%d,parent=%s), translateCount=%d, rotateCount=%d, \n", indent, name, thisNode->getName(), targetCount, parentName, translateCount, rotateCount);
+  if ( thisTranslate == NULL && thisRotate == NULL ) return;
 
-  fprintf(fp, "%s;; transform/roate:%d\n", indent, targetCount);
   fprintf(fp, "%s(send %s :transform\n%s      (make-coords :pos (float-vector %f %f %f)\n%s                   :angle %f :axis (float-vector %f %f %f)) %s)\n",
 	  indent, name, indent, 
-	  1000*thisTranslate->getValue()[0],
-	  1000*thisTranslate->getValue()[1],
-	  1000*thisTranslate->getValue()[2],
+	  thisTranslate ? 1000*thisTranslate->getValue()[0] : 0,
+	  thisTranslate ? 1000*thisTranslate->getValue()[1] : 0,
+	  thisTranslate ? 1000*thisTranslate->getValue()[2] : 0,
 	  indent,
-	  (thisRotate->getValue()[3])*M_PI/180.0,
-	  thisRotate->getValue()[0],
-	  thisRotate->getValue()[1],
-	  thisRotate->getValue()[2],
+	  thisRotate ? (thisRotate->getValue()[3])*M_PI/180.0 : 0,
+	  thisRotate ? thisRotate->getValue()[0] : 0,
+	  thisRotate ? thisRotate->getValue()[1] : 0,
+	  thisRotate ? thisRotate->getValue()[2] : 1,
 	  parentName);
 }
 
@@ -494,13 +496,25 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
     fprintf(stderr, "writeNodes link sid:%s name:%s node_array:%zd\n",
             thisNode->getSid(), thisNode->getName(),thisNode->getNode_array().getCount() );
 
+    domNode *geomNode = NULL;
+
+    for (unsigned int currentNodeArray=0;currentNodeArray<thisNode->getNode_array().getCount();currentNodeArray++) {
+      if (strcmp(thisNode->getNode_array()[currentNodeArray]->getName(),"visual") == 0) {
+	geomNode = thisNode->getNode_array()[currentNodeArray];
+      }
+    }
+    if ( geomNode == NULL ) {
+      fprintf(stderr, "writeNodes no visual found for link sid:%s name:%s node_array:%zd\n",
+	      thisNode->getSid(), thisNode->getName(),thisNode->getNode_array().getCount() );
+    }
+    fprintf(fp, "     ;; node id=%s, name=%s, sid=%s\n", thisNode->getId(), thisNode->getName(), thisNode->getSid());
     // geometry we assume Node_array()[0] contatins geometry
     fprintf(fp, "     (let (");
-    if ( thisNode->getInstance_geometry_array().getCount() > 0 ) {
-      int geometryCount = thisNode->getInstance_geometry_array().getCount();
+    if ( geomNode && geomNode->getInstance_geometry_array().getCount() > 0 ) {
+      int geometryCount = geomNode->getInstance_geometry_array().getCount();
       vector<pair<domInstance_geometry*, string> > geometryNameArray;
       for(int currentGeometryCount=0;currentGeometryCount<geometryCount;currentGeometryCount++) {
-	domInstance_geometry *thisGeometry  = thisNode->getInstance_geometry_array()[currentGeometryCount];
+	domInstance_geometry *thisGeometry  = geomNode->getInstance_geometry_array()[currentGeometryCount];
 	const char * geometryName = (string("b_")+thisGeometry->getUrl().id()).c_str();
 	fprintf(stderr, " geometry:%d %s\n",currentGeometryCount, geometryName);
 	geometryNameArray.push_back(pair<domInstance_geometry*, string>(thisGeometry, geometryName));
@@ -511,7 +525,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 	fprintf(fp, " %s", it->second.c_str());
       }
       fprintf(fp, ")\n");
-      fprintf(fp, "       ;; define bodyset-link for %s : %s\n", thisNode->getName(), thisNode->getId());
+      fprintf(fp, "       ;; define bodyset-link for %s : %s\n", geomNode->getName(), geomNode->getId());
       int geometryNameCount = geometryNameArray.size()+1;
       for(vector<pair<domInstance_geometry *, string> >::iterator it=geometryNameArray.begin();it!=geometryNameArray.end();it++){
 	domInstance_geometry *thisGeometry = it->first;
@@ -519,7 +533,8 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 	fprintf(fp, "       (setq %s (instance %s :init))\n",  geometryName, thisGeometry->getUrl().id().c_str());
 
 	// note that geometryNameCount 0 means root node and >1 indicates the coordinates of each geometry
-	writeTransform(fp, "       ", geometryName, thisNode, geometryNameCount--);
+	//writeTransform(fp, "       ", geometryName, thisNode, geometryNameCount--);
+	writeTransform(fp, "       ", geometryName, geomNode, 0);
       }
       if ( geometryNameArray.size() > 0 ) {
 	//int geometryNameCount = 1;
@@ -528,7 +543,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 	  const char * geometryName = it->second.c_str();
 	  // transform
 	  // note that geometryNameCount 0 means root node and >1 indicates the coordinates of each geometry
-	  //writeTransform(fp, "       ", geometryName, thisNode, geometryNameCount++);
+	  //writeTransform(fp, "       ", geometryName, geomNode, geometryNameCount++);
 	  fprintf(fp, "       (send %s :assoc %s)\n", rootName, geometryName);
 	}
 	// transform
