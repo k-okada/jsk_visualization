@@ -116,7 +116,7 @@ if __name__ == '__main__':
             tf.seek(0)
             sxml = tf.read()
             sphinxdoc += """Contents
---------
+########
 
 .. code-block:: xml
 
