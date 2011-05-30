@@ -557,7 +557,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 	  fprintf(fp, "       (send %s :assoc %s)\n", rootName, geometryName);
 	}
 	// transform
-	writeTransform(fp, "       ", rootName, thisNode, 1);
+	//writeTransform(fp, "       ", rootName, thisNode, 1);
       }
       fprintf(fp, "       (setq %s\n", thisNode->getName());
       fprintf(fp, "             (instance bodyset-link\n");
@@ -590,6 +590,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 
     //transform
     writeTransform(fp, "       ", thisNode->getName(), thisNode, 0);
+    writeTransform(fp, "       ", thisNode->getName(), thisNode, 1); // for pr2
 
     fprintf(fp, "       ;;\n");
 
