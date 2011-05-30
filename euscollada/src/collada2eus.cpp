@@ -46,7 +46,7 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
   fprintf(fp, "(defmethod %s\n", thisGeometry->getId());
   if ( thisMesh == NULL )  {
     fprintf(fp, "  (:init (&key (name))\n");
-    fprintf(fp, "         (replace-object self (make-cube 100 100 100))\n");
+    fprintf(fp, "         (replace-object self (make-cube 10 10 10))\n");
     fprintf(fp, "         (if name (send self :name name))\n");
     fprintf(fp, "         self)\n");
     fprintf(fp, "   )\n");
