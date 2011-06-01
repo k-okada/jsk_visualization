@@ -3,13 +3,19 @@
     <node name="stereo_calibrator"
           pkg="camera_calibration"
           type="cameracalibrator.py"
-          args="--size=8x6 --square=0.108 --approximate=0.01 --use-rational"
+          args="--size=8x6 --square=0.108 --approximate=0.01"
           output="screen"
           clear_params="true">
+      <!-- add "--use-rational" to args -->
+
       <remap from="left" to="left/image_raw" />
       <remap from="right" to="right/image_raw" />
       <remap from="left_camera" to="left" />
       <remap from="right_camera" to="right" />
+      <!-- for stereo_synchronizer
+      <remap from="left_camera" to="left_raw" />
+      <remap from="right_camera" to="right_raw" />
+      -->
     </node>
     <!-- for checking calibration -->
     <!-- rosrun camera_calibration cameracheck.py stereo:=/CR/wide_stereo -->
