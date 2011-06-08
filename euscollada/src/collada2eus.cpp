@@ -491,11 +491,11 @@ void writeTransform(FILE *fp, const char *indent, const char *name, domNode *thi
 	  parentName);
 }
 
-void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
+void writeNodes(FILE *fp, domRigid_body_Array thisRigidbodyArray, domNode_Array thisNodeArray) {
   int nodeArrayCount = thisNodeArray.getCount();
   for(int currentNodeArray=0;currentNodeArray<nodeArrayCount;currentNodeArray++) {
     domNode *thisNode = thisNodeArray[currentNodeArray];
-    writeNodes(fp, thisNode->getNode_array());
+    writeNodes(fp, thisRigidbodyArray, thisNode->getNode_array());
 
     if ( strcmp(thisNode->getName(),"visual") == 0 ) continue; //@@@ OK??
     // link
@@ -515,7 +515,15 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
       geomNode = thisNode;
     }
     fprintf(fp, "     ;; node id=%s, name=%s, sid=%s\n", thisNode->getId(), thisNode->getName(), thisNode->getSid());
-    // geometry we assume Node_array()[0] contatins geometry
+    //fprintf(stderr, "%d\n", (int)thisRigidbodyArray.getCount());
+    domRigid_body* thisRigidbody = NULL;
+    for(unsigned int currentRigidbodyArray=0;currentRigidbodyArray<thisRigidbodyArray.getCount();currentRigidbodyArray++){
+      if ( strcmp(thisNode->getName(),thisRigidbodyArray[currentRigidbodyArray]->getName()) == 0 )  {
+	thisRigidbody = thisRigidbodyArray[currentRigidbodyArray];
+      }
+      //fprintf(stderr, "%s - %f (%d)\n", thisRigidbodyArray[currentRigidbodyArray]->getName(), thisRigidbodyArray[currentRigidbodyArray]->getTechnique_common()->getMass()->getValue()*1000, strcmp(thisNode->getName(),thisRigidbodyArray[currentRigidbodyArray]->getName()));
+      // geometry we assume Node_array()[0] contatins geometry
+    }
     fprintf(fp, "     (let (");
     if ( geomNode && geomNode->getInstance_geometry_array().getCount() > 0 ) {
       int geometryCount = geomNode->getInstance_geometry_array().getCount();
@@ -569,7 +577,12 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
       }
       fprintf(fp, ")\n");
       fprintf(fp, "                       :name :%s\n", thisNode->getName());
-      fprintf(fp, "                       :weight 1.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))))\n");
+      if ( thisRigidbody == NULL ) {
+	fprintf(fp, "                       :weight 0.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))\n");
+      } else {
+	fprintf(fp, "                       :weight %.3f :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))\n", thisRigidbody->getTechnique_common()->getMass()->getValue()*1000);
+      }
+      fprintf(fp, "))\n");
     } else if ( (thisNode->getNode_array().getCount() > 0 &&
                  strcmp(thisNode->getNode_array()[0]->getName(),"visual") != 0 ) ||
 		(thisNode->getNode_array().getCount() > 1 &&
@@ -747,7 +760,9 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, "\n");
 
   // write kinemtaics
-  writeNodes(output_fp, thisNode->getNode_array());
+  domPhysics_model *thisPhysicsmodel;
+  g_dae->getDatabase()->getElement((daeElement**)&thisPhysicsmodel, 0, NULL, "physics_model");
+  writeNodes(output_fp, thisPhysicsmodel->getRigid_body_array(), thisNode->getNode_array());
   fprintf(output_fp, "     (send self :assoc %s)\n", thisNode->getNode_array()[0]->getName());
 
   // write joint
