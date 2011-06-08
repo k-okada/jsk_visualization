@@ -568,7 +568,8 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
 	fprintf(fp, " %s", geometryName);
       }
       fprintf(fp, ")\n");
-      fprintf(fp, "                       :name :%s))\n", thisNode->getName());
+      fprintf(fp, "                       :name :%s\n", thisNode->getName());
+      fprintf(fp, "                       :weight 1.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))))\n");
     } else if ( (thisNode->getNode_array().getCount() > 0 &&
                  strcmp(thisNode->getNode_array()[0]->getName(),"visual") != 0 ) ||
 		(thisNode->getNode_array().getCount() > 1 &&
@@ -576,7 +577,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray) {
       fprintf(fp, ")\n"); // let(
       cerr << ";; WARNING link without geometry : " << thisNode->getName() << endl;
       fprintf(fp, "       ;; define bodyset-link for %s\n", thisNode->getName());
-      fprintf(fp, "       (setq %s (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 10 10 10)) :name :%s))\n", thisNode->getName(), thisNode->getName());
+      fprintf(fp, "       (setq %s (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 10 10 10)) :name :%s :weight 1.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))))\n", thisNode->getName(), thisNode->getName());
     } else {
       fprintf(fp, ")\n"); // let(
       cerr << ";; WARNING link without geometry nor node: " << thisNode->getName() << " geometry : " << thisNode->getInstance_geometry_array().getCount() << ", node : " << thisNode->getNode_array().getCount();;
