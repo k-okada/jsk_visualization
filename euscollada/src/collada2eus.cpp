@@ -393,7 +393,7 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   int jointElementCount;
   jointElementCount = g_dae->getDatabase()->getElementCount(NULL, "joint", NULL);
   domJoint *thisJoint = findJointFromName(jointSid);
-  fprintf(fp, "     (setq %s\n", thisJoint->getName());
+  fprintf(fp, "     (setq j_%s\n", thisJoint->getName());
   fprintf(fp, "           (instance %s :init\n",
           (thisJoint->getPrismatic_array().getCount()>0)?"linear-joint":"rotational-joint");
   fprintf(fp, "                     :name :%s\n", thisJoint->getName());
@@ -741,7 +741,7 @@ int main(int argc, char* argv[]){
   for(int currentJoint=0;currentJoint<(int)(g_dae->getDatabase()->getElementCount(NULL, "joint", NULL));currentJoint++) {
     domJoint *thisJoint;
     g_dae->getDatabase()->getElement((daeElement**)&thisJoint, currentJoint, NULL, "joint");
-    fprintf(output_fp, "%s ", thisJoint->getName());
+    fprintf(output_fp, "j_%s ", thisJoint->getName());
   }
   for(int currentLink=0;currentLink<(int)(g_dae->getDatabase()->getElementCount(NULL, "link", NULL));currentLink++) {
     domJoint *thisLink;
@@ -892,7 +892,7 @@ int main(int argc, char* argv[]){
   for(int currentJoint=0;currentJoint<(int)(g_dae->getDatabase()->getElementCount(NULL, "joint", NULL));currentJoint++) {
     domJoint *thisJoint;
     g_dae->getDatabase()->getElement((daeElement**)&thisJoint, currentJoint, NULL, "joint");
-    fprintf(output_fp, "    (:%s (&rest args) (forward-message-to %s args))\n", thisJoint->getName(), thisJoint->getName());
+    fprintf(output_fp, "    (:%s (&rest args) (forward-message-to j_%s args))\n", thisJoint->getName(), thisJoint->getName());
   }
   fprintf(output_fp, "\n    ;; all links\n");
   for(int currentLink=0;currentLink<(int)(g_dae->getDatabase()->getElementCount(NULL, "link", NULL));currentLink++) {
