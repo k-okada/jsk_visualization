@@ -478,7 +478,7 @@ void writeTransform(FILE *fp, const char *indent, const char *name, domNode *thi
   fprintf(fp, "%s;; writeTransform(name=%s,domNode=%s,targetCount=%d,parent=%s), translateCount=%d, rotateCount=%d, \n", indent, name, thisNode->getName(), targetCount, parentName, translateCount, rotateCount);
   if ( thisTranslate == NULL && thisRotate == NULL ) return;
 
-  fprintf(fp, "%s(send l_%s :transform\n%s      (make-coords :pos (float-vector %f %f %f)\n%s                   :angle %f :axis (float-vector %f %f %f)) %s)\n",
+  fprintf(fp, "%s(send %s :transform\n%s      (make-coords :pos (float-vector %f %f %f)\n%s                   :angle %f :axis (float-vector %f %f %f)) %s)\n",
 	  indent, name, indent, 
 	  thisTranslate ? 1000*thisTranslate->getValue()[0] : 0,
 	  thisTranslate ? 1000*thisTranslate->getValue()[1] : 0,
@@ -491,11 +491,11 @@ void writeTransform(FILE *fp, const char *indent, const char *name, domNode *thi
 	  parentName);
 }
 
-void writeNodes(FILE *fp, domRigid_body_Array thisRigidbodyArray, domNode_Array thisNodeArray) {
+void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisRigidbodyArray) {
   int nodeArrayCount = thisNodeArray.getCount();
   for(int currentNodeArray=0;currentNodeArray<nodeArrayCount;currentNodeArray++) {
     domNode *thisNode = thisNodeArray[currentNodeArray];
-    writeNodes(fp, thisRigidbodyArray, thisNode->getNode_array());
+    writeNodes(fp, thisNode->getNode_array(), thisRigidbodyArray);
 
     if ( strcmp(thisNode->getName(),"visual") == 0 ) continue; //@@@ OK??
     // link
@@ -599,12 +599,13 @@ void writeNodes(FILE *fp, domRigid_body_Array thisRigidbodyArray, domNode_Array 
       }
       cerr << endl;
       fprintf(fp, "       ;; define cascaded-coords for %s\n", thisNode->getName());
-      fprintf(fp, "       (setq %s (make-cascoords :name :%s))\n", thisNode->getName(), thisNode->getName());
+      fprintf(fp, "       (setq l_%s (make-cascoords :name :%s))\n", thisNode->getName(), thisNode->getName());
     }
 
     //transform
-    writeTransform(fp, "       ", thisNode->getName(), thisNode, 0);
-    writeTransform(fp, "       ", thisNode->getName(), thisNode, 1); // for pr2
+    string nodeName = string("l_")+string(thisNode->getName());
+    writeTransform(fp, "       ", nodeName.c_str(), thisNode, 0);
+    writeTransform(fp, "       ", nodeName.c_str(), thisNode, 1); // for pr2
 
     fprintf(fp, "       ;;\n");
 
@@ -616,7 +617,8 @@ void writeNodes(FILE *fp, domRigid_body_Array thisRigidbodyArray, domNode_Array 
       //for(int geometryNameCount = (int)thisNode->getTranslate_array().getCount()-1; geometryNameCount >=0 ; geometryNameCount--) {
 	// transform
 	string nodeName = string("l_") + string(thisNode->getName());
-	writeTransform(fp, "       ", thisNode2->getName(), thisNode, geometryNameCount, nodeName.c_str());
+	string nodeName2 = string("l_") + string(thisNode2->getName());
+	writeTransform(fp, "       ", nodeName2.c_str(), thisNode, geometryNameCount, nodeName.c_str());
       }
       fprintf(fp, "       ;;\n");
       fprintf(fp, "       (send l_%s :assoc l_%s)\n",
@@ -763,9 +765,9 @@ int main(int argc, char* argv[]){
   // write kinemtaics
   domPhysics_model *thisPhysicsmodel;
   g_dae->getDatabase()->getElement((daeElement**)&thisPhysicsmodel, 0, NULL, "physics_model");
-  writeNodes(output_fp, thisPhysicsmodel->getRigid_body_array(), thisNode->getNode_array());
+  writeNodes(output_fp, thisNode->getNode_array(), thisPhysicsmodel?(thisPhysicsmodel->getRigid_body_array()):(domRigid_body_Array)NULL);
   fprintf(output_fp, "     (send self :assoc l_%s)\n", thisNode->getNode_array()[0]->getName());
-
+  
   // write joint
   domKinematics_model *thisKinematics;
   g_dae->getDatabase()->getElement((daeElement**)&thisKinematics, 0, NULL, "kinematics_model");
@@ -786,7 +788,7 @@ int main(int argc, char* argv[]){
     vector<string> link_names = limb.second.first;
 
     if (link_names.size()>0) {
-      fprintf(output_fp, "     (setq %s-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", limb_name.c_str(), link_names.back().c_str());
+      fprintf(output_fp, "     (setq %s-end-coords (make-cascoords :coords (send l_%s :copy-worldcoords)))\n", limb_name.c_str(), link_names.back().c_str());
       try {
         const YAML::Node& n = doc[limb_name+"-end-coords"]["translate"];
         double value;
@@ -805,7 +807,7 @@ int main(int argc, char* argv[]){
         fprintf(output_fp, "))\n");
       } catch(YAML::RepresentationException& e) {
       }
-      fprintf(output_fp, "     (send %s :assoc %s-end-coords)\n", link_names.back().c_str(), limb_name.c_str());
+      fprintf(output_fp, "     (send l_%s :assoc %s-end-coords)\n", link_names.back().c_str(), limb_name.c_str());
     }
   }
   fprintf(output_fp, "\n");
@@ -815,10 +817,10 @@ int main(int argc, char* argv[]){
   BOOST_FOREACH(link_joint_pair& limb, limbs) {
     string limb_name = limb.first;
     vector<string> link_names = limb.second.first;
-    if (link_names.size()>0) fprintf(output_fp, "     (setq %s-root-link %s)\n", limb_name.c_str(), link_names[0].c_str());
+    if (link_names.size()>0) fprintf(output_fp, "     (setq %s-root-link l_%s)\n", limb_name.c_str(), link_names[0].c_str());
     if ( link_names.size() > 0 ) {
       fprintf(output_fp, "     (setq %s (list", limb_name.c_str());
-      for (unsigned int i=0;i<link_names.size();i++) fprintf(output_fp, " %s", link_names[i].c_str()); fprintf(output_fp, "))\n");
+      for (unsigned int i=0;i<link_names.size();i++) fprintf(output_fp, " l_%s", link_names[i].c_str()); fprintf(output_fp, "))\n");
       fprintf(output_fp, "\n");
     }
   }
@@ -903,7 +905,7 @@ int main(int argc, char* argv[]){
   }
   fprintf(output_fp, "\n    ;; user-defined joint\n");
   for(vector<pair<string, string> >::iterator it=g_all_link_names.begin();it!=g_all_link_names.end();it++){
-    fprintf(output_fp, "    (:%s (&rest args) (forward-message-to %s args))\n", it->second.c_str(), it->first.c_str());
+    fprintf(output_fp, "    (:%s (&rest args) (forward-message-to j_%s args))\n", it->second.c_str(), it->first.c_str());
   }
 
   fprintf(output_fp, "  )\n\n");
