@@ -308,7 +308,7 @@ domJoint *findJointFromName(const char *jointName) {
     }
     string jointSid_str = string(((domKinematics_model *)(thisJoint->getParentElement()->getParentElement()))->getId())+string("/")+string(thisJoint->getSid());
     if ( jointSid_str.compare(jointName) == 0 ||
-         strcmp(thisJoint->getName(),jointName) == 0 ) {
+         string(thisJoint->getName()).compare(jointName) == 0 ) {
       return thisJoint;
     }
   }
