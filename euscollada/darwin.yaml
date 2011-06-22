@@ -2,24 +2,6 @@
 ## - collada_joint_name : euslisp_joint_name (start with :)
 ##
 
-head:
-  - joint12     : head-neck-y
-  - joint13     : head-neck-p
-larm:
-  - joint14     : larm-shoulder-p
-  - joint15     : larm-shoulder-r
-  - joint16     : larm-elbow-p
-rarm:
-  - joint17     : rarm-shoulder-p
-  - joint18     : rarm-shoulder-r
-  - joint19     : rarm-elbow-p
-lleg:
-  - joint6      : lleg-crotch-y
-  - joint7      : lleg-crotch-r
-  - joint8      : lleg-crotch-p
-  - joint9      : lleg-knee-p
-  - joint10     : lleg-ankle-p
-  - joint11     : lleg-ankle-r
 rleg:
   - joint0      : rleg-crotch-y
   - joint1      : rleg-crotch-r
@@ -27,6 +9,24 @@ rleg:
   - joint3      : rleg-knee-p
   - joint4      : rleg-ankle-p
   - joint5      : rleg-ankle-r
+lleg:
+  - joint6      : lleg-crotch-y
+  - joint7      : lleg-crotch-r
+  - joint8      : lleg-crotch-p
+  - joint9      : lleg-knee-p
+  - joint10     : lleg-ankle-p
+  - joint11     : lleg-ankle-r
+head:
+  - joint12     : head-neck-y
+  - joint13     : head-neck-p
+rarm:
+  - joint17     : rarm-shoulder-p
+  - joint18     : rarm-shoulder-r
+  - joint19     : rarm-elbow-p
+larm:
+  - joint14     : larm-shoulder-p
+  - joint15     : larm-shoulder-r
+  - joint16     : larm-elbow-p
 
 angle-vector:
   reset-pose : [0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,]

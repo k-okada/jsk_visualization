@@ -2,9 +2,6 @@
 ## - collada_joint_name : euslisp_joint_name (start with :)
 ##
 
-head:
-  - HeadYaw   : head-neck-y
-  - HeadPitch : head-neck-p
 larm:
   - LShoulderPitch   : larm-shoulder-p
   - LShoulderRoll    : larm-shoulder-r
@@ -31,6 +28,9 @@ rleg:
   - RKneePitch       : rleg-knee-p
   - RAnklePitch      : rleg-ankle-p
   - RAnkleRoll       : rleg-ankle-r
+head:
+  - HeadYaw   : head-neck-y
+  - HeadPitch : head-neck-p
 
 angle-vector:
   reset-pose : [110.0, 10.0, -90.0, -40.0, 0.0,   110.0, -10.0, -90.0, -40.0, 0.0,  0.0, 0.0, -30.0, 60.0, -30.0, 0.0,   0.0, 0.0, -30.0, 60.0, -30.0, 0.0,  0.0, 0.0]

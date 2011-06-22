@@ -629,6 +629,8 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
   }
 }
 
+bool limb_order_asc(const pair<string, size_t>& left, const pair<string, size_t>& right) { return left.second < right.second; }
+
 int main(int argc, char* argv[]){
   FILE *output_fp;
   char *input_filename, *yaml_filename, *output_filename;
@@ -668,19 +670,9 @@ int main(int argc, char* argv[]){
   g_document = g_dae->getDoc(0);
 
   // read yaml
-  vector<string> larm_joint_names, rarm_joint_names, lleg_joint_names, rleg_joint_names, head_joint_names, torso_joint_names;
-  vector<string> larm_link_names, rarm_link_names, lleg_link_names, rleg_link_names, head_link_names, torso_link_names;
-
-  typedef pair<vector<string> &, vector<string> & > link_joint;
+  typedef pair<vector<string>, vector<string> > link_joint;
   typedef pair<string, link_joint > link_joint_pair;
-  link_joint_pair limbs[]
-    = {  link_joint_pair("torso", link_joint(torso_link_names, torso_joint_names)),
-	 link_joint_pair("larm", link_joint(larm_link_names, larm_joint_names)),
-         link_joint_pair("rarm", link_joint(rarm_link_names, rarm_joint_names)),
-         link_joint_pair("lleg", link_joint(lleg_link_names, lleg_joint_names)),
-         link_joint_pair("rleg", link_joint(rleg_link_names, rleg_joint_names)),
-         link_joint_pair("head", link_joint(head_link_names, head_joint_names))
-         };
+  string limb_candidates[] = {"torso", "larm", "rarm", "lleg", "rleg", "head"}; // candidates of limb names
 
   ifstream fin(yaml_filename);
   if (fin.fail()) {
@@ -690,21 +682,33 @@ int main(int argc, char* argv[]){
   YAML::Node doc;
   parser.GetNextDocument(doc);
 
-  BOOST_FOREACH(link_joint_pair& limb, limbs) {
-    string limb_name = limb.first;
-    vector<string>& link_names = limb.second.first;
-    vector<string>& joint_names = limb.second.second;
+  /* re-order limb name by lines of yaml */
+  vector<pair<string, size_t> > limb_order;
+  BOOST_FOREACH(string& limb, limb_candidates) {
+    if ( doc.FindValue(limb) ) {
+      std::cerr << limb << "@" << doc[limb].GetMark().line << std::endl;
+      limb_order.push_back(pair<string, size_t>(limb, doc[limb].GetMark().line));
+    }
+  }
+  std::sort(limb_order.begin(), limb_order.end(), limb_order_asc);
+
+  // generate limbs including limb_name, link_names, and joint_names
+  vector<link_joint_pair> limbs;
+  for (size_t i = 0; i < limb_order.size(); i++) {
+    string limb_name = limb_order[i].first;
+    vector<string> tmp_link_names, tmp_joint_names;
     try {
       const YAML::Node& limb_doc = doc[limb_name];
       for(unsigned int i = 0; i < limb_doc.size(); i++) {
-        const YAML::Node& n = limb_doc[i];
-        for(YAML::Iterator it=n.begin();it!=n.end();it++) {
-          string key, value; it.first() >> key; it.second() >> value;
-          joint_names.push_back(key);
-          link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
-          g_all_link_names.push_back(pair<string, string>(key, value));
-        }
+	const YAML::Node& n = limb_doc[i];
+	for(YAML::Iterator it=n.begin();it!=n.end();it++) {
+	  string key, value; it.first() >> key; it.second() >> value;
+	  tmp_joint_names.push_back(key);
+	  tmp_link_names.push_back(findChildLinkFromJointName(key.c_str())->getName());
+	  g_all_link_names.push_back(pair<string, string>(key, value));
+	}
       }
+      limbs.push_back(link_joint_pair(limb_name, link_joint(tmp_link_names, tmp_joint_names)));
     } catch(YAML::RepresentationException& e) {
     }
   }
