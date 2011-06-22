@@ -580,7 +580,11 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
       if ( thisRigidbody == NULL ) {
 	fprintf(fp, "                       :weight 0.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))\n");
       } else {
-	fprintf(fp, "                       :weight %.3f :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))\n", thisRigidbody->getTechnique_common()->getMass()->getValue()*1000);
+	domTranslate_Array translateArray = thisRigidbody->getTechnique_common()->getMass_frame()->getTranslate_array();
+	domTranslateRef thisTranslate = translateArray[translateArray.getCount()-1];
+	fprintf(fp, "                       :weight %.3f :centroid (float-vector %.3f %.3f %.3f) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))\n",
+		thisRigidbody->getTechnique_common()->getMass()->getValue()*1000,
+		thisTranslate->getValue()[0]*1000, thisTranslate->getValue()[1]*1000, thisTranslate->getValue()[2]*1000);
       }
       fprintf(fp, "))\n");
     } else if ( (thisNode->getNode_array().getCount() > 0 &&
