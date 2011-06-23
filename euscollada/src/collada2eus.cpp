@@ -812,7 +812,13 @@ int main(int argc, char* argv[]){
     vector<string> link_names = limb.second.first;
 
     if (link_names.size()>0) {
-      fprintf(output_fp, "     (setq %s-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", limb_name.c_str(), link_names.back().c_str());
+      string end_coords_parent_name(link_names.back());
+      try {
+        const YAML::Node& n = doc[limb_name+"-end-coords"]["parent"];
+	n >> end_coords_parent_name;
+      } catch(YAML::RepresentationException& e) {
+      }
+      fprintf(output_fp, "     (setq %s-end-coords (make-cascoords :coords (send %s :copy-worldcoords)))\n", limb_name.c_str(), end_coords_parent_name.c_str());
       try {
         const YAML::Node& n = doc[limb_name+"-end-coords"]["translate"];
         double value;
@@ -829,12 +835,6 @@ int main(int argc, char* argv[]){
         fprintf(output_fp, " (float-vector");
         for(unsigned int i=0;i<3;i++) { n[i]>>value; fprintf(output_fp, " %f", value);}
         fprintf(output_fp, "))\n");
-      } catch(YAML::RepresentationException& e) {
-      }
-      string end_coords_parent_name(link_names.back());
-      try {
-        const YAML::Node& n = doc[limb_name+"-end-coords"]["parent"];
-	n >> end_coords_parent_name;
       } catch(YAML::RepresentationException& e) {
       }
       fprintf(output_fp, "     (send %s :assoc %s-end-coords)\n", end_coords_parent_name.c_str(), limb_name.c_str());
