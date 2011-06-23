@@ -583,7 +583,9 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
 	domTranslate_Array translateArray = thisRigidbody->getTechnique_common()->getMass_frame()->getTranslate_array();
 	domTranslateRef thisTranslate = translateArray[translateArray.getCount()-1];
 	fprintf(fp, "                       :weight %.3f :centroid (float-vector %.3f %.3f %.3f)\n",
+		/* weight : collada [kg] -> eus : [g] */
 		thisRigidbody->getTechnique_common()->getMass()->getValue()*1000,
+		/* centroid : collada [m] -> eus : [mm] */
 		thisTranslate->getValue()[0]*1000, thisTranslate->getValue()[1]*1000, thisTranslate->getValue()[2]*1000);
 	domRotate_Array rotateArray = thisRigidbody->getTechnique_common()->getMass_frame()->getRotate_array();
 	domRotateRef thisRotate = rotateArray[rotateArray.getCount()-1];
@@ -594,6 +596,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
 		thisRotate ? thisRotate->getValue()[3]*M_PI/180.0 : 0);
 	fprintf(fp, "                                              (tmp-rot-matrix (matrix-exponent (scale (elt tmp-rot-axis 3) (subseq tmp-rot-axis 0 3))))\n");
 	fprintf(fp, "                                              (iner (float-vector %.3f %.3f %.3f)))\n",
+		/* inertia : collada [kg m^2] -> eus : [g mm^2] */
 		thisRigidbody->getTechnique_common()->getInertia()->getValue()[0]*1e9,
 		thisRigidbody->getTechnique_common()->getInertia()->getValue()[1]*1e9,
 		thisRigidbody->getTechnique_common()->getInertia()->getValue()[2]*1e9);
