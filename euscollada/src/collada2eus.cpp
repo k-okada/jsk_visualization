@@ -831,7 +831,13 @@ int main(int argc, char* argv[]){
         fprintf(output_fp, "))\n");
       } catch(YAML::RepresentationException& e) {
       }
-      fprintf(output_fp, "     (send %s :assoc %s-end-coords)\n", link_names.back().c_str(), limb_name.c_str());
+      string end_coords_parent_name(link_names.back());
+      try {
+        const YAML::Node& n = doc[limb_name+"-end-coords"]["parent"];
+	n >> end_coords_parent_name;
+      } catch(YAML::RepresentationException& e) {
+      }
+      fprintf(output_fp, "     (send %s :assoc %s-end-coords)\n", end_coords_parent_name.c_str(), limb_name.c_str());
     }
   }
   fprintf(output_fp, "\n");
