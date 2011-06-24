@@ -993,10 +993,11 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, "     	         (mapcar #'(lambda (l)\n");
   fprintf(output_fp, "     		  	     (find-root-link l))\n");
   fprintf(output_fp, "     		         (send-all (send self :joint-list) :parent-link))))))\n");
-  fprintf(output_fp, "     	 (unless (= (length root-link) 1)\n");
-  fprintf(output_fp, "     	   (error \"root link definition is ambiguous!!\"))\n");
-  fprintf(output_fp, "     	 (unless (equal (car root-link) (car links))\n");
-  fprintf(output_fp, "     	   (setq links (append root-link (cdr links)))))) ;; replace root link\n");
+  fprintf(output_fp, "     	 (when (> (length (send self :links)) 1)\n");
+  fprintf(output_fp, "     	   (unless (= (length root-link) 1)\n");
+  fprintf(output_fp, "     	     (error \"root link definition is ambiguous!!\"))\n");
+  fprintf(output_fp, "     	   (unless (equal (car root-link) (car links))\n");
+  fprintf(output_fp, "     	     (setq links (append root-link (cdr links))))))) ;; replace root link\n");
   fprintf(output_fp, "       )\n");
 
   fprintf(output_fp, "  )\n\n");
