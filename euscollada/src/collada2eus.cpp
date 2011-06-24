@@ -578,7 +578,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
       fprintf(fp, ")\n");
       fprintf(fp, "                       :name :%s\n", thisNode->getName());
       if ( thisRigidbody == NULL ) {
-	fprintf(fp, "                       :weight 0.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))\n");
+	fprintf(fp, "                       :weight 1.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))\n");
       } else {
 	domTranslate_Array translateArray = thisRigidbody->getTechnique_common()->getMass_frame()->getTranslate_array();
 	domTranslateRef thisTranslate = translateArray[translateArray.getCount()-1];
@@ -971,8 +971,33 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, "  		  #'(lambda (x) (send x :get :tmp-child-links))\n");
   fprintf(output_fp, "  		  (send self :links)))\n");
   fprintf(output_fp, "         (send ll :append-mass-properties (send ll :get :tmp-child-links) :update t))\n");
-  fprintf(output_fp, "       (dolist (ll (send self :links)) (remprop ll :tmp-child-links))\n");
-  fprintf(output_fp, "       ))\n");
+  fprintf(output_fp, "       (dolist (ll (send self :links)) (remprop ll :tmp-child-links)))\n");
+  fprintf(output_fp, "\n     ;; check root link validation\n");
+  fprintf(output_fp, "     (labels\n");
+  fprintf(output_fp, "	       ((get-parent-link\n");
+  fprintf(output_fp, "	         (ll)\n");
+  fprintf(output_fp, "            (or (send ll :parent-link)\n");
+  fprintf(output_fp, "	              (if (derivedp (send ll :parent) bodyset-link)\n");
+  fprintf(output_fp, "		          (send ll :parent))))\n");
+  fprintf(output_fp, "	        (find-root-link\n");
+  fprintf(output_fp, "	         (ll)\n");
+  fprintf(output_fp, "	         (let ((pl (get-parent-link ll)))\n");
+  fprintf(output_fp, "	           (cond\n");
+  fprintf(output_fp, "	             ((null pl) nil)\n");
+  fprintf(output_fp, "	             ((get-parent-link pl) (find-root-link pl))\n");
+  fprintf(output_fp, "	             ((find (send ll :joint) (send self :joint-list)) pl)\n");
+  fprintf(output_fp, "	             (t ll)))))\n");
+  fprintf(output_fp, "       (let ((root-link\n");
+  fprintf(output_fp, "     	      (remove-duplicates\n");
+  fprintf(output_fp, "     	        (remove nil\n");
+  fprintf(output_fp, "     	         (mapcar #'(lambda (l)\n");
+  fprintf(output_fp, "     		  	     (find-root-link l))\n");
+  fprintf(output_fp, "     		         (send-all (send self :joint-list) :parent-link))))))\n");
+  fprintf(output_fp, "     	 (unless (= (length root-link) 1)\n");
+  fprintf(output_fp, "     	   (error \"root link definition is ambiguous!!\"))\n");
+  fprintf(output_fp, "     	 (unless (equal (car root-link) (car links))\n");
+  fprintf(output_fp, "     	   (setq links (append root-link (cdr links)))))) ;; replace root link\n");
+  fprintf(output_fp, "       )\n");
 
   fprintf(output_fp, "  )\n\n");
 
