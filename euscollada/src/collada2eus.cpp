@@ -937,6 +937,42 @@ int main(int argc, char* argv[]){
   for(vector<pair<string, string> >::iterator it=g_all_link_names.begin();it!=g_all_link_names.end();it++){
     fprintf(output_fp, "    (:%s (&rest args) (forward-message-to %s args))\n", it->second.c_str(), it->first.c_str());
   }
+  /* dump :init-ending for update mass properties */
+  fprintf(output_fp, "\n    (:init-ending\n");
+  fprintf(output_fp, "     ()\n");
+  fprintf(output_fp, "     (send-super :init-ending)\n");
+  fprintf(output_fp, "     ;; update link mass properties\n");
+  fprintf(output_fp, "     (labels ((find-parent-link-in-links\n");
+  fprintf(output_fp, "  	     (ll)\n");
+  fprintf(output_fp, "  	     (if (not (send ll :parent-link))\n");
+  fprintf(output_fp, "  		 (let ((tmp (send ll :parent)))\n");
+  fprintf(output_fp, "  		   (while (not (and (derivedp tmp bodyset-link)\n");
+  fprintf(output_fp, "  				    (find tmp (send self :links))))\n");
+  fprintf(output_fp, "  		     (setq tmp (send tmp :parent)))\n");
+  fprintf(output_fp, "  		   tmp)))\n");
+  fprintf(output_fp, "  	    (gather-all-links\n");
+  fprintf(output_fp, "  	     (&optional (ll (car (send self :links))))\n");
+  fprintf(output_fp, "  	     (append (list ll)\n");
+  fprintf(output_fp, "  		     (flatten\n");
+  fprintf(output_fp, "  		      (mapcar #'(lambda (a)\n");
+  fprintf(output_fp, "  				  (gather-all-links a))\n");
+  fprintf(output_fp, "  			      (remove-if-not #'(lambda (x) (derivedp x bodyset-link)) (send ll :descendants)))))\n");
+  fprintf(output_fp, "  	     ))\n");
+  fprintf(output_fp, "       ;; gather all links not included in (send self :links)\n");
+  fprintf(output_fp, "       (send-all (send self :links) :put :tmp-child-links nil)\n");
+  fprintf(output_fp, "       (dolist (ll (cdr (gather-all-links))) ;; but root link\n");
+  fprintf(output_fp, "         (unless (send ll :parent-link)\n");
+  fprintf(output_fp, "  	 (let ((pl (find-parent-link-in-links ll)))\n");
+  fprintf(output_fp, "  	   (send pl :put :tmp-child-links\n");
+  fprintf(output_fp, "  		 (cons ll (send pl :get :tmp-child-links)))\n");
+  fprintf(output_fp, "  	   )))\n");
+  fprintf(output_fp, "       ;; append mass properties of gathered links to their parent-links\n");
+  fprintf(output_fp, "       (dolist (ll (remove-if-not\n");
+  fprintf(output_fp, "  		  #'(lambda (x) (send x :get :tmp-child-links))\n");
+  fprintf(output_fp, "  		  (send self :links)))\n");
+  fprintf(output_fp, "         (send ll :append-mass-properties (send ll :get :tmp-child-links) :update t))\n");
+  fprintf(output_fp, "       (dolist (ll (send self :links)) (remprop ll :tmp-child-links))\n");
+  fprintf(output_fp, "       ))\n");
 
   fprintf(output_fp, "  )\n\n");
 
