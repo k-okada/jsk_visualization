@@ -24,8 +24,8 @@ rosrun roseus roseus "\
                             (float-vector				\
                              0						\
                              (* 300 (sin (* pi (/ i 25.0))))		\
-                             (* 600 (sin (* pi (/ i 50.0))))))))	\
-   (send *pr2* :inverse-kinematics p					\
+                             (* 500 (sin (* pi (/ i 50.0))))))))	\
+   (send *pr2* :rarm :inverse-kinematics p				\
          :look-at-target t						\
          :rotation-axis :z						\
          :use-base 0.1							\
