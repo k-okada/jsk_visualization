@@ -31,7 +31,7 @@ larm-end-coords:
   parent : l_gripper_tool_frame 
   translate : [0, 0, 0]
 rarm-end-coords:
-  paret : r_gripper_tool_frame 
+  parent : r_gripper_tool_frame 
   translate : [0, 0, 0]
 head-end-coords:
   translate : [0.08, 0, 0.13]
