@@ -72,4 +72,5 @@ rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrav
 rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/darpa-arm.zae test/darpa-arm.zae 3944246c010a4a3ab212506c0588895b)
 
 rosbuild_add_pyunit(test/collada2eus_test.py)
+rosbuild_add_rostest(test/euscollada-test.launch)
 
