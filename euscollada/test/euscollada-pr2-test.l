@@ -7,7 +7,8 @@
   (if (not (boundp '*pr2*)) (pr2))
   (send *pr2* :move-to (make-coords) :world)
   (send *pr2* :reset-pose)
-  (if x::*display* (objects (list *pr2*)))
+  (if (eq x::*display* 0) (setq x::*display* nil))
+  (if (and x::*display* (objects (list *pr2*)))
   (dotimes (i 100)
    (print (list i (send *pr2* :torso :waist-z :joint-angle)))
    (setq p (make-coords :pos
