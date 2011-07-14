@@ -1,6 +1,6 @@
 <launch>
   <node name="collada_urdf" pkg="collada_urdf_jsk_patch" type="urdf_to_collada"
-	args="$(find pr2_mechanism_model)/pr2.urdf $(findeuscollada)/pr2.dae" />
+	args="$(find pr2_mechanism_model)/pr2.urdf $(find euscollada)/pr2.dae" />
   <node name="collada2eus" pkg="euscollada" type="collada2eus"
 	args="$(find euscollada)/pr2.dae $(find euscollada)/pr2.yaml $(find euscollada)/pr2.l" />
   <test test-name="euscollada-pr2-test" pkg="roseus" type="roseus"
