@@ -776,10 +776,25 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, ";; %s $ ", get_current_dir_name());for(int i=0;i<argc;i++) fprintf(output_fp, "%s ", argv[i]); fprintf(output_fp, "\n");
   fprintf(output_fp, ";;\n");
   fprintf(output_fp, "\n");
+  fprintf(output_fp, ";; load euscollada-robot class definition\n");
+  fprintf(output_fp, "#+:ros (require :euscollada-robot \"package://euscollada/src/euscollada-robot.l\")\n");
+  fprintf(output_fp, "#-:ros\n");
+  fprintf(output_fp, "(labels ((with-strm (str) (let* ((strm (piped-fork str))) (prog1 (read-line strm nil nil) (close strm)))))\n");
+  fprintf(output_fp, "  (let* ((euscollada-fname-path \"src/euscollada-robot.l\")\n");
+  fprintf(output_fp, "	 (fname\n");
+  fprintf(output_fp, "	  (if (with-strm \"which rospack\")\n");
+  fprintf(output_fp, "	      (format nil \"~A/~A\" (with-strm \"rospack find euscollada\") euscollada-fname-path))))\n");
+  fprintf(output_fp, "    (unless (probe-file fname)\n");
+  fprintf(output_fp, "      (setq fname (format nil \"~A/ros/diamondback/jsk-ros-pkg/euscollada/~A\" (unix:getenv \"HOME\") euscollada-fname-path)))\n");
+  fprintf(output_fp, "    (unless (probe-file fname)\n");
+  fprintf(output_fp, "      (setq fname (format nil \"~A/ros/cturtle/jsk-ros-pkg/euscollada/~A\" (unix:getenv \"HOME\") euscollada-fname-path)))\n");
+  fprintf(output_fp, "    (when (probe-file fname)\n");
+  fprintf(output_fp, "      (require :euscollada-robot fname))))\n\n");
+
   fprintf(output_fp, "(defun %s () (setq *%s* (instance %s-robot :init)))\n", thisNode->getName(), thisNode->getName(), thisNode->getName());
   fprintf(output_fp, "\n");
   fprintf(output_fp, "(defclass %s-robot\n", thisNode->getName());
-  fprintf(output_fp, "  :super robot-model\n");
+  fprintf(output_fp, "  :super euscollada-robot\n");
   fprintf(output_fp, "  :slots (");
   // all joint and link name
   for(int currentJoint=0;currentJoint<(int)(g_dae->getDatabase()->getElementCount(NULL, "joint", NULL));currentJoint++) {
@@ -954,69 +969,6 @@ int main(int argc, char* argv[]){
   for(vector<pair<string, string> >::iterator it=g_all_link_names.begin();it!=g_all_link_names.end();it++){
     fprintf(output_fp, "    (:%s (&rest args) (forward-message-to %s args))\n", it->second.c_str(), it->first.c_str());
   }
-  /* dump :init-ending for update mass properties */
-  fprintf(output_fp, "\n    (:init-ending\n");
-  fprintf(output_fp, "     ()\n");
-  fprintf(output_fp, "     (send-super :init-ending)\n");
-  fprintf(output_fp, "     ;; update link mass properties\n");
-  fprintf(output_fp, "     (labels ((find-parent-link-in-links\n");
-  fprintf(output_fp, "  	     (ll)\n");
-  fprintf(output_fp, "  	     (if (not (send ll :parent-link))\n");
-  fprintf(output_fp, "  		 (let ((tmp (send ll :parent)))\n");
-  fprintf(output_fp, "  		   (while (not (and (derivedp tmp bodyset-link)\n");
-  fprintf(output_fp, "  				    (find tmp (send self :links))))\n");
-  fprintf(output_fp, "  		     (setq tmp (send tmp :parent)))\n");
-  fprintf(output_fp, "  		   tmp)))\n");
-  fprintf(output_fp, "  	    (gather-all-links\n");
-  fprintf(output_fp, "  	     (&optional (ll (car (send self :links))))\n");
-  fprintf(output_fp, "  	     (append (list ll)\n");
-  fprintf(output_fp, "  		     (flatten\n");
-  fprintf(output_fp, "  		      (mapcar #'(lambda (a)\n");
-  fprintf(output_fp, "  				  (gather-all-links a))\n");
-  fprintf(output_fp, "  			      (remove-if-not #'(lambda (x) (derivedp x bodyset-link)) (send ll :descendants)))))\n");
-  fprintf(output_fp, "  	     ))\n");
-  fprintf(output_fp, "       ;; gather all links not included in (send self :links)\n");
-  fprintf(output_fp, "       (send-all (send self :links) :put :tmp-child-links nil)\n");
-  fprintf(output_fp, "       (dolist (ll (cdr (gather-all-links))) ;; but root link\n");
-  fprintf(output_fp, "         (unless (send ll :parent-link)\n");
-  fprintf(output_fp, "  	 (let ((pl (find-parent-link-in-links ll)))\n");
-  fprintf(output_fp, "  	   (send pl :put :tmp-child-links\n");
-  fprintf(output_fp, "  		 (cons ll (send pl :get :tmp-child-links)))\n");
-  fprintf(output_fp, "  	   )))\n");
-  fprintf(output_fp, "       ;; append mass properties of gathered links to their parent-links\n");
-  fprintf(output_fp, "       (dolist (ll (remove-if-not\n");
-  fprintf(output_fp, "  		  #'(lambda (x) (send x :get :tmp-child-links))\n");
-  fprintf(output_fp, "  		  (send self :links)))\n");
-  fprintf(output_fp, "         (send ll :append-mass-properties (send ll :get :tmp-child-links) :update t))\n");
-  fprintf(output_fp, "       (dolist (ll (send self :links)) (remprop ll :tmp-child-links)))\n");
-  fprintf(output_fp, "\n     ;; check root link validation\n");
-  fprintf(output_fp, "     (labels\n");
-  fprintf(output_fp, "	       ((get-parent-link\n");
-  fprintf(output_fp, "	         (ll)\n");
-  fprintf(output_fp, "            (or (send ll :parent-link)\n");
-  fprintf(output_fp, "	              (if (derivedp (send ll :parent) bodyset-link)\n");
-  fprintf(output_fp, "		          (send ll :parent))))\n");
-  fprintf(output_fp, "	        (find-root-link\n");
-  fprintf(output_fp, "	         (ll)\n");
-  fprintf(output_fp, "	         (let ((pl (get-parent-link ll)))\n");
-  fprintf(output_fp, "	           (cond\n");
-  fprintf(output_fp, "	             ((null pl) nil)\n");
-  fprintf(output_fp, "	             ((get-parent-link pl) (find-root-link pl))\n");
-  fprintf(output_fp, "	             ((find (send ll :joint) (send self :joint-list)) pl)\n");
-  fprintf(output_fp, "	             (t ll)))))\n");
-  fprintf(output_fp, "       (let ((root-link\n");
-  fprintf(output_fp, "     	      (remove-duplicates\n");
-  fprintf(output_fp, "     	        (remove nil\n");
-  fprintf(output_fp, "     	         (mapcar #'(lambda (l)\n");
-  fprintf(output_fp, "     		  	     (find-root-link l))\n");
-  fprintf(output_fp, "     		         (send-all (send self :joint-list) :parent-link))))))\n");
-  fprintf(output_fp, "     	 (when (> (length (send self :links)) 1)\n");
-  fprintf(output_fp, "     	   (unless (= (length root-link) 1)\n");
-  fprintf(output_fp, "     	     (error \"root link definition is ambiguous!!\"))\n");
-  fprintf(output_fp, "     	   (unless (equal (car root-link) (car links))\n");
-  fprintf(output_fp, "     	     (setq links (append root-link (cdr links))))))) ;; replace root link\n");
-  fprintf(output_fp, "       )\n");
-
   fprintf(output_fp, "  )\n\n");
 
   writeGeometry(output_fp, g_dae->getDatabase());
