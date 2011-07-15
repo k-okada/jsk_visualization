@@ -16,6 +16,7 @@ extern "C" {
 #include <qhull/qhull_a.h>
 }
 
+#include "rospack/rospack.h"
 
 daeDocument *g_document;
 DAE* g_dae = NULL;
@@ -668,6 +669,26 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
 
 bool limb_order_asc(const pair<string, size_t>& left, const pair<string, size_t>& right) { return left.second < right.second; }
 
+void copy_euscollada_robot_class_definition (FILE *output_fp)
+{
+  fprintf(output_fp, ";; copy euscollada-robot class definition from euscollada/src/euscollada-robot.l\n");
+  fprintf(output_fp, ";;\n");
+  rospack::ROSPack rp;
+  try {
+    rospack::Package *p = rp.get_pkg("euscollada");
+    std::string euscollada_robot_path;
+    if (p!=NULL) euscollada_robot_path = p->path;
+    euscollada_robot_path += "/src/euscollada-robot.l";
+    ifstream fin(euscollada_robot_path.c_str());
+    std::string buf;
+    while(fin && getline(fin, buf))
+      fprintf(output_fp, "%s\n", buf.c_str());
+  } catch (runtime_error &e) {
+    std::cerr << "cannot resolve euscollada package path" << std::endl;
+  }
+  fprintf(output_fp, ";;\n");
+}
+
 int main(int argc, char* argv[]){
   FILE *output_fp;
   char *input_filename, *yaml_filename, *output_filename;
@@ -776,20 +797,7 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, ";; %s $ ", get_current_dir_name());for(int i=0;i<argc;i++) fprintf(output_fp, "%s ", argv[i]); fprintf(output_fp, "\n");
   fprintf(output_fp, ";;\n");
   fprintf(output_fp, "\n");
-  fprintf(output_fp, ";; load euscollada-robot class definition\n");
-  fprintf(output_fp, "#+:ros (require :euscollada-robot \"package://euscollada/src/euscollada-robot.l\")\n");
-  fprintf(output_fp, "#-:ros\n");
-  fprintf(output_fp, "(labels ((with-strm (str) (let* ((strm (piped-fork str))) (prog1 (read-line strm nil nil) (close strm)))))\n");
-  fprintf(output_fp, "  (let* ((euscollada-fname-path \"src/euscollada-robot.l\")\n");
-  fprintf(output_fp, "	 (fname\n");
-  fprintf(output_fp, "	  (if (with-strm \"which rospack\")\n");
-  fprintf(output_fp, "	      (format nil \"~A/~A\" (with-strm \"rospack find euscollada\") euscollada-fname-path))))\n");
-  fprintf(output_fp, "    (unless (probe-file fname)\n");
-  fprintf(output_fp, "      (setq fname (format nil \"~A/ros/diamondback/jsk-ros-pkg/euscollada/~A\" (unix:getenv \"HOME\") euscollada-fname-path)))\n");
-  fprintf(output_fp, "    (unless (probe-file fname)\n");
-  fprintf(output_fp, "      (setq fname (format nil \"~A/ros/cturtle/jsk-ros-pkg/euscollada/~A\" (unix:getenv \"HOME\") euscollada-fname-path)))\n");
-  fprintf(output_fp, "    (when (probe-file fname)\n");
-  fprintf(output_fp, "      (require :euscollada-robot fname))))\n\n");
+  copy_euscollada_robot_class_definition(output_fp);
 
   fprintf(output_fp, "(defun %s () (setq *%s* (instance %s-robot :init)))\n", thisNode->getName(), thisNode->getName(), thisNode->getName());
   fprintf(output_fp, "\n");
