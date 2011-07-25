@@ -372,7 +372,7 @@
         nil
       (let* ((parent-link-name (cdr (assoc :parent j)))
              (parent-link (find-link-from-links-description
-                           parent-link-name ((eusmodel-link-description desc)))))
+                           parent-link-name (eusmodel-link-description desc))))
         (append (find-parent-liks-from-link-description parent-link desc)
                 (list parent-link))))))
 
@@ -930,7 +930,6 @@
 (defun convert-irtmodel-to-collada
   (model-file &optional (output-uri "package://euscollada") (model-name))
   "convert irtmodel to collada model. (convert-irtmodel-to-collada irtmodel-file-path &optional (output-uri) (model-name))"
-  (warn "!! ~A ~A ~A~%" model-file output-uri model-name)
   (if (not (and model-file output-uri))
       (progn
         (warn "usage: convert-to-urdf.l <modelfile> <output-directory-uri>~%")
