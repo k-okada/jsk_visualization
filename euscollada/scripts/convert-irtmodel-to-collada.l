@@ -275,12 +275,11 @@
       '(0)
     (append (range2 (1- n)) (list n))))
 
-(defun eus2collada (obj root-dir
+(defun eus2collada (obj full-root-dir
                         &key
                         (scale 0.001)
                         (file-suffix ".dae"))
-  (let ((name (send obj :name))
-        (full-root-dir (ros::resolve-ros-path root-dir)))
+  (let ((name (send obj :name)))
     (unless name
       (error "You need to specify name"))
     (let ((descrpition (eusmodel-description obj)))
@@ -939,7 +938,7 @@
           (remove-directory-name model-file))))
     (let ((model (instance (eval (intern model-class-name)) :init)))
       (if model-name (send model :name model-name))
-      (eus2collada model output-uri)))
+      (eus2collada model (ros::resolve-ros-path output-uri))))
   (exit))
 
 (in-package "USER")
