@@ -85,7 +85,7 @@
   (cond ((null l) s)
         ((stringp (car l))
          (cat-clark (cdr l) (string-append s (car l)) i))
-        (else
+        (t
          (case (car l)
            (BO    (cat-clark (cdr l) (string-append s "<" ) (+ i 1)))
            (EO    (cat-clark (cdr l) (string-append s "</") (- i 1)))
