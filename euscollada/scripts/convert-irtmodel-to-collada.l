@@ -936,8 +936,7 @@
   (load model-file)
   (let ((model-class-name
          (estimate-class-name
-          (remove-directory-name model-file)))
-        (pkg-name (send (url-pathname output-uri) :host)))
+          (remove-directory-name model-file))))
     (let ((model (instance (eval (intern model-class-name)) :init)))
       (if model-name (send model :name model-name))
       (eus2collada model output-uri)))
