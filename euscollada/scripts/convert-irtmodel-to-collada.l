@@ -929,11 +929,7 @@
 
 (defun convert-irtmodel-to-collada
   (model-file &optional (output-uri "package://euscollada") (model-name))
-  "convert irtmodel to collada model. (convert-irtmodel-to-collada irtmodel-file-path &optional (output-uri) (model-name))"
-  (if (not (and model-file output-uri))
-      (progn
-        (warn "usage: convert-to-urdf.l <modelfile> <output-directory-uri>~%")
-        (exit 1)))
+  "convert irtmodel to collada model. (convert-irtmodel-to-collada irtmodel-file-path &optional (output-uri \"package://euscollada\") (model-name))"
   (format t "convert ~A and output to ~A~%" model-file output-uri)
 
   (format t "loading ~A~%" model-file)
