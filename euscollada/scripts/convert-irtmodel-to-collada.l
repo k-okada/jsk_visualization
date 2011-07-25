@@ -941,7 +941,6 @@
   (let ((model-class-name
          (estimate-class-name
           (remove-directory-name model-file)))
-        (full-output-path (ros::resolve-ros-path output-uri))
         (pkg-name (send (url-pathname output-uri) :host)))
     (let ((model (instance (eval (intern model-class-name)) :init)))
       (if model-name (send model :name model-name))
