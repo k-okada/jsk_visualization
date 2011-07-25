@@ -51,9 +51,9 @@ macro(convert_to_collada)
   foreach(_model ${irtmodels_list})
     string(REGEX REPLACE ".l" "" _model_name1 ${_model})
     string(REGEX REPLACE ".*/" "" _model_name ${_model_name1})
-    set(_command_arg "\"\\(progn \\(defvar *model-file* \\\"${_model}\\\"\\) \\(defvar *model-name* \\\"${_model_name}\\\"\\) \\(defvar  *output-uri* \\\"package://${PROJECT_NAME}\\\"\\)\\)\" ")
+    set(_command_arg "\"\\(convert-irtmodel-to-collada \\\"${_model}\\\" \\\"package://${PROJECT_NAME}\\\" \\\"${_model_name}\\\"\\)\"")
     add_custom_command(OUTPUT "${collada_output_directory}/${_model_name}.dae"
-      COMMAND "rosrun" "roseus" "roseus" "\"${_command_arg}\"" "${convert_exe_full_path}"
+      COMMAND "rosrun" "roseus" "roseus" "${convert_exe_full_path}" "\"${_command_arg}\""
       DEPENDS "${convert_exe_full_path}" "${_model}"
       "${_rospack_euscollada_path}/src/collada-interface.l"
       "${_rospack_euscollada_path}/src/eusmodel-description.l")
