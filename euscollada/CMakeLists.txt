@@ -49,7 +49,7 @@ macro(convert_to_collada)
   set(irtmodels_list ${irtmodels})
   set(_autogen "")
   foreach(_model ${irtmodels_list})
-    string(REGEX REPLACE ".l" "" _model_name1 ${_model})
+    string(REGEX REPLACE "\\.l" "" _model_name1 ${_model})
     string(REGEX REPLACE ".*/" "" _model_name ${_model_name1})
     set(_command_arg "\"\\(convert-irtmodel-to-collada-ros \\\"${_model}\\\" \\\"package://${PROJECT_NAME}\\\" \\\"${_model_name}\\\"\\)\"")
     add_custom_command(OUTPUT "${collada_output_directory}/${_model_name}.dae"
