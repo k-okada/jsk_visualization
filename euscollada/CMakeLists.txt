@@ -51,7 +51,7 @@ macro(convert_to_collada)
   foreach(_model ${irtmodels_list})
     string(REGEX REPLACE "\\.l" "" _model_name1 ${_model})
     string(REGEX REPLACE ".*/" "" _model_name ${_model_name1})
-    set(_command_arg "\"\\(convert-irtmodel-to-collada-ros \\\"${_model}\\\" \\\"package://${PROJECT_NAME}\\\" \\\"${_model_name}\\\"\\)\"")
+    set(_command_arg "\"\\(convert-irtmodel-to-collada \\\"${_model}\\\" \\(ros::resolve-ros-path \\\"package://${PROJECT_NAME}\\\"\\) \\\"${_model_name}\\\"\\)\"")
     add_custom_command(OUTPUT "${collada_output_directory}/${_model_name}.dae"
       COMMAND "rosrun" "roseus" "roseus" "${convert_exe_full_path}" "\"${_command_arg}\""
       DEPENDS "${convert_exe_full_path}" "${_model}"
