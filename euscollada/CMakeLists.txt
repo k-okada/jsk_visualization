@@ -55,9 +55,7 @@ macro(convert_to_collada)
     set(_command_arg "\"\\(convert-irtmodel-to-collada \\\"${_model}\\\" \\(ros::resolve-ros-path \\\"package://${PROJECT_NAME}/collada\\\"\\) \\\"${_model_name}\\\"\\)\"")
     add_custom_command(OUTPUT "${collada_output_directory}/${_model_name}.dae"
       COMMAND "rosrun" "roseus" "roseus" "${convert_exe_full_path}" "\"${_command_arg}\""
-      DEPENDS "${convert_exe_full_path}" "${_model}"
-      "${_rospack_euscollada_path}/src/collada-interface.l"
-      "${_rospack_euscollada_path}/src/eusmodel-description.l")
+      DEPENDS "${convert_exe_full_path}" "${_model}")
     list(APPEND _autogen "${collada_output_directory}/${_model_name}.dae")
   endforeach(_model)
   add_custom_target(CONVERT_EUS_TO_COLLADA ALL DEPENDS ${_autogen})
