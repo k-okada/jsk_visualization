@@ -1,6 +1,8 @@
 ;;
 ;; Convert from PDDL result (include failure recovery) to State Machine
 ;;
+;; Author: Manabu Saito <saito@jsk.t.u-tokyo.ac.jp>
+;;
 
 ;; TODO
 ;; start, goal state
