@@ -1,0 +1,9 @@
+<stack>
+  <description brief="jsk_android_apps">jsk_android_apps</description>
+  <author>Maintained by Kei Okada, Haseru Chen, Manabu Saito</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/jsk_android_apps</url>
+  <depend stack="ros" />
+
+</stack>
