@@ -1,13 +1,13 @@
 <package>
-  <description brief="pr2_hello_world">
+  <description brief="startup">
 
-     pr2_hello_world
+     startup
 
   </description>
   <author>Manabu Saito</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/pr2_hello_world</url>
+  <url>http://ros.org/wiki/startup</url>
 
 </package>
 

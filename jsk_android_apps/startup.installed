@@ -1,0 +1,3 @@
+apps:
+  - app: startup/app
+    display: JSK PR2 Startup
