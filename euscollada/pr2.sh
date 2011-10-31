@@ -37,7 +37,7 @@ rosrun roseus roseus "\
 	(send *irtviewer* :draw-objects)				\
 	(x::window-main-one))						\
    (incf i)								\
-   (if (and (not (boundp '*irtviewer*)) (> i 100)) (exit 0))		\
+   (when (> i 100) (exit 0))						\
    )									\
   (if (boundp '*irtviewer*) (send-all (send *pr2* :links) :draw-on :flush t))\
   )									\
