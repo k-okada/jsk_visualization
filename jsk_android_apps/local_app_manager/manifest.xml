@@ -8,7 +8,12 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/local_app_manager</url>
+
   <depend package="app_manager"/>
+
+  <!-- for battery information -->
+  <depend package="turtlebot_node"/>
+  <depend package="diagnostic_aggregator"/>
 
 </package>
 
