@@ -2,7 +2,7 @@
 ;; this file is copied from package://pr2eus/pr2-utils.l
 ;;
 
-(defmethod hrp4r-robot
+(defmethod euscollada-robot
   (:select-target-arm
    (c)
    (let ((v (send self :inverse-transform-vector (send c :worldpos))))

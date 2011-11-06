@@ -2,18 +2,18 @@
 
 (ros::roseus "pickbox")
 (require :robot-interface "package://roseus/euslisp/robot-interface.l")
-(require :hrp4r "package://hrpsys/scripts/hrp4r.l")
+(require :hrp4 "package://hrpsys/scripts/hrp4c.l")
 (load "./hrp4-utils.l")
 
-(defclass hrp4r-interface
+(defclass hrp4c-interface
   :super robot-interface
   :slots ())
-(defmethod hrp4r-interface
+(defmethod hrp4c-interface
   (:init (&rest args)
-	  (send-super :init :robot hrp4r-robot)))
+	  (send-super :init :robot hrp4-robot)))
 
-(setq *ri* (instance hrp4r-interface :init))
-(setq *hrp4* (instance hrp4r-robot :init))
+(setq *ri* (instance hrp4c-interface :init))
+(setq *hrp4* (instance hrp4-robot :init))
 (objects (list *hrp4*))
 (setq *base-pos* (send *hrp4* :head :end-coords :worldpos)
       *msg* nil)
