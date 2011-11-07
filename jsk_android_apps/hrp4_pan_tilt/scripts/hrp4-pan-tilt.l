@@ -29,14 +29,16 @@
 	      *base-pos*))
 
     (send *ri* :angle-vector (send *hrp4* :angle-vector) 1000)
-    ;(send *ri* :wait-interpolation)
+    (send *ri* :wait-interpolation)
     ))
 
 (ros::subscribe "/android/orientation" geometry_msgs::PoseStamped #'cb 1)
 
+(ros::rate 1)
 (do-until-key
  (if (not (ros::ok)) (exit))
  (ros::spin-once)
  (proccess)
  (x::window-main-one)
- (unix::usleep (* 100 1000)))
+ (ros::sleep)
+ )
