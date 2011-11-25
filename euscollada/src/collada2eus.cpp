@@ -712,7 +712,7 @@ int main(int argc, char* argv[]){
     fprintf(stderr, "could not write to %s\n", output_filename);
     exit(-1);
   }
-  fprintf(stderr, "Convert %s to %s\n", input_filename, output_filename);
+  fprintf(stderr, "Convert %s to %s\n with %s", input_filename, output_filename, yaml_filename);
 
   // init COLLADA
   g_dae = new DAE();
@@ -732,23 +732,25 @@ int main(int argc, char* argv[]){
   typedef pair<string, link_joint > link_joint_pair;
   string limb_candidates[] = {"torso", "larm", "rarm", "lleg", "rleg", "head"}; // candidates of limb names
 
-  ifstream fin(yaml_filename);
-  if (fin.fail()) {
-    fprintf(stderr, "%c[31m;; Could not open %s%c[m\n", 0x1b, yaml_filename, 0x1b);
-  }
-  YAML::Parser parser(fin);
-  YAML::Node doc;
-  parser.GetNextDocument(doc);
-
-  /* re-order limb name by lines of yaml */
   vector<pair<string, size_t> > limb_order;
-  BOOST_FOREACH(string& limb, limb_candidates) {
+  YAML::Node doc;
+  if (yaml_filename != NULL) {
+    ifstream fin(yaml_filename);
+    if (fin.fail()) {
+      fprintf(stderr, "%c[31m;; Could not open %s%c[m\n", 0x1b, yaml_filename, 0x1b);
+    }
+    YAML::Parser parser(fin);
+    parser.GetNextDocument(doc);
+
+    /* re-order limb name by lines of yaml */
+    BOOST_FOREACH(string& limb, limb_candidates) {
     if ( doc.FindValue(limb) ) {
       std::cerr << limb << "@" << doc[limb].GetMark().line << std::endl;
       limb_order.push_back(pair<string, size_t>(limb, doc[limb].GetMark().line));
     }
+    }
+    std::sort(limb_order.begin(), limb_order.end(), limb_order_asc);
   }
-  std::sort(limb_order.begin(), limb_order.end(), limb_order_asc);
 
   // generate limbs including limb_name, link_names, and joint_names
   vector<link_joint_pair> limbs;
