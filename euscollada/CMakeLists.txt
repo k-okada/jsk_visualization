@@ -31,32 +31,35 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 rosbuild_add_executable(collada2eus src/collada2eus.cpp)
 target_link_libraries(collada2eus qhull)
-message("${CMAKE_SYSTEM_PROCESSOR}")
-macro(convert_to_collada)
-  set(convert_exe "convert-irtmodel-to-collada.l")
-  rosbuild_invoke_rospack("euscollada" _rospack euscollada_path find)
-  set(convert_exe_full_path "${_rospack_euscollada_path}/scripts/${convert_exe}")
-  #message("${convert_exe_full_path}") #debug
-  # search all irtmodels
-  rosbuild_invoke_rospack("euslisp" _rospack euslisp_path find)
-  rosbuild_invoke_rospack("${PROJECT_NAME}" _rospack current_package_path find)
-  set(irtmodel_directory "${_rospack_euslisp_path}/jskeus/eus/models")
-  set(collada_output_directory "${_rospack_current_package_path}/collada")
-  execute_process(COMMAND "find" "${irtmodel_directory}" "-name" "*robot.l" "-o" "-name" "*object.l"
-    OUTPUT_VARIABLE irtmodels)
 
-  string(REPLACE "\n" ";" irtmodels "${irtmodels}") #space separated list
-  set(irtmodels_list ${irtmodels})
-  set(_autogen "")
-  execute_process(COMMAND mkdir -p ${_rospack_current_package_path}/collada)
-  foreach(_model ${irtmodels_list})
-    string(REGEX REPLACE "\\.l" "" _model_name1 ${_model})
-    string(REGEX REPLACE ".*/" "" _model_name ${_model_name1})
+rosbuild_find_ros_package(euslisp)
+macro(convert_to_collada)
+  set(convert_exe "${CMAKE_CURRENT_SOURCE_DIR}/scripts/convert-irtmodel-to-collada.l")
+  # search all irtmodels
+  set(irtmodel_directory "${euslisp_PACKAGE_PATH}/jskeus/eus/models")
+  set(collada_directory "${CMAKE_CURRENT_SOURCE_DIR}/collada")
+  #
+  message("convert scrpit ${convert_exe}")
+  message("input irtmodel dir ${irtmodel_directory}")
+  message("output collada dir ${collada_directory}")
+  # get robot and object models
+  file(GLOB irt_models "${irtmodel_directory}/*-robot.l" "${irtmodel_directory}/*-object.l")
+  # remove scene object models
+  file(GLOB irt_scenes RELATIVE ${irtmodel_directory} "${irtmodel_directory}/*-scene.l")
+  foreach(_scene ${irt_scenes})
+    string(REGEX REPLACE "\\-scene.l" "" _scene_name ${_scene})
+    file(GLOB _scene_objects "${irtmodel_directory}/${_scene_name}-*-object.l")
+    list(REMOVE_ITEM irt_models ${_scene_objects})
+  endforeach(_scene ${irt_scenes})
+  file(MAKE_DIRECTORY ${collada_directory})
+  #
+  foreach(_model ${irt_models})
+    get_filename_component(_model_name ${_model} NAME_WE)
     set(_command_arg "\"\\(convert-irtmodel-to-collada \\\"${_model}\\\" \\(ros::resolve-ros-path \\\"package://${PROJECT_NAME}/collada\\\"\\) \\\"${_model_name}\\\"\\)\"")
-    add_custom_command(OUTPUT "${collada_output_directory}/${_model_name}.dae"
-      COMMAND "rosrun" "roseus" "roseus" "${convert_exe_full_path}" "\"${_command_arg}\""
-      DEPENDS "${convert_exe_full_path}" "${_model}")
-    list(APPEND _autogen "${collada_output_directory}/${_model_name}.dae")
+    add_custom_command(OUTPUT "${collada_directory}/${_model_name}.dae"
+      COMMAND "rosrun" "roseus" "roseus" "${convert_exe}" "\"${_command_arg}\""
+      DEPENDS "${convert_exe}" "${_model}")
+    list(APPEND _autogen "${collada_directory}/${_model_name}.dae")
   endforeach(_model)
   add_custom_target(CONVERT_EUS_TO_COLLADA ALL DEPENDS ${_autogen})
 endmacro(convert_to_collada)
