@@ -595,9 +595,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
       }
       fprintf(fp, ")\n");
       fprintf(fp, "                       :name :%s\n", thisNode->getName());
-      if ( thisRigidbody == NULL ) {
-	fprintf(fp, "                       :weight 1.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))\n");
-      } else {
+      if ( thisRigidbody && thisRigidbody->getTechnique_common()->getMass_frame() ) {
 	domTranslate_Array translateArray = thisRigidbody->getTechnique_common()->getMass_frame()->getTranslate_array();
 	domTranslateRef thisTranslate = translateArray[translateArray.getCount()-1];
 	fprintf(fp, "                       :weight %.3f :centroid (float-vector %.3f %.3f %.3f)\n",
@@ -619,6 +617,8 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
 		thisRigidbody->getTechnique_common()->getInertia()->getValue()[1]*1e9,
 		thisRigidbody->getTechnique_common()->getInertia()->getValue()[2]*1e9);
 	fprintf(fp, "                                          (m* (m* tmp-rot-matrix (diagonal iner)) (transpose tmp-rot-matrix)))\n");
+      } else {
+	fprintf(fp, "                       :weight 1.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))\n");
       }
       fprintf(fp, "		       ))\n");
     } else if ( (thisNode->getNode_array().getCount() > 0 &&
