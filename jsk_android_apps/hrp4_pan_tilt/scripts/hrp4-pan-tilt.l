@@ -2,7 +2,7 @@
 
 (ros::roseus "pickbox")
 (require :robot-interface "package://roseus/euslisp/robot-interface.l")
-(require :hrp4r "package://hrpsys/scripts/hrp4r.l")
+(require :hrp4r "package://hrpsys_ros_bridge/models/hrp4r.l")
 (load "./hrp4-utils.l")
 
 (defclass hrp4r-interface
