@@ -53,7 +53,11 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
     fprintf(fp, "   )\n");
     return;
   }
-  fprintf(fp, "  (:init (&key (name))\n");
+  if (thisGeometry->getName()){
+    fprintf(fp, "  (:init (&key (name \"%s\"))\n", thisGeometry->getName());
+  } else {
+    fprintf(fp, "  (:init (&key (name))\n");
+  }
   fprintf(fp, "         (replace-object self (send self :qhull-faceset))\n");
   fprintf(fp, "         (if name (send self :name name))\n");
   fprintf(fp, "         self)\n");
@@ -285,8 +289,8 @@ void writeGeometry(FILE *fp, daeDatabase *thisDatabase) {
     domGeometry *thisGeometry;
     thisDatabase->getElement((daeElement**)&thisGeometry, currentGeometry, NULL, "geometry");
 
-    fprintf(stderr, "geometry %d id:%s\n",
-            currentGeometry, thisGeometry->getId());
+    fprintf(stderr, "geometry %d id:%s (%s)\n",
+            currentGeometry, thisGeometry->getId(), thisGeometry->getName());
 
     // write geometry information
     writeTriangle(fp, thisGeometry);
