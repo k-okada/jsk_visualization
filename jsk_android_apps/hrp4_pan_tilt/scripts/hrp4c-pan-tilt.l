@@ -1,7 +1,7 @@
 #!/usr/bin/env roseus
 
 (ros::roseus "pickbox")
-(require :robot-interface "package://roseus/euslisp/robot-interface.l")
+(require :robot-interface "package://pr2eus/robot-interface.l")
 (require :hrp4 "package://hrpsys_ros_bridge/models/hrp4c.l")
 (load "./hrp4-utils.l")
 
