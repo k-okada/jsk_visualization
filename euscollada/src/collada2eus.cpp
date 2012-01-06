@@ -420,6 +420,8 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
       max = jointAxis_array[0]->getLimits()->getMax()->getValue();
     }
   }
+  fprintf(stderr, "** %s\n", thisJoint->getName());
+  fprintf(stderr, "min = %f, max = %f\n", min, max);
   // dump :max-joint-velocity of eus file from <speed> tag of collada file
   domMotion *thisMotion;
   g_dae->getDatabase()->getElement((daeElement**)&thisMotion, 0, NULL, "motion");
@@ -437,6 +439,26 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
       }
     }
   }
+  // use safety controller data
+  domKinematics *thisKinematics;
+  g_dae->getDatabase()->getElement((daeElement**)&thisKinematics, 0, NULL, "kinematics");
+  if( !!thisKinematics->getTechnique_common() ) {
+    for(size_t i = 0; i < thisKinematics->getTechnique_common()->getAxis_info_array().getCount(); ++i) {
+      domKinematics_axis_infoRef kinematics_axis_info = thisKinematics->getTechnique_common()->getAxis_info_array()[i];
+      // Sid name from Motion axis info
+      string axis_info_name(string(kinematics_axis_info->getAxis()));
+      // Sid name from joint axis info
+      string joint_name(string(daeSafeCast<domKinematics_model>(thisJoint->getParentElement()->getParentElement())->getId()) // kinamtics_model's id
+			+"/"+ string(thisJoint->getSid()) +"/"+ jointAxis_array[0]->getSid());
+      if (axis_info_name == joint_name && // if thisJoint corresponds to kinematics_axis
+	  thisKinematics->getTechnique_common()->getAxis_info_array()[i]->getLimits()) {
+	min = thisKinematics->getTechnique_common()->getAxis_info_array()[i]->getLimits()->getMin()->getFloat()->getValue();
+	max = thisKinematics->getTechnique_common()->getAxis_info_array()[i]->getLimits()->getMax()->getFloat()->getValue();
+	fprintf(stderr, "min = %f, max = %f (safety)\n", min, max);
+      }
+    }
+  }
+
   axis[0] = jointAxis_array[0]->getAxis()->getValue()[0];
   axis[1] = jointAxis_array[0]->getAxis()->getValue()[1];
   axis[2] = jointAxis_array[0]->getAxis()->getValue()[2];
