@@ -405,12 +405,13 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   fprintf(fp, "                     :parent-link %s :child-link %s\n", parentLink->getName(), childLink->getName());
   domAxis_constraint_Array jointAxis_array;
   int jointCount;
-  float axis[3], min = FLT_MAX, max = -FLT_MAX;
+  float axis[3], min = FLT_MAX, max = -FLT_MAX, scale = 1.0;
   if ( thisJoint->getPrismatic_array().getCount() > 0 ) {
     jointAxis_array = thisJoint->getPrismatic_array();
     if ( jointAxis_array[0]->getLimits() ) {
-      min = 1000*jointAxis_array[0]->getLimits()->getMin()->getValue();
-      max = 1000*jointAxis_array[0]->getLimits()->getMax()->getValue();
+      scale = 1000;
+      min = scale*jointAxis_array[0]->getLimits()->getMin()->getValue();
+      max = scale*jointAxis_array[0]->getLimits()->getMax()->getValue();
     }
   } else if ( thisJoint->getRevolute_array().getCount() > 0 ) {
     jointAxis_array = thisJoint->getRevolute_array();
@@ -452,8 +453,8 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
 			+"/"+ string(thisJoint->getSid()) +"/"+ jointAxis_array[0]->getSid());
       if (axis_info_name == joint_name && // if thisJoint corresponds to kinematics_axis
 	  thisKinematics->getTechnique_common()->getAxis_info_array()[i]->getLimits()) {
-	min = thisKinematics->getTechnique_common()->getAxis_info_array()[i]->getLimits()->getMin()->getFloat()->getValue();
-	max = thisKinematics->getTechnique_common()->getAxis_info_array()[i]->getLimits()->getMax()->getFloat()->getValue();
+	min = scale*thisKinematics->getTechnique_common()->getAxis_info_array()[i]->getLimits()->getMin()->getFloat()->getValue();
+	max = scale*thisKinematics->getTechnique_common()->getAxis_info_array()[i]->getLimits()->getMax()->getFloat()->getValue();
 	fprintf(stderr, "min = %f, max = %f (safety)\n", min, max);
       }
     }
