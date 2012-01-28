@@ -436,7 +436,7 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
 			+"/"+ string(thisJoint->getSid()) +"/"+ jointAxis_array[0]->getSid());
       if (axis_info_name == joint_name && // if thisJoint corresponds to Motion_axis
 	  thisMotion->getTechnique_common()->getAxis_info_array()[i]->getSpeed()) {
-	fprintf(fp, "                     :max-joint-velocity %f\n", thisMotion->getTechnique_common()->getAxis_info_array()[i]->getSpeed()->getFloat()->getValue());
+	fprintf(fp, "                     :max-joint-velocity %f\n", fabs(thisMotion->getTechnique_common()->getAxis_info_array()[i]->getSpeed()->getFloat()->getValue()));
       }
     }
   }
