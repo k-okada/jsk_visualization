@@ -350,8 +350,7 @@ domLink *findNonFixChildLink(domLink *thisLink) {
     if (jointAxis_array[0]->getLimits() &&
         jointAxis_array[0]->getLimits()->getMin()->getValue() == 0 &&
         jointAxis_array[0]->getLimits()->getMax()->getValue() == 0 ) {
-      domLink *tmp_thisLink = findNonFixChildLink(thisLink->getAttachment_full_array()[currentAttachment]->getLink());
-      if ( tmp_thisLink ) return tmp_thisLink;
+      return thisLink->getAttachment_full_array()[currentAttachment]->getLink();
     } else {
       return thisLink;
     }
@@ -369,8 +368,6 @@ domLink *findChildLinkFromJointName(const char *jointName) {
     for(int currentAttachment=0;currentAttachment<(int)(thisLink->getAttachment_full_array().getCount());currentAttachment++){
       if ( jointSid_str.compare(thisLink->getAttachment_full_array()[currentAttachment]->getJoint()) == 0 ) {
         domLink *childLink = thisLink->getAttachment_full_array()[currentAttachment]->getLink();
-        domLink *tmp_childLink = findNonFixChildLink(childLink);
-        if (tmp_childLink) childLink = tmp_childLink;
         return childLink;
       }
     }
@@ -391,9 +388,6 @@ const char* findLinkName(const char *link_name) {
 // write euslisp joint instance from jointSid, parentLink, childLink
 void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *childLink) {
   //
-  domLink *tmp_childLink = findNonFixChildLink(childLink);
-  if (tmp_childLink) childLink = tmp_childLink;
-
   // get number of joints
   int jointElementCount;
   jointElementCount = g_dae->getDatabase()->getElementCount(NULL, "joint", NULL);
