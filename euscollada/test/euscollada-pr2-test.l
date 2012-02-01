@@ -36,7 +36,7 @@
 	 (ret
 	  (eps= (* 1e-3 (send *pr2* :weight)) ;; [g] -> [kg]
 		(reduce #'+ (read-from-string (format nil "(~A )" (read-line strm nil nil))))
-		1)))
+		)))
     (close strm)
     (assert ret)))
 
