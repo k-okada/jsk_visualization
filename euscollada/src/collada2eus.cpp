@@ -458,7 +458,7 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   axis[1] = jointAxis_array[0]->getAxis()->getValue()[1];
   axis[2] = jointAxis_array[0]->getAxis()->getValue()[2];
   cerr << "    writeJoint " << thisJoint->getName() << ", parent = " << parentLink->getName() << ", child = " << childLink->getName()  << ", limit = " << min << "/" << max << endl;
-  fprintf(fp, "                     :axis (float-vector %f %f %f)\n", axis[0], axis[1], axis[2]);
+  fprintf(fp, "                     :axis (let ((tmp-axis (float-vector %f %f %f))) (if (eps= (norm tmp-axis) 0.0) (float-vector 1 0 0) tmp-axis))\n", axis[0], axis[1], axis[2]);
   fprintf(fp, "                    ");
   fprintf(fp, " :min "); if (min == FLT_MAX) fprintf(fp, "*-inf*"); else fprintf(fp, "%f", min);
   fprintf(fp, " :max "); if (max ==-FLT_MAX) fprintf(fp,  "*inf*"); else fprintf(fp, "%f", max);
