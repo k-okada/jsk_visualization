@@ -1,6 +1,5 @@
 <launch>
   <node name="pr2_collada_urdf_eus" pkg="euscollada" type="pr2.sh" />
-/>
   <test test-name="euscollada-pr2-test" pkg="roseus" type="roseus"
 	args="$(find euscollada)/test/euscollada-pr2-test.l" />
 </launch>
