@@ -31,6 +31,14 @@
     (send-all (send *pr2* :links) :draw-on :flush t))
   )
 
+(deftest pr2-weight-test
+  (let* ((strm (piped-fork "echo $(grep \"<mass\" `rospack find pr2_mechanism_model`/pr2.urdf | cut -d\\\" -f2)"))
+	 (ret
+	  (eps= (* 1e-3 (send *pr2* :weight)) ;; [g] -> [kg]
+		(reduce #'+ (read-from-string (format nil "(~A )" (read-line strm nil nil))))
+		1)))
+    (close strm)
+    (assert ret)))
 
 (run-all-tests)
 (exit)
