@@ -633,7 +633,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
 		thisRigidbody->getTechnique_common()->getInertia()->getValue()[2]*1e9);
 	fprintf(fp, "                                          (m* (m* tmp-rot-matrix (diagonal iner)) (transpose tmp-rot-matrix)))\n");
       } else {
-	fprintf(fp, "                       :weight 1.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))\n");
+	fprintf(fp, "                       :weight 0.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((0 0 0)(0 0 0)(0 0 0))\n");
       }
       fprintf(fp, "		       ))\n");
     } else if ( (thisNode->getNode_array().getCount() > 0 &&
@@ -643,7 +643,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
       fprintf(fp, ")\n"); // let(
       cerr << ";; WARNING link without geometry : " << thisNode->getName() << endl;
       fprintf(fp, "       ;; define bodyset-link for %s\n", thisNode->getName());
-      fprintf(fp, "       (setq %s (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 10 10 10)) :name :%s :weight 1.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((1 0 0)(0 1 0)(0 0 1))))\n", thisNode->getName(), thisNode->getName());
+      fprintf(fp, "       (setq %s (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 10 10 10)) :name :%s :weight 0.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((0 0 0)(0 0 0)(0 0 0))))\n", thisNode->getName(), thisNode->getName());
     } else {
       fprintf(fp, ")\n"); // let(
       cerr << ";; WARNING link without geometry nor node: " << thisNode->getName() << " geometry : " << thisNode->getInstance_geometry_array().getCount() << ", node : " << thisNode->getNode_array().getCount();;
@@ -652,7 +652,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
       }
       cerr << endl;
       fprintf(fp, "       ;; define cascaded-coords for %s\n", thisNode->getName());
-      fprintf(fp, "       (setq %s (instance bodyset-link :init (make-cascoords) :name :%s))\n", thisNode->getName(), thisNode->getName());
+      fprintf(fp, "       (setq %s (instance bodyset-link :init (make-cascoords) :name :%s :weight 0.0 :centroid (float-vector 0 0 0) :inertia-tensor #2f((0 0 0)(0 0 0)(0 0 0))))\n", thisNode->getName(), thisNode->getName());
       parentName = ":world";
     }
 
