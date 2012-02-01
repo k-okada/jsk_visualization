@@ -18,33 +18,6 @@
        (send (send j :child-link) :add-parent-link (send j :parent-link))
        (send (send j :parent-link) :add-child-links (send j :child-link))))
 
-   ;; check root link validation
-   (labels
-       ((get-parent-link
-	 (ll)
-	 (or (send ll :parent-link)
-	     (if (derivedp (send ll :parent) bodyset-link)
-		 (send ll :parent))))
-	(find-root-link
-	 (ll)
-	 (let ((pl (get-parent-link ll)))
-	   (cond
-	    ((null pl) nil)
-	    ((get-parent-link pl) (find-root-link pl))
-	    ((find (send ll :joint) (send self :joint-list)) pl)
-	    (t ll)))))
-     (let ((root-link
-	    (remove-duplicates
-	     (remove nil
-		     (mapcar #'(lambda (l)
-				 (find-root-link l))
-			     (send-all (send self :joint-list) :parent-link))))))
-       (when (> (length (send self :links)) 1)
-	 (unless (= (length root-link) 1)
-	   (error "root link definition is ambiguous!!"))
-	 (unless (equal (car root-link) (car links))
-	   (setq links (append root-link (cdr links))))))) ;; replace root link
-
    ;; update link mass properties
    (labels ((find-parent-link-in-links
   	     (ll)
