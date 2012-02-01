@@ -652,7 +652,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
       }
       cerr << endl;
       fprintf(fp, "       ;; define cascaded-coords for %s\n", thisNode->getName());
-      fprintf(fp, "       (setq %s (make-cascoords :name :%s))\n", thisNode->getName(), thisNode->getName());
+      fprintf(fp, "       (setq %s (instance bodyset-link :init (make-cascoords) :name :%s))\n", thisNode->getName(), thisNode->getName());
       parentName = ":world";
     }
 

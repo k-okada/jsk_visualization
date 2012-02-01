@@ -13,10 +13,9 @@
    (dolist (j (mapcan #'(lambda (x) (if (and (derivedp (cdr x) joint)
 					     (not (memq (cdr x) (send self :joint-list))))
 					(list (cdr x)))) (send self :slots)))
-     (when (derivedp (send j :child-link) bodyset-link)
-       (send (send j :child-link) :add-joint j)
-       (send (send j :child-link) :add-parent-link (send j :parent-link))
-       (send (send j :parent-link) :add-child-links (send j :child-link))))
+     (send (send j :child-link) :add-joint j)
+     (send (send j :child-link) :add-parent-link (send j :parent-link))
+     (send (send j :parent-link) :add-child-links (send j :child-link)))
 
    ;; update link mass properties
    (labels ((find-parent-link-in-links
