@@ -69,7 +69,8 @@ convert_to_collada()
 ## pr2.l
 ADD_CUSTOM_COMMAND(
   OUTPUT ${CMAKE_SOURCE_DIR}/pr2.l
-  COMMAND rosrun euscollada pr2.sh)
+  COMMAND rosrun euscollada pr2.sh
+  DEPENDS collada2eus)
 ADD_CUSTOM_TARGET(pr2model ALL DEPENDS ${CMAKE_SOURCE_DIR}/pr2.l)
 
 ## test
