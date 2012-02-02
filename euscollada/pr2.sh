@@ -5,14 +5,14 @@ cd `rospack find euscollada`
 rosrun collada_urdf_jsk_patch urdf_to_collada `rospack find pr2_mechanism_model`/pr2.urdf pr2.dae
 if [ "$?" != 0 ] ;  then exit ; fi
 
-rosrun euscollada collada2eus pr2.dae pr2.yaml pr2.l
+rosrun euscollada collada2eus pr2.dae pr2.yaml pr2.l.tmp; mv pr2.l.tmp pr2.l
 if [ "$?" != 0 ] ;  then exit ; fi
 
 rosrun roseus roseus "\
 (progn									\
   (load \"package://euscollada/pr2.l\")					\
   (load \"package://pr2eus/pr2-utils.l\")				\
-  (if (and x::*display* (> x::*display* 0) (not (boundp '*irtviewer*))) (make-irtviewer))			\
+  (if (and x::*display* (> x::*display* 0) (not (boundp '*irtviewer*))) (make-irtviewer :title \"pr2.sh\"))			\
   (if (not (boundp '*pr2*)) (pr2))					\
 									\
   (send *pr2* :move-to (make-coords) :world)				\
