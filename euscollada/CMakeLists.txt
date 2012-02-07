@@ -61,7 +61,7 @@ macro(convert_to_collada)
       DEPENDS "${convert_exe}" "${_model}")
     list(APPEND _autogen "${collada_directory}/${_model_name}.dae")
   endforeach(_model)
-  add_custom_target(CONVERT_EUS_TO_COLLADA ALL DEPENDS ${_autogen})
+  add_custom_target(CONVERT_EUS_TO_COLLADA ALL DEPENDS ROSBUILD_genmanifest_roseus_euscollada ${_autogen})
 endmacro(convert_to_collada)
 
 convert_to_collada()
