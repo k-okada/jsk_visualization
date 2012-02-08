@@ -3,6 +3,15 @@
   <sphinxdoc><![CDATA[
 Convert collada robot to euslisp robot model
 
+PR2 example
+
+.. code-block:: bash
+
+  rosrun euscollada pr2.sh
+
+.. image:: test/pr2_test.gif
+  :width: 400
+
 .. code-block:: bash
 
   rosrun euscollada collada2eus <collada model file name> <euslisp model file name>
