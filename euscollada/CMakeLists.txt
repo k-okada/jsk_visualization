@@ -82,3 +82,6 @@ rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrav
 rosbuild_add_pyunit(test/collada2eus_test.py)
 rosbuild_add_rostest(test/euscollada-test.launch)
 
+# roslaunch documentation
+rosbuild_find_ros_package("jsk_tools")
+execute_process(COMMAND cmake -E chdir ${PROJECT_SOURCE_DIR} python ${jsk_tools_PACKAGE_PATH}/bin/launchdoc-generator.py ${PROJECT_NAME} --output_dir=. --nomakefile RESULT_VARIABLE _make_failed)

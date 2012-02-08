@@ -1,5 +1,37 @@
 <launch>
   <node name="pr2_collada_urdf_eus" pkg="euscollada" type="pr2.sh" />
+  <sphinxdoc><![CDATA[
+Convert collada robot to euslisp robot model
+
+.. code-block:: bash
+
+  rosrun euscollada collada2eus <collada model file name> <euslisp model file name>
+
+Mitsubishi PA10
+https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/mitsubishi-pa10.zae
+
+.. image:: test/mitsubishi-pa10.png
+  :width: 400
+
+Unimate PUMA Arm
+https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/unimation-pumaarm.zae
+
+.. image:: test/unimation-pumaarm.png
+  :width: 400
+
+Care-O-Bot
+https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/care-o-bot3.zae
+
+.. image:: test/care-o-bot3.png
+  :width: 400
+
+Darpa ARM
+https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/darpa-arm.zae
+
+.. image:: test/darpa-arm.png
+  :width: 400
+
+  ]]></sphinxdoc>
   <test test-name="euscollada-pr2-test" pkg="roseus" type="roseus"
 	args="$(find euscollada)/test/euscollada-pr2-test.l" />
 </launch>

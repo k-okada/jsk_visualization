@@ -9,6 +9,10 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/euscollada</url>
 
+  <export>
+    <rosdoc config="rosdoc.yaml" />
+  </export>
+
   <depend package="colladadom"/>
   <depend package="collada_urdf_jsk_patch"/>
   <depend package="euslisp"/>
