@@ -28,15 +28,10 @@
    (when x::*display*
      (send *irtviewer* :objects (list *pr2* p))
      (send *irtviewer* :draw-objects)
-     (send *irtviewer* :viewer :viewsurface :write-to-image-file (format nil "/tmp/pr2_~0,3d.png" i))
      (x::window-main-one))
    )
   (if x::*display*
-    (send-all (send *pr2* :links) :draw-on :flush t)
-    (send *irtviewer* :viewer :viewsurface :write-to-image-file (format nil "/tmp/pr2_~0,3d.png" 100)))
-  (dotimes (i 101)
-    (unix::system (format nil "convert /tmp/pr2_~0,3d.png /tmp/pr2_~0,3d.gif" i i)))
-  (unix::system (format nil "gifsicle --colors 256 --loop --delay 20 /tmp/pr2_*.gif -o ~A" (ros::resolve-ros-path "package://euscollada/test/pr2_test.gif")))
+    (send-all (send *pr2* :links) :draw-on :flush t))
   )
 
 (deftest pr2-weight-test
