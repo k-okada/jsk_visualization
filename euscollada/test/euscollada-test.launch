@@ -9,7 +9,7 @@ PR2 example
 
   rosrun euscollada pr2.sh
 
-.. image:: build/pr2_test.gif
+.. video:: build/pr2_test
   :width: 400
 
 .. code-block:: bash
@@ -41,7 +41,7 @@ https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/darpa-arm.zae
   :width: 400
 
   ]]></sphinxdoc>
-  <test test-name="euscollada-pr2-test" pkg="roseus" type="roseus"
+  <test test-name="euscollada_pr2_test" pkg="roseus" type="roseus"
 	args="$(find euscollada)/test/euscollada-pr2-test.l"
 	launch-prefix="glc-capture --start --out=$(find euscollada)/build/pr2_test.glc"/>
   <test type="glc_encode.sh" pkg="jsk_tools" test-name="z_pr2_test" args="$(find euscollada)/build/pr2_test.glc" time-limit="1000"/>
