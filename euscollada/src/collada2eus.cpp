@@ -338,13 +338,10 @@ domLink *findNonFixChildLink(domLink *thisLink) {
   for(int currentAttachment=0;currentAttachment<attachmentCount;currentAttachment++){
     domJoint *thisJoint = findJointFromName(thisLink->getAttachment_full_array()[currentAttachment]->getJoint());
     domAxis_constraint_Array jointAxis_array;
-    int jointCount = 0;
     if ( thisJoint->getPrismatic_array().getCount() > 0 ) {
       jointAxis_array = thisJoint->getPrismatic_array();
-      jointCount = thisJoint->getPrismatic_array().getCount();
     } else if ( thisJoint->getRevolute_array().getCount() > 0 ) {
       jointAxis_array = thisJoint->getRevolute_array();
-      jointCount = thisJoint->getRevolute_array().getCount();
     }
     //
     if (jointAxis_array[0]->getLimits() &&
@@ -389,8 +386,6 @@ const char* findLinkName(const char *link_name) {
 void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *childLink) {
   //
   // get number of joints
-  int jointElementCount;
-  jointElementCount = g_dae->getDatabase()->getElementCount(NULL, "joint", NULL);
   domJoint *thisJoint = findJointFromName(jointSid);
   fprintf(fp, "     (setq %s\n", thisJoint->getName());
   fprintf(fp, "           (instance %s :init\n",
@@ -398,7 +393,6 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   fprintf(fp, "                     :name :%s\n", thisJoint->getName());
   fprintf(fp, "                     :parent-link %s :child-link %s\n", parentLink->getName(), childLink->getName());
   domAxis_constraint_Array jointAxis_array;
-  int jointCount;
   float axis[3], min = FLT_MAX, max = -FLT_MAX, scale = 1.0;
   if ( thisJoint->getPrismatic_array().getCount() > 0 ) {
     jointAxis_array = thisJoint->getPrismatic_array();
@@ -409,7 +403,6 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
     }
   } else if ( thisJoint->getRevolute_array().getCount() > 0 ) {
     jointAxis_array = thisJoint->getRevolute_array();
-    jointCount = thisJoint->getRevolute_array().getCount();
     if ( jointAxis_array[0]->getLimits() ) {
       min = jointAxis_array[0]->getLimits()->getMin()->getValue();
       max = jointAxis_array[0]->getLimits()->getMax()->getValue();
@@ -574,7 +567,6 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
       }
       fprintf(fp, ")\n");
       fprintf(fp, "       ;; define bodyset-link for %s : %s\n", geomNode->getName(), geomNode->getId());
-      int geometryNameCount = geometryNameArray.size()+1;
       for(vector<pair<domInstance_geometry *, string> >::iterator it=geometryNameArray.begin();it!=geometryNameArray.end();it++){
 	domInstance_geometry *thisGeometry = it->first;
 	const char * geometryName = it->second.c_str();
