@@ -832,6 +832,22 @@ int main(int argc, char* argv[]){
     g_dae->getDatabase()->getElement((daeElement**)&thisLink, currentLink, NULL, "link");
     fprintf(output_fp, "%s ", thisLink->getName());
   }
+  // add openrave manipulator tip frame
+  if ( g_dae->getDatabase()->getElementCount(NULL, "kinematics_scene", NULL) > 0 ) {
+    domKinematics_scene *thisKinematicsScene;
+    g_dae->getDatabase()->getElement((daeElement**)&thisKinematicsScene, 0, NULL, "kinematics_scene");
+    for(size_t ias = 0; ias < thisKinematicsScene->getInstance_articulated_system_array().getCount(); ++ias) {
+      domArticulated_system *thisArticulated = daeSafeCast<domArticulated_system>(thisKinematicsScene->getInstance_articulated_system_array()[ias]->getUrl().getElement().cast());
+      for(size_t ie = 0; ie < thisArticulated->getExtra_array().getCount(); ++ie) {
+	domExtraRef pextra = thisArticulated->getExtra_array()[ie];
+	if( strcmp(pextra->getType(), "manipulator") == 0 ) {
+	  string armname = pextra->getAttribute("name");
+	  fprintf(output_fp, "%s-frame-tip ", armname.c_str());
+	}
+      }
+    }
+  }
+  //
   fprintf(output_fp, "))\n");
 
   fprintf(output_fp, "(defmethod %s-robot\n", thisNode->getName());
@@ -863,7 +879,45 @@ int main(int argc, char* argv[]){
   }
 
   // end-coords
-  fprintf(output_fp, "     ;; end coords\n");
+  fprintf(output_fp, "\n");
+  fprintf(output_fp, "     ;; end coords from openrave manipulater tag\n");
+  if ( g_dae->getDatabase()->getElementCount(NULL, "kinematics_scene", NULL) > 0 ) {
+    domKinematics_scene *thisKinematicsScene;
+    g_dae->getDatabase()->getElement((daeElement**)&thisKinematicsScene, 0, NULL, "kinematics_scene");
+    for(size_t ias = 0; ias < thisKinematicsScene->getInstance_articulated_system_array().getCount(); ++ias) {
+      domArticulated_system *thisArticulated = daeSafeCast<domArticulated_system>(thisKinematicsScene->getInstance_articulated_system_array()[ias]->getUrl().getElement().cast());
+      for(size_t ie = 0; ie < thisArticulated->getExtra_array().getCount(); ++ie) {
+	domExtraRef pextra = thisArticulated->getExtra_array()[ie];
+	if( strcmp(pextra->getType(), "manipulator") == 0 ) {
+	  string armname = pextra->getAttribute("name");
+	  daeElement* frame_tip = pextra->getTechnique_array()[0]->getChild("frame_tip");
+	  if ( armname != "" ) {
+	    domLinkRef pdomlink = daeSafeCast<domLink>(daeSidRef(frame_tip->getAttribute("link"), thisArticulated).resolve().elt);
+	    domTranslateRef ptrans = daeSafeCast<domTranslate>(frame_tip->getChild("translate"));
+	    domRotateRef prot = daeSafeCast<domRotate>(frame_tip->getChild("rotate"));
+
+	    fprintf(output_fp, "     (setq %s-frame-tip (make-cascoords :coords (send %s :copy-worldcoords)))\n", armname.c_str(), pdomlink->getName());
+	    fprintf(output_fp, "     (send %s-frame-tip :transform (make-coords ", armname.c_str());
+	    if ( ptrans ) {
+	      fprintf(output_fp, ":pos #f(");
+	      for(unsigned int i=0;i<3;i++) { fprintf(output_fp, " %f", 1000*ptrans->getValue()[i]);}
+	      fprintf(output_fp, ") ");
+	    }
+	    if ( prot ) {
+	      fprintf(output_fp, ":axis #f(");
+	      for(unsigned int i=0;i<3;i++) { fprintf(output_fp, " %f", 1000*prot->getValue()[i]);}
+	      fprintf(output_fp, ") :angle");
+	      fprintf(output_fp, " %f", prot->getValue()[3]*(M_PI/180.0));
+	    }
+	    fprintf(output_fp, ") :local)\n");
+	    fprintf(output_fp, "     (send %s :assoc %s-frame-tip)\n",pdomlink->getName(), armname.c_str());
+	  }
+	}
+      }
+    }
+  }
+
+  fprintf(output_fp, "     ;; end coords from yaml file\n");
   BOOST_FOREACH(link_joint_pair& limb, limbs) {
     string limb_name = limb.first;
     vector<string> link_names = limb.second.first;
