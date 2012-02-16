@@ -28,11 +28,11 @@ head:
 ## end-coords
 ##
 larm-end-coords: 
-  parent : l_gripper_palm_link
-  translate : [0.18, 0, 0]
+  parent : l_gripper_tool_frame
+  rotate : [0, 1, 0, 00]
 rarm-end-coords:
-  parent : r_gripper_palm_link
-  translate : [0.18, 0, 0]
+  parent : r_gripper_tool_frame
+  rotate : [0, 1, 0, 00]
 head-end-coords:
   translate : [0.08, 0, 0.13]
   rotate    : [0, 1, 0, 90]
