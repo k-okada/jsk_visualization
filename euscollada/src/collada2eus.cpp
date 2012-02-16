@@ -888,7 +888,7 @@ int main(int argc, char* argv[]){
 	    domTranslateRef ptrans = daeSafeCast<domTranslate>(frame_tip->getChild("translate"));
 	    domRotateRef prot = daeSafeCast<domRotate>(frame_tip->getChild("rotate"));
 
-	    fprintf(output_fp, "     (setq %s-frame-tip (make-cascoords :coords (send %s :copy-worldcoords)))\n", armname.c_str(), pdomlink->getName());
+	    fprintf(output_fp, "     (setq %s-frame-tip (make-cascoords :coords (send %s :copy-worldcoords) :name :%s-frame-tip))\n", armname.c_str(), pdomlink->getName(), armname.c_str());
 	    fprintf(output_fp, "     (send %s-frame-tip :transform (make-coords ", armname.c_str());
 	    if ( ptrans ) {
 	      fprintf(output_fp, ":pos #f(");
@@ -902,7 +902,11 @@ int main(int argc, char* argv[]){
 	      fprintf(output_fp, " %f", prot->getValue()[3]*(M_PI/180.0));
 	    }
 	    fprintf(output_fp, ") :local)\n");
-	    fprintf(output_fp, "     (send %s :assoc %s-frame-tip)\n",pdomlink->getName(), armname.c_str());
+	    fprintf(output_fp, "     (send %s :assoc %s-frame-tip)\n\n",pdomlink->getName(), armname.c_str());
+	  }
+	  if ( armname == "leftarm" || armname == "rightarm" ) {
+	    fprintf(output_fp, "     (setq %carm-end-coords (make-cascoords :coords (send %s-frame-tip :copy-worldcoords)))\n", armname.c_str()[0], armname.c_str());
+	    fprintf(output_fp, "     (send %s-frame-tip :assoc %carm-end-coords)\n\n", armname.c_str(), armname.c_str()[0]);
 	  }
 	}
       }
@@ -1032,6 +1036,22 @@ int main(int argc, char* argv[]){
     domJoint *thisLink;
     g_dae->getDatabase()->getElement((daeElement**)&thisLink, currentLink, NULL, "link");
     fprintf(output_fp, "    (:%s (&rest args) (forward-message-to %s args))\n", thisLink->getName(), thisLink->getName());
+  }
+  // add openrave manipulator tip frame
+  fprintf(output_fp, "\n    ;; all manipulator\n");
+  if ( g_dae->getDatabase()->getElementCount(NULL, "kinematics_scene", NULL) > 0 ) {
+    domKinematics_scene *thisKinematicsScene;
+    g_dae->getDatabase()->getElement((daeElement**)&thisKinematicsScene, 0, NULL, "kinematics_scene");
+    for(size_t ias = 0; ias < thisKinematicsScene->getInstance_articulated_system_array().getCount(); ++ias) {
+      domArticulated_system *thisArticulated = daeSafeCast<domArticulated_system>(thisKinematicsScene->getInstance_articulated_system_array()[ias]->getUrl().getElement().cast());
+      for(size_t ie = 0; ie < thisArticulated->getExtra_array().getCount(); ++ie) {
+	domExtraRef pextra = thisArticulated->getExtra_array()[ie];
+	if( strcmp(pextra->getType(), "manipulator") == 0 ) {
+	  string armname = pextra->getAttribute("name");
+	  fprintf(output_fp, "    (:%s-frame-tip (&rest args) (forward-message-to %s-frame-tip args))\n", armname.c_str(), armname.c_str());
+	}
+      }
+    }
   }
   fprintf(output_fp, "\n    ;; user-defined joint\n");
   for(vector<pair<string, string> >::iterator it=g_all_link_names.begin();it!=g_all_link_names.end();it++){
