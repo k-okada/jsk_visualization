@@ -390,7 +390,7 @@ void writeJoint(FILE *fp, const char *jointSid, domLink *parentLink, domLink *ch
   fprintf(fp, "     (setq %s\n", thisJoint->getName());
   fprintf(fp, "           (instance %s :init\n",
           (thisJoint->getPrismatic_array().getCount()>0)?"linear-joint":"rotational-joint");
-  fprintf(fp, "                     :name :%s\n", thisJoint->getName());
+  fprintf(fp, "                     :name \"%s\"\n", thisJoint->getName());
   fprintf(fp, "                     :parent-link %s :child-link %s\n", parentLink->getName(), childLink->getName());
   domAxis_constraint_Array jointAxis_array;
   float axis[3], min = FLT_MAX, max = -FLT_MAX, scale = 1.0;
