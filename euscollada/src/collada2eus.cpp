@@ -516,6 +516,17 @@ void writeTransform(FILE *fp, const char *indent, const char *name, domNode *thi
   }
 }
 
+// find Link from kinematic
+domLink* findLinkfromKinematics (domLink* thisLink, const std::string& link_name)
+{
+  if (thisLink->getName()==link_name) return thisLink;
+  for(size_t ii = 0; ii < thisLink->getAttachment_full_array().getCount(); ++ii) {
+    domLink* tmpLink = findLinkfromKinematics(thisLink->getAttachment_full_array()[ii]->getLink(), link_name);
+    if (tmpLink) return tmpLink;
+  }
+  return NULL;
+}
+
 void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisRigidbodyArray) {
   int nodeArrayCount = thisNodeArray.getCount();
   for(int currentNodeArray=0;currentNodeArray<nodeArrayCount;currentNodeArray++) {
@@ -669,6 +680,41 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
       fprintf(fp, "       (send %s :assoc %s)\n",
 	      thisNode->getName(),
 	      thisNode->getNode_array()[currentNodeArray]->getName());
+    }
+    // sensor
+    if ( g_dae->getDatabase()->getElementCount(NULL, "articulated_system", NULL) > 0 ) {
+      domKinematics_model *thisKinematics;
+      g_dae->getDatabase()->getElement((daeElement**)&thisKinematics, 0, NULL, "kinematics_model");
+      domLink* thisLink = findLinkfromKinematics(thisKinematics->getTechnique_common()->getLink_array()[0], std::string(thisNode->getName()));
+      domArticulated_system *thisArticulated;
+      g_dae->getDatabase()->getElement((daeElement**)&thisArticulated, 0, NULL, "articulated_system");
+      for(size_t ie = 0; ie < thisArticulated->getExtra_array().getCount(); ++ie) {
+	domExtraRef pextra = thisArticulated->getExtra_array()[ie];
+	// find element which type is attach_sensor and is attached to thisNode
+	if ( strcmp(pextra->getType(), "attach_sensor") == 0 ) {
+	  daeElement* frame_origin = pextra->getTechnique_array()[0]->getChild("frame_origin");
+	  if ( std::string(thisKinematics->getId())+std::string("/")+std::string(thisLink->getSid()) == frame_origin->getAttribute("link")) {
+	    std::cerr << "Sensor " << pextra->getName() << " is attached to " << thisNode->getName() << std::endl;
+	    domTranslateRef ptrans = daeSafeCast<domTranslate>(frame_origin->getChild("translate"));
+	    domRotateRef prot = daeSafeCast<domRotate>(frame_origin->getChild("rotate"));
+	    fprintf(fp, "       (setq %s-sensor-coords (make-cascoords :name :%s))\n", pextra->getName(), pextra->getName());
+	    fprintf(fp, "       (send %s-sensor-coords :transform (make-coords ", pextra->getName());
+	    if ( ptrans ) {
+	      fprintf(fp, ":pos #f(");
+	      for(unsigned int i=0;i<3;i++) { fprintf(fp, " %f", 1000*ptrans->getValue()[i]);}
+	      fprintf(fp, ") ");
+	    }
+	    if ( prot ) {
+	      fprintf(fp, ":axis #f(");
+	      for(unsigned int i=0;i<3;i++) { fprintf(fp, " %f", prot->getValue()[i]);}
+	      fprintf(fp, ") :angle");
+	      fprintf(fp, " %f", prot->getValue()[3]*(M_PI/180.0));
+	    }
+	    fprintf(fp, "))\n");
+	    fprintf(fp, "       (send %s :assoc %s-sensor-coords)\n", thisNode->getName(), pextra->getName());
+	  }
+	}
+      }
     }
     fprintf(fp, "       )\n\n");
   }
@@ -836,6 +882,18 @@ int main(int argc, char* argv[]){
 	  string armname = pextra->getAttribute("name");
 	  fprintf(output_fp, "%s-frame-tip ", armname.c_str());
 	}
+      }
+    }
+  }
+  // sensor
+  if ( g_dae->getDatabase()->getElementCount(NULL, "articulated_system", NULL) > 0 ) {
+    domArticulated_system *thisArticulated;
+    g_dae->getDatabase()->getElement((daeElement**)&thisArticulated, 0, NULL, "articulated_system");
+    for(size_t ie = 0; ie < thisArticulated->getExtra_array().getCount(); ++ie) {
+      domExtraRef pextra = thisArticulated->getExtra_array()[ie];
+      // find element which type is attach_sensor and is attached to thisNode
+      if ( strcmp(pextra->getType(), "attach_sensor") == 0 ) {
+	fprintf(output_fp, "%s-sensor-coords ", pextra->getName());
       }
     }
   }
