@@ -708,12 +708,14 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
                 }
               }
             }
-	    std::cerr << "Sensor " << pextra->getName() << " is attached to " << thisNode->getName() << " " << sensor_type << std::endl;
-	    domTranslateRef ptrans = daeSafeCast<domTranslate>(frame_origin->getChild("translate"));
-	    domRotateRef prot = daeSafeCast<domRotate>(frame_origin->getChild("rotate"));
+            std::string sensor_url(pextra->getTechnique_array()[0]->getChild("instance_sensor")->getAttribute("url"));
+	    std::cerr << "Sensor " << pextra->getName() << " is attached to " << thisNode->getName() << " " << sensor_type << " " << sensor_url << std::endl;
 	    fprintf(fp, "       (setq %s-sensor-coords (make-cascoords :name :%s))\n", pextra->getName(), pextra->getName());
             fprintf(fp, "       (send %s-sensor-coords :put :sensor-type :%s)\n", pextra->getName(), sensor_type.c_str());
+            fprintf(fp, "       (send %s-sensor-coords :put :sensor-id %s)\n", pextra->getName(), sensor_url.erase( sensor_url.find( "#sensor" ), 7 ).c_str());
 	    fprintf(fp, "       (send %s-sensor-coords :transform (make-coords ", pextra->getName());
+	    domTranslateRef ptrans = daeSafeCast<domTranslate>(frame_origin->getChild("translate"));
+	    domRotateRef prot = daeSafeCast<domRotate>(frame_origin->getChild("rotate"));
 	    if ( ptrans ) {
 	      fprintf(fp, ":pos #f(");
 	      for(unsigned int i=0;i<3;i++) { fprintf(fp, " %f", 1000*ptrans->getValue()[i]);}
