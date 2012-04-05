@@ -694,10 +694,25 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
 	if ( strcmp(pextra->getType(), "attach_sensor") == 0 ) {
 	  daeElement* frame_origin = pextra->getTechnique_array()[0]->getChild("frame_origin");
 	  if ( std::string(thisKinematics->getId())+std::string("/")+std::string(thisLink->getSid()) == frame_origin->getAttribute("link")) {
-	    std::cerr << "Sensor " << pextra->getName() << " is attached to " << thisNode->getName() << std::endl;
+            // get sensor_type from extra tag
+            std::string sensor_type;
+            for (size_t ii = 0; ii < g_dae->getDatabase()->getElementCount(NULL, "extra", NULL); ii++) {
+              domExtra *tmpextra;
+              g_dae->getDatabase()->getElement((daeElement**)&tmpextra, ii, NULL, "extra");
+              if (tmpextra->getType() == std::string("library_sensors")) {
+                for (size_t icon = 0; icon < tmpextra->getTechnique_array()[0]->getContents().getCount(); icon++) {
+                  if ((std::string("#") + tmpextra->getTechnique_array()[0]->getContents()[icon]->getAttribute("id")) ==
+                      pextra->getTechnique_array()[0]->getChild("instance_sensor")->getAttribute("url")) {
+                    sensor_type = tmpextra->getTechnique_array()[0]->getContents()[icon]->getAttribute("type");
+                  }
+                }
+              }
+            }
+	    std::cerr << "Sensor " << pextra->getName() << " is attached to " << thisNode->getName() << " " << sensor_type << std::endl;
 	    domTranslateRef ptrans = daeSafeCast<domTranslate>(frame_origin->getChild("translate"));
 	    domRotateRef prot = daeSafeCast<domRotate>(frame_origin->getChild("rotate"));
 	    fprintf(fp, "       (setq %s-sensor-coords (make-cascoords :name :%s))\n", pextra->getName(), pextra->getName());
+            fprintf(fp, "       (send %s-sensor-coords :put :sensor-type :%s)\n", pextra->getName(), sensor_type.c_str());
 	    fprintf(fp, "       (send %s-sensor-coords :transform (make-coords ", pextra->getName());
 	    if ( ptrans ) {
 	      fprintf(fp, ":pos #f(");
