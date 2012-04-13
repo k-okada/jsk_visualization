@@ -743,11 +743,20 @@ void copy_euscollada_robot_class_definition (FILE *output_fp)
 {
   fprintf(output_fp, ";; copy euscollada-robot class definition from euscollada/src/euscollada-robot.l\n");
   fprintf(output_fp, ";;\n");
-  rospack::ROSPack rp;
   try {
-    rospack::Package *p = rp.get_pkg("euscollada");
     std::string euscollada_robot_path;
+#ifdef ROSPACK_EXPORT
+    rospack::ROSPack rp;
+    rospack::Package *p = rp.get_pkg("euscollada");
     if (p!=NULL) euscollada_robot_path = p->path;
+#else
+    rospack::Rospack rp;
+    std::vector<std::string> search_path;
+    rp.getSearchPathFromEnv(search_path);
+    rp.crawl(search_path, 1);
+    std::string path;
+    rp.find("euscollada",euscollada_robot_path)
+#endif
     euscollada_robot_path += "/src/euscollada-robot.l";
     ifstream fin(euscollada_robot_path.c_str());
     std::string buf;
