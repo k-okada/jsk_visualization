@@ -755,7 +755,7 @@ void copy_euscollada_robot_class_definition (FILE *output_fp)
     rp.getSearchPathFromEnv(search_path);
     rp.crawl(search_path, 1);
     std::string path;
-    rp.find("euscollada",euscollada_robot_path)
+    rp.find("euscollada",euscollada_robot_path);
 #endif
     euscollada_robot_path += "/src/euscollada-robot.l";
     ifstream fin(euscollada_robot_path.c_str());
