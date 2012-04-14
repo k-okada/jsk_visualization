@@ -40,5 +40,6 @@ rosrun roseus roseus "\
    (when (> i 100) (exit 0))						\
    )									\
   (if (boundp '*irtviewer*) (send-all (send *pr2* :links) :draw-on :flush t))\
+  (exit)                                                                \
   )									\
 "
