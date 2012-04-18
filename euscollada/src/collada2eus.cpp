@@ -612,7 +612,7 @@ void writeNodes(FILE *fp, domNode_Array thisNodeArray, domRigid_body_Array thisR
 	fprintf(fp, " %s", geometryName);
       }
       fprintf(fp, ")\n");
-      fprintf(fp, "                       :name :%s\n", thisNode->getName());
+      fprintf(fp, "                       :name \"%s\"\n", thisNode->getName());
       if ( thisRigidbody && thisRigidbody->getTechnique_common()->getMass_frame() ) {
 	domTranslate_Array translateArray = thisRigidbody->getTechnique_common()->getMass_frame()->getTranslate_array();
 	domTranslateRef thisTranslate = translateArray[translateArray.getCount()-1];
