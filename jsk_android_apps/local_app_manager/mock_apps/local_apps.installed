@@ -1,4 +1,6 @@
 apps:
+  - app: jsk_pr2_startup/startup
+    display: jsk pr2 startup
   - app: pr2_hello_world/app
     display: Speak Sample App
   - app: hrp4_pan_tilt/hrp4
