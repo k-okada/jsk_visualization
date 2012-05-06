@@ -65,7 +65,7 @@ macro(convert_to_collada)
   add_dependencies(ROSBUILD_genmanifest_roseus_euscollada CONVERT_EUS_TO_COLLADA)
 endmacro(convert_to_collada)
 
-convert_to_collada()
+#convert_to_collada()
 
 ## pr2.l
 ADD_CUSTOM_COMMAND(
@@ -76,7 +76,8 @@ ADD_CUSTOM_TARGET(pr2model ALL DEPENDS ${CMAKE_SOURCE_DIR}/pr2.l)
 
 ## test
 rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/mitsubishi-pa10.zae test/mitsubishi-pa10.zae 2e995a1356befd581028b9fd0d55b10f)
-rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/unimation-pumaarm.zae test/unimation-pumaarm.zae d98ec4ba7b9cbad464da18f8b9f7c072)
+rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/unimation-pumaarm.zae test/unimation-pumaarm.zae 0d395a35da1f978163a75268b6595b98)
+
 rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/care-o-bot3.zae test/care-o-bot3.zae 36333fc202c2ca4b4169162a868d0f14)
 rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/darpa-arm.zae test/darpa-arm.zae 3944246c010a4a3ab212506c0588895b)
 
