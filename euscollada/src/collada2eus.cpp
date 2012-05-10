@@ -98,7 +98,10 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
 	thisMaterial = daeSafeCast<domMaterial>(g_dae->getDatabase()->idLookup(materialTarget, g_document));
       }
       if ( thisMaterial == NULL ) {
-	fprintf(stderr, "Could not find material %s\n", materialTarget.c_str());
+	fprintf(stderr, "Could not find material %s, use 0.8 0.8 0.8\n", materialTarget.c_str());
+	fprintf(fp, "         (gl::glColor3fv (float-vector 0.1 0.1 0.1))\n");
+	fprintf(fp, "         (gl::glMaterialfv gl::GL_FRONT gl::GL_AMBIENT (float-vector %f %f %f %f))\n", 0.8, 0.8, 0.8, 1.0);
+	fprintf(fp, "         (gl::glMaterialfv gl::GL_FRONT gl::GL_DIFFUSE (float-vector %f %f %f %f))\n", 0.8, 0.8, 0.8, 1.0);
       } else {
 	domInstance_effect* thisInstanceEffect = thisMaterial->getInstance_effect();
 	domEffect* thisEffect = daeSafeCast<domEffect>(g_dae->getDatabase()->idLookup(thisInstanceEffect->getUrl().id(),g_document));
@@ -878,6 +881,14 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, ";; %s $ ", get_current_dir_name());for(int i=0;i<argc;i++) fprintf(output_fp, "%s ", argv[i]); fprintf(output_fp, "\n");
   fprintf(output_fp, ";;\n");
   fprintf(output_fp, "\n");
+  if ( thisNode->getNode_array().getCount() == 0 ) {
+      writeGeometry(output_fp, g_dae->getDatabase());
+
+      fprintf(output_fp, "\n\n(provide :%s \"%s/%s\")\n\n", thisNode->getName(), get_current_dir_name(), output_filename);
+      fprintf(stderr, ";; generate lisp code for body\n");
+      exit(0);
+  }
+
   copy_euscollada_robot_class_definition(output_fp);
 
   fprintf(output_fp, "(defun %s () (setq *%s* (instance %s-robot :init)))\n", thisNode->getName(), thisNode->getName(), thisNode->getName());
