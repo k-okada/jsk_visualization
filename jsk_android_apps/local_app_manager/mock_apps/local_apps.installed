@@ -3,6 +3,8 @@ apps:
     display: jsk pr2 startup
   - app: pr2_hello_world/app
     display: Speak Sample App
+  - app: jsk_android_gui/jsk_android_gui
+    display: App for controlling PR2
   - app: hrp4_pan_tilt/hrp4
     display: Head Controll App for HRP-4
   - app: hrp4_pan_tilt/hrp4c
