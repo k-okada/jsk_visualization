@@ -68,6 +68,10 @@ class CrCalibration:
         lpose = self.find_checkerboard_pose(limg, linfo)
         rpose = self.find_checkerboard_pose(rimg, rinfo)
         if lpose == None or rpose == None:
+            if lpose == None:
+                rospy.loginfo("can't find CB on left camera image")
+            if rpose == None:
+                rospy.loginfo("can't find CB on range image")
             return False
 
         # calcurate pose
