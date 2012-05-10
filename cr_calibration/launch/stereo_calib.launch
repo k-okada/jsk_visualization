@@ -1,5 +1,6 @@
 <launch>
-  <group ns="HRP2017V/wide_stereo">
+  <arg name="namespace" default="$(optenv ROS_NAMESPACE '')" />
+  <group ns="$(arg namespace)/wide_stereo">
     <node name="stereo_calibrator"
           pkg="camera_calibration"
           type="cameracalibrator.py"
