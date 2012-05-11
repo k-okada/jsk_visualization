@@ -203,7 +203,7 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
             if(texoffset!=-255)
               {
                 int texindex = thisTriangles->getP()->getValue().get(i*numberOfInputs+texoffset);
-                fprintf(fp, "         (gl::glTexCoords2f %f %f)\n",
+                fprintf(fp, "         (gl::glTexCoord2f %f %f)\n",
                         thisMesh->getSource_array()[2]->getFloat_array()->getValue().get(texindex*2),
                         thisMesh->getSource_array()[2]->getFloat_array()->getValue().get(texindex*2+1)
                         );
