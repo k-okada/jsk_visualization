@@ -40,12 +40,13 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
 
   // get mesh
   domMesh *thisMesh = thisGeometry->getMesh();
+  int triangleElementCount = (int)(thisMesh->getTriangles_array().getCount());
 
   fprintf(fp, "(defclass %s\n", thisGeometry->getId());
   fprintf(fp, "  :super body\n");
   fprintf(fp, "  :slots ())\n");
   fprintf(fp, "(defmethod %s\n", thisGeometry->getId());
-  if ( thisMesh == NULL )  {
+  if ( thisMesh == NULL || triangleElementCount == 0 )  {
     fprintf(fp, "  (:init (&key (name))\n");
     fprintf(fp, "         (replace-object self (make-cube 10 10 10))\n");
     fprintf(fp, "         (if name (send self :name name))\n");
@@ -84,7 +85,6 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
   fprintf(fp, "         (gl::glNewList newlis gl::GL_COMPILE)\n");
   // Triangulation
   // based on http://www.shader.jp/xoops/html/modules/mydownloads/singlefile.php?cid=5&lid=6
-  int triangleElementCount = (int)(thisMesh->getTriangles_array().getCount());
   for(int currentTriangle=0;currentTriangle<triangleElementCount;currentTriangle++)
     {
       domTriangles* thisTriangles = thisMesh->getTriangles_array().get(0);
@@ -883,6 +883,35 @@ int main(int argc, char* argv[]){
   fprintf(output_fp, ";;\n");
   fprintf(output_fp, "\n");
   if ( thisNode->getNode_array().getCount() == 0 ) {
+      fprintf(output_fp, "(defun %s () (setq *%s* (instance %s-object :init)))\n", thisNode->getName(), thisNode->getName(), thisNode->getName());
+      fprintf(output_fp, "\n");
+      fprintf(output_fp, "(defclass %s-object\n", thisNode->getName());
+      fprintf(output_fp, "  :super bodyset-link\n");
+      fprintf(output_fp, "  :slots ())\n\n");
+      fprintf(output_fp, "(defmethod %s-object\n", thisNode->getName());
+      fprintf(output_fp, "  (:init\n");
+      fprintf(output_fp, "   (&rest args)\n");
+      fprintf(output_fp, "   (let ()\n");
+      fprintf(output_fp, "     (send-super* :init (make-cascoords)\n");
+      fprintf(output_fp, "                  :bodies (list");
+
+      daeDatabase *thisDatabase = g_dae->getDatabase();
+      int geometryElementCount =  thisDatabase->getElementCount(NULL, "geometry", NULL);
+      for(int currentGeometry=0;currentGeometry<geometryElementCount;currentGeometry++) {
+	  // get current geometry
+	  domGeometry *thisGeometry;
+	  thisDatabase->getElement((daeElement**)&thisGeometry, currentGeometry, NULL, "geometry");
+
+	  fprintf(output_fp, " (instance %s :init)", thisGeometry->getId());
+	  fprintf(stderr, "geometry %d id:%s (%s)\n",
+		  currentGeometry, thisGeometry->getId(), thisGeometry->getName());
+
+	  // write geometry information
+      }
+      fprintf(output_fp, ")\n");
+      fprintf(output_fp, "                  :name \"%s\"\n", thisNode->getName());
+      fprintf(output_fp, "                  args))))\n");
+
       writeGeometry(output_fp, g_dae->getDatabase());
 
       fprintf(output_fp, "\n\n(provide :%s \"%s/%s\")\n\n", thisNode->getName(), get_current_dir_name(), output_filename);
