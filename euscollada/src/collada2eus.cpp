@@ -223,19 +223,21 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
           points.push_back(a2);
         }
       fprintf(fp, "         (gl::glEnd)\n");
-      fprintf(fp, "         (gl::glEndList)\n");
-      fprintf(fp, "         (setf (get self :GL-DISPLAYLIST-ID)\n");
-      fprintf(fp, "               (cons (cons glcon newlis)\n");
-      fprintf(fp, "                     (get self :GL-DISPLAYLIST-ID)))\n");
-      fprintf(fp, "         (setq newlis nil)))\n");
-      fprintf(fp, "     (gl::glPopMatrix)\n");
-      fprintf(fp, "     (gl::glPopAttrib)\n");
-      fprintf(fp, "#+:jsk\n");
-      fprintf(fp, "     (sys::mutex-unlock gl::*opengl-lock*)\n");
-      fprintf(fp, "     (unless newlis (send self :draw vwr))\n");
-      fprintf(fp, "     ))\n");
+    }
+  fprintf(fp, "         (gl::glEndList)\n");
+  fprintf(fp, "         (setf (get self :GL-DISPLAYLIST-ID)\n");
+  fprintf(fp, "               (cons (cons glcon newlis)\n");
+  fprintf(fp, "                     (get self :GL-DISPLAYLIST-ID)))\n");
+  fprintf(fp, "         (setq newlis nil)))\n");
+  fprintf(fp, "     (gl::glPopMatrix)\n");
+  fprintf(fp, "     (gl::glPopAttrib)\n");
+  fprintf(fp, "#+:jsk\n");
+  fprintf(fp, "     (sys::mutex-unlock gl::*opengl-lock*)\n");
+  fprintf(fp, "     (unless newlis (send self :draw vwr))\n");
+  fprintf(fp, "     ))\n");
 
-      // do qhull
+  // do qhull
+  if ( points.size() > 0 ) {
       char qhull_attr[] = "qhull C-0.001";
       int ret = qh_new_qhull (3, points.size()/3, &points[0], 0, qhull_attr, NULL, stderr);
       fprintf(fp, "  (:qhull-faceset ()\n");
@@ -272,9 +274,8 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
       if (curlong || totlong) {
         fprintf (stderr, "qhull internal warning (user_eg, #1): did not free %d bytes of long memory (%d pieces)\n", totlong, curlong);
       }
-
-      fprintf(fp, "  )\n\n");
-    }
+  }
+  fprintf(fp, "  )\n\n");
 
   // Polylist
   int polylistElementCount = (int)(thisMesh->getPolylist_array().getCount());
