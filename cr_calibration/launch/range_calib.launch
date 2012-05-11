@@ -4,10 +4,10 @@
     <node name="range_calibrator"
           pkg="camera_calibration"
           type="cameracalibrator.py"
-          args="--size=8x6 --square=0.108 --fix-principal_point"
+          args="--size=8x6 --square=0.108 --fix-principal-point"
           output="screen"
           clear_params="true">
-      <!-- add "--use-rational" to args -->
+      <!-- add "\-\-use-rational" to args -->
       <remap from="image" to="intensity/image_raw" />
       <remap from="camera/set_camera_info" to="camera_info" />
     </node>
