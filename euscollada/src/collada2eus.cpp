@@ -40,7 +40,7 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
 
   // get mesh
   domMesh *thisMesh = thisGeometry->getMesh();
-  int triangleElementCount = (int)(thisMesh->getTriangles_array().getCount());
+  int triangleElementCount = thisMesh?(int)(thisMesh->getTriangles_array().getCount()):0;
 
   fprintf(fp, "(defclass %s\n", thisGeometry->getId());
   fprintf(fp, "  :super body\n");
