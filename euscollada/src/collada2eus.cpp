@@ -985,14 +985,18 @@ int main(int argc, char* argv[]){
   // write joint
   domKinematics_model *thisKinematics;
   g_dae->getDatabase()->getElement((daeElement**)&thisKinematics, 0, NULL, "kinematics_model");
-  writeKinematics(output_fp, thisKinematics->getTechnique_common()->getLink_array()[0]->getAttachment_full_array());
+  if ( thisKinematics ) {
+      writeKinematics(output_fp, thisKinematics->getTechnique_common()->getLink_array()[0]->getAttachment_full_array());
 
-  domLinkRef thisLink = thisKinematics->getTechnique_common()->getLink_array()[0];
-  for(unsigned int currentAttachment2=0;currentAttachment2 < (unsigned int)(thisLink->getAttachment_full_array().getCount());currentAttachment2++) {
-    writeJoint(output_fp, thisLink->getAttachment_full_array()[currentAttachment2]->getJoint(),
-               thisLink,
-               thisLink->getAttachment_full_array()[currentAttachment2]->getLink()
-               );
+      domLinkRef thisLink = thisKinematics->getTechnique_common()->getLink_array()[0];
+      if ( thisLink ) {
+	  for(unsigned int currentAttachment2=0;currentAttachment2 < (unsigned int)(thisLink->getAttachment_full_array().getCount());currentAttachment2++) {
+	      writeJoint(output_fp, thisLink->getAttachment_full_array()[currentAttachment2]->getJoint(),
+			 thisLink,
+			 thisLink->getAttachment_full_array()[currentAttachment2]->getLink()
+		  );
+	  }
+      }
   }
 
   // end-coords
