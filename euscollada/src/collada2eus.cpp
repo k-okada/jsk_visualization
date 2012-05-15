@@ -20,6 +20,7 @@ extern "C" {
 
 daeDocument *g_document;
 DAE* g_dae = NULL;
+float g_scale = 1.0;
 
 vector<pair<string, string> > g_all_link_names;
 
@@ -216,7 +217,7 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
           a1 = thisMesh->getSource_array()[0]->getFloat_array()->getValue().get(index*3+1);
           a2 = thisMesh->getSource_array()[0]->getFloat_array()->getValue().get(index*3+2);
           fprintf(fp, "         (gl::glVertex3fv (float-vector %f %f %f))\n",
-                  1000*a0,1000*a1,1000*a2);
+                  g_scale*1000*a0,g_scale*1000*a1,g_scale*1000*a2);
           // store vertex vector to qhull
           points.push_back(a0);
           points.push_back(a1);
@@ -245,9 +246,9 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
         fprintf(fp, "   (instance faceset :init :faces (list\n");
 	for (unsigned int i = 0; i < points.size()/9; i++ ) {
           fprintf(fp, "    (instance face :init :vertices (list (float-vector %f %f %f) (float-vector %f %f %f) (float-vector %f %f %f)))\n",
-		  1000*points[i*9+0], 1000*points[i*9+1], 1000*points[i*9+2],
-		  1000*points[i*9+3], 1000*points[i*9+4], 1000*points[i*9+5],
-		  1000*points[i*9+6], 1000*points[i*9+7], 1000*points[i*9+8]);
+		  g_scale*1000*points[i*9+0], g_scale*1000*points[i*9+1], g_scale*1000*points[i*9+2],
+		  g_scale*1000*points[i*9+3], g_scale*1000*points[i*9+4], g_scale*1000*points[i*9+5],
+		  g_scale*1000*points[i*9+6], g_scale*1000*points[i*9+7], g_scale*1000*points[i*9+8]);
 	}
 	fprintf(fp, "    ))\n");
       } else {
@@ -260,7 +261,7 @@ void writeTriangle(FILE *fp, domGeometry *thisGeometry) {
           fprintf(fp, "    (instance face :init :vertices (list");
           setT *vertices = qh_facet3vertex(facet); // ccw?
           FOREACHvertex_(vertices) {
-            fprintf(fp, " (float-vector %f %f %f)", 1000*vertex->point[0], 1000*vertex->point[1], 1000*vertex->point[2]);
+            fprintf(fp, " (float-vector %f %f %f)", g_scale*1000*vertex->point[0], g_scale*1000*vertex->point[1], g_scale*1000*vertex->point[2]);
           }
           fprintf(fp, "))\n");
           qh_settempfree(&vertices);
@@ -884,6 +885,12 @@ int main(int argc, char* argv[]){
   domNode* thisNode= thisVisualscene->getNode_array()[0];
 
   fprintf(stderr, "Visual_scene %s\n", thisNode->getName());
+  
+  if( !!g_dae->getDom(input_filename)->getAsset()) {
+      if( !!g_dae->getDom(input_filename)->getAsset()->getUnit() ) {
+	  g_scale = g_dae->getDom(input_filename)->getAsset()->getUnit()->getMeter();
+      }
+  }
 
   utsname uname_buf;
   uname(&uname_buf);
