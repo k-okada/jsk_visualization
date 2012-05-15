@@ -481,14 +481,18 @@ void writeKinematics(FILE *fp, domLink::domAttachment_full_Array thisAttachmentA
 void writeTransform(FILE *fp, const char *indent, const char *name, domNode *thisNode, int targetCount, const char *parentName=":world") {
   domTranslateRef thisTranslate = NULL;
   domRotateRef thisRotate = NULL;
+  domMatrixRef thisMatrix = NULL;
 
   domTranslate_Array translateArray = thisNode->getTranslate_array();
   int translateCount = translateArray.getCount();
   domRotate_Array rotateArray = thisNode->getRotate_array();
   int rotateCount = rotateArray.getCount();
+  domMatrix_Array matrixArray = thisNode->getMatrix_array();
+  int matrixCount = matrixArray.getCount();
 
   fprintf(fp, "\n");
-  fprintf(fp, "%s;; writeTransform(name=%s,domNode=%s,targetCount=%d,parent=%s), translateCount=%d, rotateCount=%d, \n", indent, name, thisNode->getName(), targetCount, parentName, translateCount, rotateCount);
+  fprintf(fp, "%s;; writeTransform(name=%s,domNode=%s,targetCount=%d,parent=%s), translateCount=%d, rotateCount=%d, matrixCount=%d\n", indent, name, thisNode->getName(), targetCount, parentName, translateCount, rotateCount, matrixCount);
+  fprintf(stderr, "%s;; writeTransform(name=%s,domNode=%s,targetCount=%d,parent=%s), translateCount=%d, rotateCount=%d, matrixCount=%d\n", indent, name, thisNode->getName(), targetCount, parentName, translateCount, rotateCount, matrixCount);
 
   for (int i=0, currentTranslate=0, currentRotate=0, skipTranslate=0, skipRotate=0; i < min(translateCount, rotateCount); i++, currentTranslate++, currentRotate++){
     if ( translateArray[currentTranslate]->getSid() ) {
@@ -515,6 +519,19 @@ void writeTransform(FILE *fp, const char *indent, const char *name, domNode *thi
 	      thisRotate ? thisRotate->getValue()[0] : 0,
 	      thisRotate ? thisRotate->getValue()[1] : 0,
 	      thisRotate ? thisRotate->getValue()[2] : 1,
+	      parentName);
+    }
+  }
+  for (int i=0, currentMatrix=0, skipMatrix=0; i < matrixCount; i++, currentMatrix++){
+    thisMatrix = matrixArray[currentMatrix];
+
+    if ( skipMatrix == targetCount ) {
+      fprintf(fp, "%s(send %s :transform\n%s      (make-coords :4x4 #2f((%f %f %f %f)(%f %f %f %f)(%f %f %f %f)(%f %f %f %f))) %s)\n",
+	      indent, name, indent,
+	      thisMatrix->getValue()[0], thisMatrix->getValue()[1], thisMatrix->getValue()[2], 1000*thisMatrix->getValue()[3],
+	      thisMatrix->getValue()[4], thisMatrix->getValue()[5], thisMatrix->getValue()[6], 1000*thisMatrix->getValue()[7],
+	      thisMatrix->getValue()[8], thisMatrix->getValue()[9], thisMatrix->getValue()[10], 1000*thisMatrix->getValue()[11],
+	      thisMatrix->getValue()[12], thisMatrix->getValue()[13], thisMatrix->getValue()[14], thisMatrix->getValue()[15],
 	      parentName);
     }
   }
