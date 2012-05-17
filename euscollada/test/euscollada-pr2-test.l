@@ -46,6 +46,8 @@
   (let ((root-link (car (send robot :links))))
     (assert (null (send root-link :parent-link))
 	    (format nil "root link should have no parent-link!! ~A ~A~%" root-link (send root-link :parent-link)))
+    (assert (equal robot (send root-link :parent))
+            (format nil "root link ~A should be :assoced with robot ~A!!~%" root-link robot))
     )
 
   ;;link-joint-length-check-for-serial-link-manipulator
