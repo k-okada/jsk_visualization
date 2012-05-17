@@ -52,7 +52,7 @@
   (let ((joint-length (length (mapcar #'cdr (remove-if-not #'(lambda (s) (derivedp (cdr s) joint)) (send robot :slots)))))
 	(link-length (length (remove-duplicates (mapcar #'cdr (remove-if-not #'(lambda (s) (derivedp (cdr s) bodyset-link)) (send robot :slots)))))))
     (assert (= (+ joint-length 1) link-length)
-	    (format nil ";; link(~A) = joint(=A) + 1 <- for serial link manipulator!!~%" link-length joint-length)))
+	    (format nil ";; link(~A) = joint(=~A) + 1 <- for serial link manipulator!!~%" link-length joint-length)))
 
   ;; chain-validity-check
   (let ((jl (mapcar #'cdr (remove-if-not #'(lambda (s) (derivedp (cdr s) joint)) (send robot :slots)))))
