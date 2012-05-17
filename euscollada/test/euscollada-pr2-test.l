@@ -49,14 +49,17 @@
     )
 
   ;;link-joint-length-check-for-serial-link-manipulator
-  (let ((joint-length (length (mapcar #'cdr (remove-if-not #'(lambda (s) (derivedp (cdr s) joint)) (send robot :slots)))))
-	(link-length (length (remove-duplicates (mapcar #'cdr (remove-if-not #'(lambda (s) (derivedp (cdr s) bodyset-link)) (send robot :slots)))))))
-    (assert (= (+ joint-length 1) link-length)
-	    (format nil ";; link(~A) = joint(=~A) + 1 <- for serial link manipulator!!~%" link-length joint-length)))
-
-  ;; chain-validity-check
-  (let ((jl (mapcar #'cdr (remove-if-not #'(lambda (s) (derivedp (cdr s) joint)) (send robot :slots)))))
-    (dolist (j jl)
+  (let ((joint-list
+         (remove-duplicates
+          (append (mapcar #'cdr (remove-if-not #'(lambda (s) (derivedp (cdr s) joint)) (send robot :slots)))
+                  (send robot :joint-list))))
+	(links (remove-duplicates
+               (append (mapcar #'cdr (remove-if-not #'(lambda (s) (derivedp (cdr s) bodyset-link)) (send robot :slots)))
+                       (send robot :links)))))
+    (assert (= (+ (length joint-list) 1) (length links))
+	    (format nil ";; link(~A) = joint(=~A) + 1 <- for serial link manipulator!!~%" (length links) (length joint-list)))
+    ;; chain-validity-check
+    (dolist (j joint-list)
       ;; joint should have child-link derived from bodyset-link class
       (assert (and (send j :child-link) (derivedp (send j :child-link) bodyset-link))
 	      (format nil "joint should have child-link derived from bodyset-link class ~A ~A" j (send j :child-link)))
