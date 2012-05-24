@@ -72,7 +72,7 @@ ADD_CUSTOM_COMMAND(
   OUTPUT ${CMAKE_SOURCE_DIR}/pr2.l
   COMMAND rosrun euscollada pr2.sh
   DEPENDS collada2eus)
-ADD_CUSTOM_TARGET(pr2model ALL DEPENDS ${CMAKE_SOURCE_DIR}/pr2.l)
+#ADD_CUSTOM_TARGET(pr2model ALL DEPENDS ${CMAKE_SOURCE_DIR}/pr2.l)
 
 ## test
 rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/mitsubishi-pa10.zae test/mitsubishi-pa10.zae 2e995a1356befd581028b9fd0d55b10f)
@@ -82,7 +82,10 @@ rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrav
 rosbuild_download_test_data(https://openrave.svn.sourceforge.net/svnroot/openrave/data/robots/darpa-arm.zae test/darpa-arm.zae 3944246c010a4a3ab212506c0588895b)
 
 rosbuild_add_pyunit(test/collada2eus_test.py)
-rosbuild_add_rostest(test/euscollada-test.launch)
+rosbuild_check_for_display(disp)
+if(disp)
+  rosbuild_add_rostest(test/euscollada-test.launch)
+endif(disp)
 
 # roslaunch documentation
 rosbuild_find_ros_package("jsk_tools")
