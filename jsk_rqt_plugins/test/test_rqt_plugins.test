@@ -1,0 +1,9 @@
+<launch>
+  <node name="pub_dummy_data" pkg="rostopic" type="rostopic"
+        args="pub -r 10 /dummy_3d_data geometry_msgs/Point 1 2 3 --"/>
+
+  <node pkg="jsk_rqt_plugins" type="rqt_3d_plot" name="rqt_3d_plot" required="true" args="/dummy_3d_data/x" />
+  <node pkg="jsk_rqt_plugins" type="rqt_yn_btn"  name="rqt_yn_btn"  required="true"/>
+
+  <test pkg="jsk_rqt_plugins" test-name="test_rqt_plugins" type="test_rqt_plugins.py" />
+</launch>
