@@ -3,8 +3,17 @@
 from rqt_gui_py.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt, QTimer, qWarning, Slot
-from python_qt_binding.QtGui import QAction, QIcon, QMenu, QWidget
-from python_qt_binding.QtGui import QWidget, QVBoxLayout, QSizePolicy, QColor
+
+# support both rt4 and qt5
+from distutils.version import LooseVersion
+import python_qt_binding
+if LooseVersion(python_qt_binding.QT_BINDING_VERSION).version[0] >= 5:
+    from python_qt_binding.QtWidgets import QAction, QMenu, QWidget
+    from python_qt_binding.QtWidgets import QVBoxLayout, QSizePolicy
+    from python_qt_binding.QtGui import QIcon, QColor
+else:
+    from python_qt_binding.QtGui import QAction, QIcon, QMenu, QWidget
+    from python_qt_binding.QtGui import QVBoxLayout, QSizePolicy, QColor
 from rqt_py_common.topic_completer import TopicCompleter
 from matplotlib.colors import colorConverter
 from rqt_py_common.topic_helpers import is_slot_numeric
@@ -19,17 +28,30 @@ import os, sys
 import argparse
 
 try:
-    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+    if LooseVersion(python_qt_binding.QT_BINDING_VERSION).version[0] >= 5:
+        from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+    else:
+        from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 except ImportError:
     # work around bug in dateutil
     import sys
     import thread
     sys.modules['_thread'] = thread
-    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+    print(1)
+    if LooseVersion(python_qt_binding.QT_BINDING_VERSION).version[0] >= 5:
+        from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+    else:
+        from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 try:
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
+    if LooseVersion(python_qt_binding.QT_BINDING_VERSION).version[0] >= 5:
+        from matplotlib.backends.backend_qt5agg import NavigationToolbar2QTAgg as NavigationToolbar
+    else:
+        from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 except ImportError:
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+    if LooseVersion(python_qt_binding.QT_BINDING_VERSION).version[0] >= 5:
+        from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+    else:
+        from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
 import numpy
