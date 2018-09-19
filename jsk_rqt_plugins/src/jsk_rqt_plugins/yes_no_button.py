@@ -7,7 +7,14 @@ import rosservice
 
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
-from python_qt_binding.QtGui import QWidget
+
+# support both rt4 and qt5
+from distutils.version import LooseVersion
+import python_qt_binding
+if LooseVersion(python_qt_binding.QT_BINDING_VERSION).version[0] >= 5:
+    from python_qt_binding.QtWidgets import QWidget
+else:
+    from python_qt_binding.QtGui import QWidget
 
 from jsk_gui_msgs.srv import YesNo, YesNoResponse
 
